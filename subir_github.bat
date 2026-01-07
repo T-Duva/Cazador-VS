@@ -71,10 +71,16 @@ git push
 
 if errorlevel 1 (
     echo.
-    echo ERROR: No se pudo subir a GitHub.
-    echo Verifica tu conexion o tus credenciales.
-    pause
-    exit /b 1
+    echo Configurando conexion con GitHub (primera vez)...
+    git push --set-upstream origin main
+    
+    if errorlevel 1 (
+        echo.
+        echo ERROR: No se pudo subir a GitHub.
+        echo Verifica tu conexion o tus credenciales.
+        pause
+        exit /b 1
+    )
 )
 
 echo.
