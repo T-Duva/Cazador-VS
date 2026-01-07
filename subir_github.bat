@@ -38,7 +38,7 @@ echo.
 set /p mensaje="Escribe un mensaje para el commit (ej: Actualizar scripts): "
 
 if "%mensaje%"=="" (
-    set mensaje="Actualizacion automatica"
+    set mensaje=Actualizacion automatica
 )
 
 echo.
@@ -55,7 +55,7 @@ if "%opcion%"=="1" (
 
 echo.
 echo Creando commit con mensaje: %mensaje%
-git commit -m %mensaje%
+git commit -m "%mensaje%"
 
 if errorlevel 1 (
     echo.
