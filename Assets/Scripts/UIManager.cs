@@ -2246,10 +2246,8 @@ public class UIManager : MonoBehaviour
     #endregion
     
     #region Dialogos
-    // Diálogos
     public void MostrarDialogoSeleccionClase(Action<string> callback)
     {
-        // Destruir cualquier diálogo anterior que pueda existir
         GameObject dialogAnterior = GameObject.Find("DialogoClase");
         if (dialogAnterior != null)
         {
@@ -2309,7 +2307,6 @@ public class UIManager : MonoBehaviour
     
     public void MostrarDialogoDistribucionSkill(int puntosTotal, int maxVida, int maxArmadura, int maxDaño, Action<int, int, int> callback)
     {
-        // Fondo completamente opaco para evitar imágenes residuales
         GameObject dialog = CrearPanel("DialogoSkill", new Color(0.1f, 0.1f, 0.15f, 1f));
         dialog.transform.SetParent(canvas.transform, false);
         dialog.transform.SetAsLastSibling(); // Asegurar que esté al frente
@@ -2321,7 +2318,6 @@ public class UIManager : MonoBehaviour
         titulo.rectTransform.sizeDelta = new Vector2(800, 80); // Tamaño al doble (era 400x40, ahora 800x80)
         titulo.transform.SetParent(dialog.transform, false);
         
-        // Variables para almacenar los valores (usando array para poder modificarlos en los listeners)
         int[] valores = new int[3];
         valores[0] = 1; // Vida: 1 punto inicial
         valores[1] = 1; // Armadura: 1 punto inicial
@@ -2330,7 +2326,6 @@ public class UIManager : MonoBehaviour
         int puntosUsados = valores[0] + valores[1] + valores[2];
         int puntosRestantes = puntosTotal - puntosUsados;
         
-        // Texto de puntos restantes - tamaño al doble
         Text lblPuntosRestantes = CrearTexto("LblPuntosRestantes", $"Puntos disponibles: {puntosRestantes}", 32, new Color(0.8f, 0.8f, 0.2f, 1f)); // Era 16, ahora 32
         lblPuntosRestantes.rectTransform.anchorMin = new Vector2(0.5f, 0.75f);
         lblPuntosRestantes.rectTransform.anchorMax = new Vector2(0.5f, 0.75f);
@@ -2338,24 +2333,18 @@ public class UIManager : MonoBehaviour
         lblPuntosRestantes.rectTransform.sizeDelta = new Vector2(600, 50); // Tamaño al doble (era 300x25, ahora 600x50)
         lblPuntosRestantes.transform.SetParent(dialog.transform, false);
         
-        // Referencias a los InputFields para poder actualizarlos desde el botón aleatorio
         InputField[] inputFields = new InputField[3];
         
-        // Cargar iconos desde imágenes separadas
         Sprite iconoVida = CargarIcono("vida");
         Sprite iconoEscudo = CargarIcono("escudo");
         Sprite iconoDaño = CargarIcono("daño");
         
-        // Crear controles para Vida (con más separación vertical)
         inputFields[0] = CrearControlStat(dialog, "Vida", iconoVida, valores, 0, maxVida, 0.65f, puntosTotal, lblPuntosRestantes);
         
-        // Crear controles para Armadura (con más separación vertical)
         inputFields[1] = CrearControlStat(dialog, "Escudo", iconoEscudo, valores, 1, maxArmadura, 0.5f, puntosTotal, lblPuntosRestantes);
         
-        // Crear controles para Daño (con más separación vertical)
         inputFields[2] = CrearControlStat(dialog, "Daño", iconoDaño, valores, 2, maxDaño, 0.35f, puntosTotal, lblPuntosRestantes);
         
-        // Botón Aleatorio - tamaño al doble
         Button btnAleatorio = CrearBotonConColor("BtnAleatorio", "🎲 ALEATORIO", 36, new Color(0.9f, 0.6f, 0.2f, 1f)); // Fuente al doble (era 18, ahora 36)
         btnAleatorio.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.1f); // Bajado (era 0.2f, ahora 0.1f)
         btnAleatorio.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.1f); // Bajado (era 0.2f, ahora 0.1f)
@@ -2363,40 +2352,31 @@ public class UIManager : MonoBehaviour
         btnAleatorio.GetComponent<RectTransform>().sizeDelta = new Vector2(360, 80); // Tamaño al doble (era 180x40, ahora 360x80)
         btnAleatorio.transform.SetParent(dialog.transform, false);
         btnAleatorio.onClick.AddListener(() => {
-            // Distribución aleatoria REAL: valores completamente aleatorios para cada stat
-            // La suma debe ser exactamente igual a puntosTotal
             System.Random rand = new System.Random();
             
             int[] maximos = { maxVida, maxArmadura, maxDaño };
             int sumaObjetivo = puntosTotal;
             
-            // Cada stat ya tiene 1 punto asignado, así que tenemos 297 puntos para distribuir (300-3)
             int puntosRestantesParaDistribuir = sumaObjetivo - 3;
             
-            // Generar valores aleatorios adicionales para cada stat (puede ser 0 o más)
-            // La suma de estos valores adicionales debe ser puntosRestantesParaDistribuir
             int valorExtra1 = rand.Next(0, Mathf.Min(maxVida - 1, puntosRestantesParaDistribuir) + 1);
             int valorExtra2 = rand.Next(0, Mathf.Min(maxArmadura - 1, puntosRestantesParaDistribuir - valorExtra1) + 1);
             int valorExtra3 = rand.Next(0, Mathf.Min(maxDaño - 1, puntosRestantesParaDistribuir - valorExtra1 - valorExtra2) + 1);
             
-            // Asignar los valores (1 base + extras)
             valores[0] = 1 + valorExtra1;
             valores[1] = 1 + valorExtra2;
             valores[2] = 1 + valorExtra3;
             
             int sumaActual = valores[0] + valores[1] + valores[2];
             
-            // Ajustar para que la suma sea exactamente puntosTotal
             int diferencia = sumaObjetivo - sumaActual;
             
-            // Si hay diferencia, distribuirla aleatoriamente
             while (diferencia != 0)
             {
                 int statElegida = rand.Next(3);
                 
                 if (diferencia > 0)
                 {
-                    // Aumentar
                     if (statElegida == 0 && valores[0] < maxVida)
                     {
                         valores[0]++;
@@ -2415,7 +2395,6 @@ public class UIManager : MonoBehaviour
                 }
                 else
                 {
-                    // Reducir (pero nunca menos de 1)
                     if (statElegida == 0 && valores[0] > 1)
                     {
                         valores[0]--;
@@ -2433,25 +2412,20 @@ public class UIManager : MonoBehaviour
                     }
                 }
                 
-                // Evitar loops infinitos
                 if (Mathf.Abs(diferencia) > 100) break;
             }
             
-            // Asegurar que no excedan los máximos y que tengan al menos 1
             valores[0] = Mathf.Clamp(valores[0], 1, maxVida);
             valores[1] = Mathf.Clamp(valores[1], 1, maxArmadura);
             valores[2] = Mathf.Clamp(valores[2], 1, maxDaño);
             
-            // Actualizar los campos de texto directamente
             if (inputFields[0] != null) inputFields[0].text = valores[0].ToString();
             if (inputFields[1] != null) inputFields[1].text = valores[1].ToString();
             if (inputFields[2] != null) inputFields[2].text = valores[2].ToString();
             
-            // Actualizar puntos restantes
             ActualizarPuntosRestantes(lblPuntosRestantes, valores, puntosTotal);
         });
         
-        // Botón Aceptar
         Button btnAceptar = CrearBotonConColor("BtnAceptar", "✅ ACEPTAR", 36, new Color(0.2f, 0.7f, 0.3f, 1f)); // Fuente al doble (era 18, ahora 36)
         btnAceptar.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.1f); // Bajado (era 0.2f, ahora 0.1f)
         btnAceptar.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.1f); // Bajado (era 0.2f, ahora 0.1f)
@@ -2467,8 +2441,6 @@ public class UIManager : MonoBehaviour
     private Sprite CargarIcono(string nombre)
     {
         #if UNITY_EDITOR
-        // Cargar el icono desde la imagen separada
-        // Intentar diferentes extensiones posibles
         string[] extensiones = { ".png", ".PNG", ".jpg", ".JPG" };
         
         foreach (string ext in extensiones)
@@ -2480,11 +2452,9 @@ public class UIManager : MonoBehaviour
                 return sprite;
             }
             
-            // Si no se carga como Sprite, intentar como Texture2D y crear el sprite
             Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(ruta);
             if (texture != null)
             {
-                // Crear sprite desde la textura completa
                 Rect rect = new Rect(0, 0, texture.width, texture.height);
                 return Sprite.Create(texture, rect, new Vector2(0.5f, 0.5f), 100f);
             }
@@ -2493,11 +2463,9 @@ public class UIManager : MonoBehaviour
         Debug.LogWarning($"No se encontró el icono {nombre} en Assets/Sprites/UI/");
         return null;
         #else
-        // En runtime, cargar desde Resources
         Sprite sprite = Resources.Load<Sprite>($"Sprites/UI/{nombre}");
         if (sprite != null) return sprite;
         
-        // Si no se carga como Sprite, intentar como Texture2D
         Texture2D texture = Resources.Load<Texture2D>($"Sprites/UI/{nombre}");
         if (texture != null)
         {
@@ -2511,7 +2479,6 @@ public class UIManager : MonoBehaviour
     
     private InputField CrearControlStat(GameObject parent, string nombre, Sprite iconoSprite, int[] valores, int indice, int maximo, float posicionY, int puntosTotal, Text lblPuntosRestantes)
     {
-        // Crear contenedor para el icono (más cerca del texto)
         GameObject contenedorIcono = new GameObject($"Icono{nombre}");
         contenedorIcono.transform.SetParent(parent.transform, false);
         RectTransform iconoRect = contenedorIcono.AddComponent<RectTransform>();
@@ -2520,7 +2487,6 @@ public class UIManager : MonoBehaviour
         iconoRect.anchoredPosition = new Vector2(-370, 0); // 1 cm más a la izquierda (aproximadamente 50 píxeles más)
         iconoRect.sizeDelta = new Vector2(80, 80); // Tamaño reducido para evitar superposición (era 100, ahora 80)
         
-        // Agregar imagen del icono si existe
         if (iconoSprite != null)
         {
             Image iconoImage = contenedorIcono.AddComponent<Image>();
@@ -2528,7 +2494,6 @@ public class UIManager : MonoBehaviour
             iconoImage.preserveAspect = true;
         }
         
-        // Label del nombre con máximo permitido (sin emoji) - tamaño de fuente al doble
         Text lblNombre = CrearTexto($"Lbl{nombre}", $"{nombre} (Máx: {maximo})", 32, Color.white); // Era 16, ahora 32
         lblNombre.rectTransform.anchorMin = new Vector2(0.5f, posicionY);
         lblNombre.rectTransform.anchorMax = new Vector2(0.5f, posicionY);
@@ -2537,7 +2502,6 @@ public class UIManager : MonoBehaviour
         lblNombre.alignment = TextAnchor.MiddleLeft;
         lblNombre.transform.SetParent(parent.transform, false);
         
-        // Campo de texto editable (InputField) - crear primero para poder referenciarlo
         GameObject inputObj = new GameObject($"Input{nombre}");
         inputObj.transform.SetParent(parent.transform, false);
         
@@ -2549,11 +2513,9 @@ public class UIManager : MonoBehaviour
         
         InputField inputField = inputObj.AddComponent<InputField>();
         
-        // Crear background para el input (más claro para mejor contraste)
         Image inputBg = inputObj.AddComponent<Image>();
         inputBg.color = new Color(0.3f, 0.3f, 0.3f, 1f); // Un poco más claro para mejor contraste con el texto
         
-        // Crear texto del input
         GameObject textObj = new GameObject("Text");
         textObj.transform.SetParent(inputObj.transform, false);
         
@@ -2574,12 +2536,10 @@ public class UIManager : MonoBehaviour
         inputText.horizontalOverflow = HorizontalWrapMode.Overflow; // Permitir que el texto se vea completo
         inputText.verticalOverflow = VerticalWrapMode.Overflow;
         
-        // Configurar InputField
         inputField.textComponent = inputText;
         inputField.contentType = InputField.ContentType.IntegerNumber;
         inputField.inputType = InputField.InputType.Standard;
         
-        // Botón -
         Button btnMenos = CrearBotonConColor($"Btn{nombre}Menos", "-", 40, new Color(0.7f, 0.3f, 0.3f, 1f)); // Fuente al doble (era 20, ahora 40)
         RectTransform menosRect = btnMenos.GetComponent<RectTransform>();
         menosRect.anchorMin = new Vector2(0.5f, posicionY);
@@ -2596,7 +2556,6 @@ public class UIManager : MonoBehaviour
             }
         });
         
-        // Actualizar cuando cambie el texto
         inputField.onEndEdit.AddListener((string texto) => {
             int nuevoValor;
             if (int.TryParse(texto, out nuevoValor))
@@ -2605,7 +2564,6 @@ public class UIManager : MonoBehaviour
                 int puntosActuales = valores[indice];
                 int puntosDisponibles = puntosTotal - puntosUsados + puntosActuales;
                 
-                // Validar que esté dentro del rango
                 if (nuevoValor < 0)
                 {
                     nuevoValor = 0;
@@ -2625,14 +2583,11 @@ public class UIManager : MonoBehaviour
             }
             else
             {
-                // Si no es un número válido, restaurar el valor anterior
                 inputField.text = valores[indice].ToString();
             }
         });
         
-        // Validar al escribir
         inputField.onValueChanged.AddListener((string texto) => {
-            // Actualizar puntos restantes en tiempo real
             int nuevoValor;
             if (int.TryParse(texto, out nuevoValor))
             {
@@ -2648,7 +2603,6 @@ public class UIManager : MonoBehaviour
             }
         });
         
-        // Botón +
         Button btnMas = CrearBotonConColor($"Btn{nombre}Mas", "+", 40, new Color(0.3f, 0.7f, 0.3f, 1f)); // Fuente al doble (era 20, ahora 40)
         RectTransform masRect = btnMas.GetComponent<RectTransform>();
         masRect.anchorMin = new Vector2(0.5f, posicionY);
