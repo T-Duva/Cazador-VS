@@ -2540,42 +2540,21 @@ public class UIManager : MonoBehaviour
         inputField.contentType = InputField.ContentType.IntegerNumber;
         inputField.inputType = InputField.InputType.Standard;
         
-        Button btnMenos = CrearBotonConColor($"Btn{nombre}Menos", "-", 40, new Color(0.7f, 0.3f, 0.3f, 1f)); // Fuente al doble (era 20, ahora 40)
-        RectTransform menosRect = btnMenos.GetComponent<RectTransform>();
-        menosRect.anchorMin = new Vector2(0.5f, posicionY);
-        menosRect.anchorMax = new Vector2(0.5f, posicionY);
-        menosRect.anchoredPosition = new Vector2(60, 0); // Ajustado para el nuevo tamaño
-        menosRect.sizeDelta = new Vector2(70, 60); // Tamaño al doble (era 35x30, ahora 70x60)
-        btnMenos.transform.SetParent(parent.transform, false);
-        btnMenos.onClick.AddListener(() => {
-            if (valores[indice] > 0)
-            {
-                valores[indice]--;
-                if (inputField != null) inputField.text = valores[indice].ToString();
-                ActualizarPuntosRestantes(lblPuntosRestantes, valores, puntosTotal);
-            }
-        });
-        
         inputField.onEndEdit.AddListener((string texto) => {
             int nuevoValor;
             if (int.TryParse(texto, out nuevoValor))
             {
-                int puntosUsados = valores[0] + valores[1] + valores[2];
-                int puntosActuales = valores[indice];
-                int puntosDisponibles = puntosTotal - puntosUsados + puntosActuales;
+                // Calcular suma de otros valores (excluyendo el actual)
+                int sumOtros = valores[0] + valores[1] + valores[2] - valores[indice];
                 
-                if (nuevoValor < 0)
-                {
-                    nuevoValor = 0;
-                }
-                else if (nuevoValor > maximo)
-                {
-                    nuevoValor = maximo;
-                }
-                else if (nuevoValor > puntosDisponibles)
-                {
-                    nuevoValor = puntosDisponibles;
-                }
+                // Calcular máximo permitido por el total de puntos
+                int maxPermitidoPorTotal = puntosTotal - sumOtros;
+                
+                // El máximo final es el menor entre el máximo del stat y el máximo permitido por el total
+                int maxFinal = Mathf.Min(maximo, maxPermitidoPorTotal);
+                
+                // Clamp entre 1 y maxFinal (mínimo 1 punto)
+                nuevoValor = Mathf.Clamp(nuevoValor, 1, maxFinal);
                 
                 valores[indice] = nuevoValor;
                 inputField.text = nuevoValor.ToString();
@@ -2591,35 +2570,15 @@ public class UIManager : MonoBehaviour
             int nuevoValor;
             if (int.TryParse(texto, out nuevoValor))
             {
-                int puntosUsados = valores[0] + valores[1] + valores[2];
-                int puntosActuales = valores[indice];
-                int puntosDisponibles = puntosTotal - puntosUsados + puntosActuales;
+                int sumOtros = valores[0] + valores[1] + valores[2] - valores[indice];
+                int maxPermitidoPorTotal = puntosTotal - sumOtros;
+                int maxFinal = Mathf.Min(maximo, maxPermitidoPorTotal);
                 
-                if (nuevoValor >= 0 && nuevoValor <= maximo && nuevoValor <= puntosDisponibles)
+                if (nuevoValor >= 1 && nuevoValor <= maxFinal)
                 {
                     valores[indice] = nuevoValor;
                     ActualizarPuntosRestantes(lblPuntosRestantes, valores, puntosTotal);
                 }
-            }
-        });
-        
-        Button btnMas = CrearBotonConColor($"Btn{nombre}Mas", "+", 40, new Color(0.3f, 0.7f, 0.3f, 1f)); // Fuente al doble (era 20, ahora 40)
-        RectTransform masRect = btnMas.GetComponent<RectTransform>();
-        masRect.anchorMin = new Vector2(0.5f, posicionY);
-        masRect.anchorMax = new Vector2(0.5f, posicionY);
-        masRect.anchoredPosition = new Vector2(260, 0); // Ajustado para el nuevo tamaño
-        masRect.sizeDelta = new Vector2(70, 60); // Tamaño al doble (era 35x30, ahora 70x60)
-        btnMas.transform.SetParent(parent.transform, false);
-        btnMas.onClick.AddListener(() => {
-            int puntosUsados = valores[0] + valores[1] + valores[2];
-            int puntosActuales = valores[indice];
-            int puntosDisponibles = puntosTotal - puntosUsados + puntosActuales;
-            
-            if (valores[indice] < maximo && puntosDisponibles > 0)
-            {
-                valores[indice]++;
-                if (inputField != null) inputField.text = valores[indice].ToString();
-                ActualizarPuntosRestantes(lblPuntosRestantes, valores, puntosTotal);
             }
         });
         
