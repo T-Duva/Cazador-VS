@@ -121,3 +121,5 @@ wheels/
 # Archivos de logs adicionales
 *.log
 
+# Cursor IDE
+.cursor/
