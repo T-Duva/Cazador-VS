@@ -56,7 +56,6 @@ public class UIManager : MonoBehaviour
     private Text lblNombreEnemigo;
     private Dictionary<string, GameObject> tarjetasJugador = new Dictionary<string, GameObject>();
     private GameObject tarjetaDañoEnemigo;
-    private GameObject spacerVidaEscudo;
     
     [Header("Ajustes de Posición HUD")]
     [SerializeField] private RectTransform panelStatsJugadorRectSerialized;
@@ -385,15 +384,6 @@ public class UIManager : MonoBehaviour
         {
             panelStatsJugadorRectSerialized = panelJugadorRect;
         }
-        
-        HorizontalLayoutGroup layoutJugador = panelStatsJugador.AddComponent<HorizontalLayoutGroup>();
-        layoutJugador.spacing = 0f;
-        layoutJugador.padding = new RectOffset(0, 0, 0, 0);
-        layoutJugador.childAlignment = TextAnchor.LowerLeft;
-        layoutJugador.childControlWidth = true;
-        layoutJugador.childControlHeight = false;
-        layoutJugador.childForceExpandWidth = false;
-        layoutJugador.childForceExpandHeight = false;
         
         panelStatsEnemigo = new GameObject("HUD_Enemy");
         panelStatsEnemigo.transform.SetParent(panelJuego.transform, false);
@@ -1339,12 +1329,18 @@ public class UIManager : MonoBehaviour
         tarjeta.transform.SetParent(parent.transform, false);
         RectTransform tarjetaRect = tarjeta.AddComponent<RectTransform>();
         tarjetaRect.sizeDelta = new Vector2(70, 80);
+        tarjetaRect.anchorMin = new Vector2(0f, 0f);
+        tarjetaRect.anchorMax = new Vector2(0f, 0f);
+        tarjetaRect.pivot = new Vector2(0f, 0f);
         
+        // LayoutElement ya no es necesario sin LayoutGroup, pero StatCardAutoWidth puede usarlo opcionalmente
         LayoutElement layoutElement = tarjeta.AddComponent<LayoutElement>();
         layoutElement.minWidth = 48f;
+        layoutElement.preferredWidth = 70f;
         layoutElement.preferredHeight = 80f;
         layoutElement.flexibleWidth = 0f;
         layoutElement.flexibleHeight = 0f;
+        
         StatCardAutoWidth autoWidth = tarjeta.AddComponent<StatCardAutoWidth>();
         
         GameObject iconoObj = new GameObject("Icono");
@@ -1376,6 +1372,18 @@ public class UIManager : MonoBehaviour
         
         autoWidth.label = textoObj;
         autoWidth.layoutElement = layoutElement;
+        
+        // Sin LayoutGroup, actualizamos RectTransform directamente cuando cambie el ancho
+        if (autoWidth != null)
+        {
+            autoWidth.SetText(texto);
+            // Asegurar que el RectTransform se actualiza con el ancho preferido
+            RectTransform rectTransform = tarjeta.GetComponent<RectTransform>();
+            if (rectTransform != null && layoutElement != null)
+            {
+                rectTransform.sizeDelta = new Vector2(layoutElement.preferredWidth, rectTransform.sizeDelta.y);
+            }
+        }
         
         return tarjeta;
     }
@@ -1430,10 +1438,16 @@ public class UIManager : MonoBehaviour
         float anchoTotal = Mathf.Max(anchoTexto + extraPadding, 48f);
         
         LayoutElement layoutElement = tarjeta.GetComponent<LayoutElement>();
+        RectTransform rectTransform = tarjeta.GetComponent<RectTransform>();
         if (layoutElement != null)
         {
             layoutElement.preferredWidth = anchoTotal;
             layoutElement.flexibleWidth = 0f;
+        }
+        // Sin LayoutGroup, actualizar RectTransform directamente
+        if (rectTransform != null)
+        {
+            rectTransform.sizeDelta = new Vector2(anchoTotal, rectTransform.sizeDelta.y);
         }
     }
     
@@ -1514,20 +1528,37 @@ public class UIManager : MonoBehaviour
             Sprite iconoBatalla = CargarIconoHUD("reloj"); // Batalla = reloj de arena
             
             tarjetasJugador["Vida"] = CrearTarjetaStat(panelStatsJugador, "Vida", iconoVida, $"Vida: {vida}/{vidaMax}");
-            
-            spacerVidaEscudo = new GameObject("SpacerVidaEscudo");
-            spacerVidaEscudo.transform.SetParent(panelStatsJugador.transform, false);
-            RectTransform spacerRect = spacerVidaEscudo.AddComponent<RectTransform>();
-            spacerRect.sizeDelta = Vector2.zero;
-            LayoutElement spacerLayout = spacerVidaEscudo.AddComponent<LayoutElement>();            
-            spacerLayout.flexibleWidth = 0f;
-            spacerLayout.flexibleHeight = 0f;
-            spacerVidaEscudo.transform.SetSiblingIndex(1); // Después de Vida (índice 0)
-            
             tarjetasJugador["Escudo"] = CrearTarjetaStat(panelStatsJugador, "Escudo", iconoEscudo, $"Escudo: {escudo}/{escudoMax}");
             tarjetasJugador["Oro"] = CrearTarjetaStat(panelStatsJugador, "Oro", iconoOro, $"Oro: {oro}");
             tarjetasJugador["Daño"] = CrearTarjetaStat(panelStatsJugador, "Daño", iconoDaño, $"Daño: {daño}");
             tarjetasJugador["Batalla"] = CrearTarjetaStat(panelStatsJugador, "Batalla", iconoBatalla, $"Batalla: {batalla}");
+            
+            // Configurar posiciones manuales para las tarjetas (sin LayoutGroup)
+            if (tarjetasJugador.ContainsKey("Vida"))
+            {
+                RectTransform vidaRect = tarjetasJugador["Vida"].GetComponent<RectTransform>();
+                if (vidaRect != null) vidaRect.anchoredPosition = new Vector2(0f, 0f);
+            }
+            if (tarjetasJugador.ContainsKey("Escudo"))
+            {
+                RectTransform escudoRect = tarjetasJugador["Escudo"].GetComponent<RectTransform>();
+                if (escudoRect != null) escudoRect.anchoredPosition = new Vector2(80f, 0f);
+            }
+            if (tarjetasJugador.ContainsKey("Oro"))
+            {
+                RectTransform oroRect = tarjetasJugador["Oro"].GetComponent<RectTransform>();
+                if (oroRect != null) oroRect.anchoredPosition = new Vector2(160f, 0f);
+            }
+            if (tarjetasJugador.ContainsKey("Daño"))
+            {
+                RectTransform dañoRect = tarjetasJugador["Daño"].GetComponent<RectTransform>();
+                if (dañoRect != null) dañoRect.anchoredPosition = new Vector2(240f, 0f);
+            }
+            if (tarjetasJugador.ContainsKey("Batalla"))
+            {
+                RectTransform batallaRect = tarjetasJugador["Batalla"].GetComponent<RectTransform>();
+                if (batallaRect != null) batallaRect.anchoredPosition = new Vector2(320f, 0f);
+            }
             
             foreach (var kvp in tarjetasJugador)
             {
