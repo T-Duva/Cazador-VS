@@ -386,15 +386,6 @@ public class UIManager : MonoBehaviour
             panelStatsJugadorRectSerialized = panelJugadorRect;
         }
         
-        HorizontalLayoutGroup layoutJugador = panelStatsJugador.AddComponent<HorizontalLayoutGroup>();
-        layoutJugador.spacing = 0f;
-        layoutJugador.padding = new RectOffset(0, 0, 0, 0);
-        layoutJugador.childAlignment = TextAnchor.LowerLeft;
-        layoutJugador.childControlWidth = true;
-        layoutJugador.childControlHeight = false;
-        layoutJugador.childForceExpandWidth = false;
-        layoutJugador.childForceExpandHeight = false;
-        
         panelStatsEnemigo = new GameObject("HUD_Enemy");
         panelStatsEnemigo.transform.SetParent(panelJuego.transform, false);
         RectTransform panelEnemigoRect = panelStatsEnemigo.AddComponent<RectTransform>();
@@ -2611,8 +2602,8 @@ public class UIManager : MonoBehaviour
             masRect.sizeDelta = new Vector2(70, 60);
             btnMas.transform.SetParent(parent.transform, false);
             btnMas.onClick.AddListener(() => {
-                int sumOtros = valores[0] + valores[1] + valores[2] - valores[indice];
-                int puntosDisponibles = puntosTotal - sumOtros;
+            int sumaActual = valores[0] + valores[1] + valores[2];
+                int puntosDisponibles = puntosTotal - sumaActual;
                 if (valores[indice] < maximo && puntosDisponibles > 0)
                 {
                     valores[indice]++;
@@ -2651,8 +2642,46 @@ public class UIManager : MonoBehaviour
             masRect.sizeDelta = new Vector2(70, 60);
             btnMas.transform.SetParent(parent.transform, false);
             btnMas.onClick.AddListener(() => {
-                int sumOtros = valores[0] + valores[1] + valores[2] - valores[indice];
-                int puntosDisponibles = puntosTotal - sumOtros;
+          int sumaActual = valores[0] + valores[1] + valores[2];
+                int puntosDisponibles = puntosTotal - sumaActual;
+                if (valores[indice] < maximo && puntosDisponibles > 0)
+                {
+                    valores[indice]++;
+                    inputField.text = valores[indice].ToString();
+                    ActualizarPuntosRestantes(lblPuntosRestantes, valores, puntosTotal);
+                }
+            });
+        }
+        if (nombre == "Daño")
+        {
+            // Botón "-" a la izquierda del input
+            Button btnMenos = CrearBotonConColor("BtnDañoMenos", "-", 44, new Color(0.7f, 0.3f, 0.3f, 1f));
+            RectTransform menosRect = btnMenos.GetComponent<RectTransform>();
+            menosRect.anchorMin = new Vector2(0.5f, posicionY);
+            menosRect.anchorMax = new Vector2(0.5f, posicionY);
+            menosRect.anchoredPosition = new Vector2(60, 0);
+            menosRect.sizeDelta = new Vector2(70, 60);
+            btnMenos.transform.SetParent(parent.transform, false);
+            btnMenos.onClick.AddListener(() => {
+                if (valores[indice] > 0)
+                {
+                    valores[indice]--;
+                    inputField.text = valores[indice].ToString();
+                    ActualizarPuntosRestantes(lblPuntosRestantes, valores, puntosTotal);
+                }
+            });
+            
+            // Botón "+" a la derecha del input
+            Button btnMas = CrearBotonConColor("BtnDañoMas", "+", 44, new Color(0.3f, 0.7f, 0.3f, 1f));
+            RectTransform masRect = btnMas.GetComponent<RectTransform>();
+            masRect.anchorMin = new Vector2(0.5f, posicionY);
+            masRect.anchorMax = new Vector2(0.5f, posicionY);
+            masRect.anchoredPosition = new Vector2(260, 0);
+            masRect.sizeDelta = new Vector2(70, 60);
+            btnMas.transform.SetParent(parent.transform, false);
+            btnMas.onClick.AddListener(() => {
+          int sumaActual = valores[0] + valores[1] + valores[2];
+                int puntosDisponibles = puntosTotal - sumaActual;
                 if (valores[indice] < maximo && puntosDisponibles > 0)
                 {
                     valores[indice]++;
