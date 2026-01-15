@@ -2582,6 +2582,86 @@ public class UIManager : MonoBehaviour
             }
         });
         
+        // Agregar botones + y - SOLO para Vida
+        if (nombre == "Vida")
+        {
+            // Botón "-" a la izquierda del input
+            Button btnMenos = CrearBotonConColor("BtnVidaMenos", "-", 44, new Color(0.7f, 0.3f, 0.3f, 1f));
+            RectTransform menosRect = btnMenos.GetComponent<RectTransform>();
+            menosRect.anchorMin = new Vector2(0.5f, posicionY);
+            menosRect.anchorMax = new Vector2(0.5f, posicionY);
+            menosRect.anchoredPosition = new Vector2(60, 0);
+            menosRect.sizeDelta = new Vector2(70, 60);
+            btnMenos.transform.SetParent(parent.transform, false);
+            btnMenos.onClick.AddListener(() => {
+                if (valores[indice] > 0)
+                {
+                    valores[indice]--;
+                    inputField.text = valores[indice].ToString();
+                    ActualizarPuntosRestantes(lblPuntosRestantes, valores, puntosTotal);
+                }
+            });
+            
+            // Botón "+" a la derecha del input
+            Button btnMas = CrearBotonConColor("BtnVidaMas", "+", 44, new Color(0.3f, 0.7f, 0.3f, 1f));
+            RectTransform masRect = btnMas.GetComponent<RectTransform>();
+            masRect.anchorMin = new Vector2(0.5f, posicionY);
+            masRect.anchorMax = new Vector2(0.5f, posicionY);
+            masRect.anchoredPosition = new Vector2(260, 0);
+            masRect.sizeDelta = new Vector2(70, 60);
+            btnMas.transform.SetParent(parent.transform, false);
+            btnMas.onClick.AddListener(() => {
+                int sumOtros = valores[0] + valores[1] + valores[2] - valores[indice];
+                int puntosDisponibles = puntosTotal - sumOtros;
+                if (valores[indice] < maximo && puntosDisponibles > 0)
+                {
+                    valores[indice]++;
+                    inputField.text = valores[indice].ToString();
+                    ActualizarPuntosRestantes(lblPuntosRestantes, valores, puntosTotal);
+                }
+            });
+        }
+        
+        // Agregar botones + y - SOLO para Escudo
+        if (nombre == "Escudo")
+        {
+            // Botón "-" a la izquierda del input
+            Button btnMenos = CrearBotonConColor("BtnEscudoMenos", "-", 44, new Color(0.7f, 0.3f, 0.3f, 1f));
+            RectTransform menosRect = btnMenos.GetComponent<RectTransform>();
+            menosRect.anchorMin = new Vector2(0.5f, posicionY);
+            menosRect.anchorMax = new Vector2(0.5f, posicionY);
+            menosRect.anchoredPosition = new Vector2(60, 0);
+            menosRect.sizeDelta = new Vector2(70, 60);
+            btnMenos.transform.SetParent(parent.transform, false);
+            btnMenos.onClick.AddListener(() => {
+                if (valores[indice] > 0)
+                {
+                    valores[indice]--;
+                    inputField.text = valores[indice].ToString();
+                    ActualizarPuntosRestantes(lblPuntosRestantes, valores, puntosTotal);
+                }
+            });
+            
+            // Botón "+" a la derecha del input
+            Button btnMas = CrearBotonConColor("BtnEscudoMas", "+", 44, new Color(0.3f, 0.7f, 0.3f, 1f));
+            RectTransform masRect = btnMas.GetComponent<RectTransform>();
+            masRect.anchorMin = new Vector2(0.5f, posicionY);
+            masRect.anchorMax = new Vector2(0.5f, posicionY);
+            masRect.anchoredPosition = new Vector2(260, 0);
+            masRect.sizeDelta = new Vector2(70, 60);
+            btnMas.transform.SetParent(parent.transform, false);
+            btnMas.onClick.AddListener(() => {
+                int sumOtros = valores[0] + valores[1] + valores[2] - valores[indice];
+                int puntosDisponibles = puntosTotal - sumOtros;
+                if (valores[indice] < maximo && puntosDisponibles > 0)
+                {
+                    valores[indice]++;
+                    inputField.text = valores[indice].ToString();
+                    ActualizarPuntosRestantes(lblPuntosRestantes, valores, puntosTotal);
+                }
+            });
+        }
+        
         return inputField;
     }
     
