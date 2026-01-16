@@ -85,7 +85,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1135989059559201148}
   - component: {fileID: 6605014023462809437}
-  - component: {fileID: 9073487872765918621}
   m_Layer: 0
   m_Name: TarjetaBatalla
   m_TagString: Untagged
@@ -109,10 +108,10 @@ RectTransform:
   - {fileID: 151496963283401949}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 640, y: 462}
-  m_SizeDelta: {x: 110, y: 102}
+  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMax: {x: 0.5, y: 0}
+  m_AnchoredPosition: {x: 240, y: 453}
+  m_SizeDelta: {x: 100, y: 110}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &6605014023462809437
 MonoBehaviour:
@@ -134,23 +133,6 @@ MonoBehaviour:
   m_FlexibleWidth: 0
   m_FlexibleHeight: 0
   m_LayoutPriority: 1
---- !u!114 &9073487872765918621
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2248982468662213328}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 92d056c213839914ab603b1b1a5c5e40, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  layoutElement: {fileID: 6605014023462809437}
-  label: {fileID: 2817826935818573505}
-  minWidth: 32
-  horizontalPadding: 16
-  extraSafety: 2
 --- !u!1 &2514499398156305834
 GameObject:
   m_ObjectHideFlags: 0

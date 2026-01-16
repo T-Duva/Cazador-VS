@@ -164,7 +164,6 @@ GameObject:
   m_Component:
   - component: {fileID: 3620827659044237601}
   - component: {fileID: 4348576065175066195}
-  - component: {fileID: 8604656925731910295}
   m_Layer: 0
   m_Name: "TarjetaDa\xF1oEnemigo"
   m_TagString: Untagged
@@ -213,20 +212,3 @@ MonoBehaviour:
   m_FlexibleWidth: 0
   m_FlexibleHeight: 0
   m_LayoutPriority: 1
---- !u!114 &8604656925731910295
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5706940552308731723}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 92d056c213839914ab603b1b1a5c5e40, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  layoutElement: {fileID: 4348576065175066195}
-  label: {fileID: 5798088544811480153}
-  minWidth: 32
-  horizontalPadding: 16
-  extraSafety: 2

@@ -1352,21 +1352,7 @@ public class UIManager : MonoBehaviour
         {
             textoObj.text = texto;
         }
-        
-        StatCardAutoWidth autoWidth = tarjeta.GetComponent<StatCardAutoWidth>();
-        if (autoWidth != null)
-        {
-            if (autoWidth.layoutElement == null)
-            {
-                autoWidth.layoutElement = tarjeta.GetComponent<LayoutElement>();
-            }
-            if (autoWidth.label == null && textoObj != null)
-            {
-                autoWidth.label = textoObj;
-            }
-            autoWidth.SetText(texto);
-        }
-        
+
         return tarjeta;
     }
     
@@ -1380,15 +1366,13 @@ public class UIManager : MonoBehaviour
         tarjetaRect.anchorMax = new Vector2(0f, 0f);
         tarjetaRect.pivot = new Vector2(0f, 0f);
         
-        // LayoutElement ya no es necesario sin LayoutGroup, pero StatCardAutoWidth puede usarlo opcionalmente
+        // LayoutElement es opcional si en el futuro se usa un LayoutGroup
         LayoutElement layoutElement = tarjeta.AddComponent<LayoutElement>();
         layoutElement.minWidth = 48f;
         layoutElement.preferredWidth = 70f;
         layoutElement.preferredHeight = 80f;
         layoutElement.flexibleWidth = 0f;
         layoutElement.flexibleHeight = 0f;
-        
-        StatCardAutoWidth autoWidth = tarjeta.AddComponent<StatCardAutoWidth>();
         
         GameObject iconoObj = new GameObject("Icono");
         iconoObj.transform.SetParent(tarjeta.transform, false);
@@ -1417,22 +1401,21 @@ public class UIManager : MonoBehaviour
         textoObj.verticalOverflow = VerticalWrapMode.Overflow;
         textoObj.transform.SetParent(tarjeta.transform, false);
         
-        autoWidth.label = textoObj;
-        autoWidth.layoutElement = layoutElement;
-        
-        // Sin LayoutGroup, actualizamos RectTransform directamente cuando cambie el ancho
-        if (autoWidth != null)
-        {
-            autoWidth.SetText(texto);
-            // Asegurar que el RectTransform se actualiza con el ancho preferido
-            RectTransform rectTransform = tarjeta.GetComponent<RectTransform>();
-            if (rectTransform != null && layoutElement != null)
-            {
-                rectTransform.sizeDelta = new Vector2(layoutElement.preferredWidth, rectTransform.sizeDelta.y);
-            }
-        }
-        
         return tarjeta;
+    }
+    
+    private void SetTextoTarjeta(GameObject tarjeta, string texto)
+    {
+        if (tarjeta == null) return;
+        Text textoObj = tarjeta.transform.Find("Texto")?.GetComponent<Text>();
+        if (textoObj == null)
+        {
+            textoObj = tarjeta.GetComponentInChildren<Text>(true);
+        }
+        if (textoObj != null)
+        {
+            textoObj.text = texto;
+        }
     }
     
     private void AjustarPosicionPanelJugador()
@@ -1609,20 +1592,16 @@ public class UIManager : MonoBehaviour
             
             foreach (var kvp in tarjetasJugador)
             {
-                StatCardAutoWidth autoWidth = kvp.Value.GetComponent<StatCardAutoWidth>();
-                if (autoWidth != null)
+                string textoInicial = "";
+                switch (kvp.Key)
                 {
-                    string textoInicial = "";
-                    switch (kvp.Key)
-                    {
-                        case "Vida": textoInicial = $"Vida: {vida}/{vidaMax}"; break;
-                        case "Escudo": textoInicial = $"Escudo: {escudo}/{escudoMax}"; break;
-                        case "Oro": textoInicial = $"Oro: {oro}"; break;
-                        case "Daño": textoInicial = $"Daño: {daño}"; break;
-                        case "Batalla": textoInicial = $"Batalla: {batalla}"; break;
-                    }
-                    autoWidth.SetText(textoInicial);
+                    case "Vida": textoInicial = $"Vida: {vida}/{vidaMax}"; break;
+                    case "Escudo": textoInicial = $"Escudo: {escudo}/{escudoMax}"; break;
+                    case "Oro": textoInicial = $"Oro: {oro}"; break;
+                    case "Daño": textoInicial = $"Daño: {daño}"; break;
+                    case "Batalla": textoInicial = $"Batalla: {batalla}"; break;
                 }
+                SetTextoTarjeta(kvp.Value, textoInicial);
             }
             
             UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(panelStatsJugador.GetComponent<RectTransform>());
@@ -1635,33 +1614,23 @@ public class UIManager : MonoBehaviour
         {
             if (tarjetasJugador.ContainsKey("Vida"))
             {
-                StatCardAutoWidth autoWidth = tarjetasJugador["Vida"].GetComponent<StatCardAutoWidth>();
-                if (autoWidth != null)
-                    autoWidth.SetText($"Vida: {vida}/{vidaMax}");
+                SetTextoTarjeta(tarjetasJugador["Vida"], $"Vida: {vida}/{vidaMax}");
             }
             if (tarjetasJugador.ContainsKey("Escudo"))
             {
-                StatCardAutoWidth autoWidth = tarjetasJugador["Escudo"].GetComponent<StatCardAutoWidth>();
-                if (autoWidth != null)
-                    autoWidth.SetText($"Escudo: {escudo}/{escudoMax}");
+                SetTextoTarjeta(tarjetasJugador["Escudo"], $"Escudo: {escudo}/{escudoMax}");
             }
             if (tarjetasJugador.ContainsKey("Oro"))
             {
-                StatCardAutoWidth autoWidth = tarjetasJugador["Oro"].GetComponent<StatCardAutoWidth>();
-                if (autoWidth != null)
-                    autoWidth.SetText($"Oro: {oro}");
+                SetTextoTarjeta(tarjetasJugador["Oro"], $"Oro: {oro}");
             }
             if (tarjetasJugador.ContainsKey("Daño"))
             {
-                StatCardAutoWidth autoWidth = tarjetasJugador["Daño"].GetComponent<StatCardAutoWidth>();
-                if (autoWidth != null)
-                    autoWidth.SetText($"Daño: {daño}");
+                SetTextoTarjeta(tarjetasJugador["Daño"], $"Daño: {daño}");
             }
             if (tarjetasJugador.ContainsKey("Batalla"))
             {
-                StatCardAutoWidth autoWidth = tarjetasJugador["Batalla"].GetComponent<StatCardAutoWidth>();
-                if (autoWidth != null)
-                    autoWidth.SetText($"Batalla: {batalla}");
+                SetTextoTarjeta(tarjetasJugador["Batalla"], $"Batalla: {batalla}");
             }
             
             UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(panelStatsJugador.GetComponent<RectTransform>());
