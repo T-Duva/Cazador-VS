@@ -65,6 +65,14 @@ public class UIManager : MonoBehaviour
     [SerializeField] private float fallbackDpi = 96f;
     [SerializeField] private float playerBottomMargin = 0f;
     [SerializeField] private float escudoOffsetX = 30f;
+    
+    [Header("Prefabs UI Batalla")]
+    [SerializeField] private GameObject tarjetaVidaPrefab;
+    [SerializeField] private GameObject tarjetaEscudoPrefab;
+    [SerializeField] private GameObject tarjetaOroPrefab;
+    [SerializeField] private GameObject tarjetaDañoPrefab;
+    [SerializeField] private GameObject tarjetaBatallaPrefab;
+    [SerializeField] private GameObject tarjetaDañoEnemigoPrefab;
     private RectTransform panelStatsJugadorRect;
     private bool _offsetAplicado = false;
     #endregion
@@ -1323,6 +1331,45 @@ public class UIManager : MonoBehaviour
         }
     }
     
+    private GameObject CrearTarjetaStatDesdePrefab(GameObject parent, GameObject prefab, string nombre, Sprite icono, string texto)
+    {
+        if (prefab == null)
+        {
+            return CrearTarjetaStat(parent, nombre, icono, texto);
+        }
+        
+        GameObject tarjeta = Instantiate(prefab, parent.transform, false);
+        tarjeta.name = $"Tarjeta{nombre}";
+        
+        Image iconoImage = tarjeta.transform.Find("Icono")?.GetComponent<Image>();
+        if (iconoImage != null && icono != null)
+        {
+            iconoImage.sprite = icono;
+        }
+        
+        Text textoObj = tarjeta.transform.Find("Texto")?.GetComponent<Text>();
+        if (textoObj != null)
+        {
+            textoObj.text = texto;
+        }
+        
+        StatCardAutoWidth autoWidth = tarjeta.GetComponent<StatCardAutoWidth>();
+        if (autoWidth != null)
+        {
+            if (autoWidth.layoutElement == null)
+            {
+                autoWidth.layoutElement = tarjeta.GetComponent<LayoutElement>();
+            }
+            if (autoWidth.label == null && textoObj != null)
+            {
+                autoWidth.label = textoObj;
+            }
+            autoWidth.SetText(texto);
+        }
+        
+        return tarjeta;
+    }
+    
     private GameObject CrearTarjetaStat(GameObject parent, string nombre, Sprite icono, string texto)
     {
         GameObject tarjeta = new GameObject($"Tarjeta{nombre}");
@@ -1527,34 +1574,34 @@ public class UIManager : MonoBehaviour
             Sprite iconoDaño = CargarIconoHUD("espada"); // Daño = espada
             Sprite iconoBatalla = CargarIconoHUD("reloj"); // Batalla = reloj de arena
             
-            tarjetasJugador["Vida"] = CrearTarjetaStat(panelStatsJugador, "Vida", iconoVida, $"Vida: {vida}/{vidaMax}");
-            tarjetasJugador["Escudo"] = CrearTarjetaStat(panelStatsJugador, "Escudo", iconoEscudo, $"Escudo: {escudo}/{escudoMax}");
-            tarjetasJugador["Oro"] = CrearTarjetaStat(panelStatsJugador, "Oro", iconoOro, $"Oro: {oro}");
-            tarjetasJugador["Daño"] = CrearTarjetaStat(panelStatsJugador, "Daño", iconoDaño, $"Daño: {daño}");
-            tarjetasJugador["Batalla"] = CrearTarjetaStat(panelStatsJugador, "Batalla", iconoBatalla, $"Batalla: {batalla}");
+            tarjetasJugador["Vida"] = CrearTarjetaStatDesdePrefab(panelStatsJugador, tarjetaVidaPrefab, "Vida", iconoVida, $"Vida: {vida}/{vidaMax}");
+            tarjetasJugador["Escudo"] = CrearTarjetaStatDesdePrefab(panelStatsJugador, tarjetaEscudoPrefab, "Escudo", iconoEscudo, $"Escudo: {escudo}/{escudoMax}");
+            tarjetasJugador["Oro"] = CrearTarjetaStatDesdePrefab(panelStatsJugador, tarjetaOroPrefab, "Oro", iconoOro, $"Oro: {oro}");
+            tarjetasJugador["Daño"] = CrearTarjetaStatDesdePrefab(panelStatsJugador, tarjetaDañoPrefab, "Daño", iconoDaño, $"Daño: {daño}");
+            tarjetasJugador["Batalla"] = CrearTarjetaStatDesdePrefab(panelStatsJugador, tarjetaBatallaPrefab, "Batalla", iconoBatalla, $"Batalla: {batalla}");
             
             // Configurar posiciones manuales para las tarjetas (sin LayoutGroup)
-            if (tarjetasJugador.ContainsKey("Vida"))
+            if (tarjetaVidaPrefab == null && tarjetasJugador.ContainsKey("Vida"))
             {
                 RectTransform vidaRect = tarjetasJugador["Vida"].GetComponent<RectTransform>();
                 if (vidaRect != null) vidaRect.anchoredPosition = new Vector2(0f, 0f);
             }
-            if (tarjetasJugador.ContainsKey("Escudo"))
+            if (tarjetaEscudoPrefab == null && tarjetasJugador.ContainsKey("Escudo"))
             {
                 RectTransform escudoRect = tarjetasJugador["Escudo"].GetComponent<RectTransform>();
                 if (escudoRect != null) escudoRect.anchoredPosition = new Vector2(80f, 0f);
             }
-            if (tarjetasJugador.ContainsKey("Oro"))
+            if (tarjetaOroPrefab == null && tarjetasJugador.ContainsKey("Oro"))
             {
                 RectTransform oroRect = tarjetasJugador["Oro"].GetComponent<RectTransform>();
                 if (oroRect != null) oroRect.anchoredPosition = new Vector2(160f, 0f);
             }
-            if (tarjetasJugador.ContainsKey("Daño"))
+            if (tarjetaDañoPrefab == null && tarjetasJugador.ContainsKey("Daño"))
             {
                 RectTransform dañoRect = tarjetasJugador["Daño"].GetComponent<RectTransform>();
                 if (dañoRect != null) dañoRect.anchoredPosition = new Vector2(240f, 0f);
             }
-            if (tarjetasJugador.ContainsKey("Batalla"))
+            if (tarjetaBatallaPrefab == null && tarjetasJugador.ContainsKey("Batalla"))
             {
                 RectTransform batallaRect = tarjetasJugador["Batalla"].GetComponent<RectTransform>();
                 if (batallaRect != null) batallaRect.anchoredPosition = new Vector2(320f, 0f);
@@ -1654,12 +1701,12 @@ public class UIManager : MonoBehaviour
             {
                 Debug.LogWarning("No se pudo cargar el icono de daño para el enemigo");
             }
-            tarjetaDañoEnemigo = CrearTarjetaStat(panelStatsEnemigo, "DañoEnemigo", iconoDaño, $"Daño: {daño}");
+            tarjetaDañoEnemigo = CrearTarjetaStatDesdePrefab(panelStatsEnemigo, tarjetaDañoEnemigoPrefab, "DañoEnemigo", iconoDaño, $"Daño: {daño}");
             if (tarjetaDañoEnemigo != null)
             {
                 tarjetaDañoEnemigo.SetActive(true);
                 RectTransform tarjetaRect = tarjetaDañoEnemigo.GetComponent<RectTransform>();
-                if (tarjetaRect != null)
+                if (tarjetaDañoEnemigoPrefab == null && tarjetaRect != null)
                 {
                     tarjetaRect.anchorMin = new Vector2(1f, 0f);
                     tarjetaRect.anchorMax = new Vector2(1f, 0f);
@@ -1676,6 +1723,10 @@ public class UIManager : MonoBehaviour
         else
         {
             Text texto = tarjetaDañoEnemigo.transform.Find("TextoDañoEnemigo")?.GetComponent<Text>();
+            if (texto == null)
+            {
+                texto = tarjetaDañoEnemigo.transform.Find("Texto")?.GetComponent<Text>();
+            }
             if (texto != null)
             {
                 texto.text = $"Daño: {daño}";
