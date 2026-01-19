@@ -73,8 +73,16 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject tarjetaDañoPrefab;
     [SerializeField] private GameObject tarjetaBatallaPrefab;
     [SerializeField] private GameObject tarjetaDañoEnemigoPrefab;
+    
+    [Header("Animación Daño UI")]
+    [SerializeField] private float duracionAnimacionDaño = 2f;
+    [SerializeField] private float desplazamientoDaño = 40f;
+    [SerializeField] private Color colorDañoVida = new Color(1f, 0.3f, 0.3f, 1f);
+    [SerializeField] private Color colorDañoEscudo = new Color(0.4f, 0.8f, 1f, 1f);
     private RectTransform panelStatsJugadorRect;
     private bool _offsetAplicado = false;
+    private Coroutine animacionDañoJugador;
+    private Coroutine animacionDañoEnemigo;
     #endregion
     
     #region UI - Descanso
@@ -1310,6 +1318,142 @@ public class UIManager : MonoBehaviour
         }
     }
     
+    public void AnimarDañoObjetivo(bool objetivoEsEnemigo, int dañoTotal, int vidaAntes, int vidaDespues, int vidaMax,
+        int escudoAntes, int escudoDespues, int escudoMax)
+    {
+        Coroutine actual = objetivoEsEnemigo ? animacionDañoEnemigo : animacionDañoJugador;
+        if (actual != null)
+        {
+            StopCoroutine(actual);
+        }
+        
+        if (objetivoEsEnemigo)
+        {
+            animacionDañoEnemigo = StartCoroutine(AnimarDañoCoroutine(true, dañoTotal, vidaAntes, vidaDespues, vidaMax, escudoAntes, escudoDespues, escudoMax));
+        }
+        else
+        {
+            animacionDañoJugador = StartCoroutine(AnimarDañoCoroutine(false, dañoTotal, vidaAntes, vidaDespues, vidaMax, escudoAntes, escudoDespues, escudoMax));
+        }
+    }
+    
+    private IEnumerator AnimarDañoCoroutine(bool objetivoEsEnemigo, int dañoTotal, int vidaAntes, int vidaDespues, int vidaMax,
+        int escudoAntes, int escudoDespues, int escudoMax)
+    {
+        Slider vidaSlider = objetivoEsEnemigo ? pbVida2 : pbVida1;
+        Slider escudoSlider = objetivoEsEnemigo ? pbEscudo2 : pbEscudo1;
+        Text vidaLabel = objetivoEsEnemigo ? lblVida2 : lblVida1;
+        Text escudoLabel = objetivoEsEnemigo ? lblEscudo2 : lblEscudo1;
+        
+        if (vidaSlider != null)
+        {
+            vidaSlider.maxValue = vidaMax;
+            vidaSlider.value = vidaAntes;
+        }
+        if (escudoSlider != null)
+        {
+            escudoSlider.maxValue = escudoMax;
+            escudoSlider.value = escudoAntes;
+        }
+        
+        bool mostrarEnVida = vidaAntes > vidaDespues;
+        RectTransform referencia = null;
+        if (mostrarEnVida && vidaLabel != null)
+        {
+            referencia = vidaLabel.rectTransform;
+        }
+        else if (!mostrarEnVida && escudoLabel != null)
+        {
+            referencia = escudoLabel.rectTransform;
+        }
+        else if (mostrarEnVida && vidaSlider != null)
+        {
+            referencia = vidaSlider.GetComponent<RectTransform>();
+        }
+        else if (!mostrarEnVida && escudoSlider != null)
+        {
+            referencia = escudoSlider.GetComponent<RectTransform>();
+        }
+        
+        Text textoDaño = null;
+        RectTransform textoRect = null;
+        if (referencia != null && panelJuego != null)
+        {
+            textoDaño = CrearTexto("DañoFlotante", $"-{dañoTotal}", 28, mostrarEnVida ? colorDañoVida : colorDañoEscudo);
+            textoRect = textoDaño.GetComponent<RectTransform>();
+            textoRect.anchorMin = referencia.anchorMin;
+            textoRect.anchorMax = referencia.anchorMax;
+            textoRect.pivot = referencia.pivot;
+            textoRect.anchoredPosition = referencia.anchoredPosition;
+            textoRect.sizeDelta = new Vector2(120f, 40f);
+            textoDaño.transform.SetParent(panelJuego.transform, false);
+        }
+        
+        float duracion = Mathf.Max(0.01f, duracionAnimacionDaño);
+        float tiempo = 0f;
+        Vector2 posicionInicial = textoRect != null ? textoRect.anchoredPosition : Vector2.zero;
+        
+        while (tiempo < duracion)
+        {
+            float t = tiempo / duracion;
+            float vidaActual = Mathf.Lerp(vidaAntes, vidaDespues, t);
+            float escudoActual = Mathf.Lerp(escudoAntes, escudoDespues, t);
+            
+            if (vidaSlider != null)
+            {
+                vidaSlider.value = vidaActual;
+                ActualizarColorVida(vidaSlider, Mathf.RoundToInt(vidaActual), vidaMax);
+            }
+            if (escudoSlider != null)
+            {
+                escudoSlider.value = escudoActual;
+            }
+            if (vidaLabel != null)
+            {
+                vidaLabel.text = $"❤️ Vida: {Mathf.RoundToInt(vidaActual)}/{vidaMax}";
+            }
+            if (escudoLabel != null)
+            {
+                escudoLabel.text = $"🛡️ Escudo: {Mathf.RoundToInt(escudoActual)}/{escudoMax}";
+            }
+            
+            if (textoRect != null && textoDaño != null)
+            {
+                float desplazamiento = Mathf.Lerp(0f, -desplazamientoDaño, t);
+                textoRect.anchoredPosition = posicionInicial + new Vector2(0f, desplazamiento);
+                Color color = textoDaño.color;
+                color.a = Mathf.Lerp(1f, 0f, t);
+                textoDaño.color = color;
+            }
+            
+            tiempo += Time.deltaTime;
+            yield return null;
+        }
+        
+        if (vidaSlider != null)
+        {
+            vidaSlider.value = vidaDespues;
+            ActualizarColorVida(vidaSlider, vidaDespues, vidaMax);
+        }
+        if (escudoSlider != null)
+        {
+            escudoSlider.value = escudoDespues;
+        }
+        if (vidaLabel != null)
+        {
+            vidaLabel.text = $"❤️ Vida: {vidaDespues}/{vidaMax}";
+        }
+        if (escudoLabel != null)
+        {
+            escudoLabel.text = $"🛡️ Escudo: {escudoDespues}/{escudoMax}";
+        }
+        
+        if (textoDaño != null)
+        {
+            Destroy(textoDaño.gameObject);
+        }
+    }
+    
     private void ActualizarColorVida(Slider slider, int vida, int vidaMax)
     {
         if (slider.fillRect == null) return;
@@ -1966,7 +2110,6 @@ public class UIManager : MonoBehaviour
             else
             {
                 animacionAtaque.gameObject.SetActive(true);
-                MostrarTextoDaño(daño, esJugador);
             }
         }
     }
@@ -2116,11 +2259,6 @@ public class UIManager : MonoBehaviour
         }
         
         float tiempoPorFrame = 0.55f; // Velocidad de animación (0.10 segundos menos que antes)
-        
-        if (daño > 0)
-        {
-            MostrarTextoDaño(daño, esJugador);
-        }
         
         int spritesCargados = 0;
         for (int i = 0; i < cantidadFrames; i++)

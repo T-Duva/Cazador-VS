@@ -450,7 +450,12 @@ public class GameManager : MonoBehaviour
         
         if (!ataqueEnProceso) yield break; // Si se detuvo, salir
         
+        int vidaAntes = vidaJugador2;
+        int escudoAntes = escudoJugador2;
         AplicarDaño(ref escudoJugador2, ref vidaJugador2, daño);
+        int vidaDespues = vidaJugador2;
+        int escudoDespues = escudoJugador2;
+        uiManager.AnimarDañoObjetivo(true, daño, vidaAntes, vidaDespues, vidaMaximaEnemigo, escudoAntes, escudoDespues, escudoMaximoEnemigo);
         
         // Mostrar animación hurt en el enemigo
         if (daño > 0 && tipoEnemigo == "Mago")
@@ -458,7 +463,9 @@ public class GameManager : MonoBehaviour
             uiManager.MostrarAnimacionHurt(tipoEnemigo, false);
         }
         
-        ActualizarInterfaz();
+        uiManager.ActualizarInfoJugador(vidaJugador1, vidaMaximaJugador1, escudoJugador1, escudoMaximoJugador1,
+                                        OroGuardado, dañoJugador1, numeroPelea);
+        uiManager.ActualizarDañoEnemigo(dañoJugador2, nombreJugador2);
         ActualizarTextoBotonHuir();
         
         // NO llamar OcultarAnimacion aquí - la animación se oculta automáticamente al terminar
@@ -493,7 +500,17 @@ public class GameManager : MonoBehaviour
         
         if (!ataqueEnProceso) yield break; // Si se detuvo, salir
         
+        vidaAntes = vidaJugador1;
+        escudoAntes = escudoJugador1;
+        int vidaAntes = vidaJugador1;
+        int escudoAntes = escudoJugador1;
         AplicarDaño(ref escudoJugador1, ref vidaJugador1, dañoEnemigo);
+        int vidaDespues = vidaJugador1;
+        int escudoDespues = escudoJugador1;
+        uiManager.AnimarDañoObjetivo(false, dañoEnemigo, vidaAntes, vidaDespues, vidaMaximaJugador1, escudoAntes, escudoDespues, escudoMaximoJugador1);
+        vidaDespues = vidaJugador1;
+        escudoDespues = escudoJugador1;
+        uiManager.AnimarDañoObjetivo(false, dañoEnemigo, vidaAntes, vidaDespues, vidaMaximaJugador1, escudoAntes, escudoDespues, escudoMaximoJugador1);
         
         // Mostrar animación hurt en el jugador
         if (dañoEnemigo > 0 && tipoJugador == "Mago")
@@ -501,7 +518,9 @@ public class GameManager : MonoBehaviour
             uiManager.MostrarAnimacionHurt(tipoJugador, true);
         }
         
-        ActualizarInterfaz();
+        uiManager.ActualizarInfoJugador(vidaJugador1, vidaMaximaJugador1, escudoJugador1, escudoMaximoJugador1,
+                                        OroGuardado, dañoJugador1, numeroPelea);
+        uiManager.ActualizarDañoEnemigo(dañoJugador2, nombreJugador2);
         ActualizarTextoBotonHuir();
         
         // NO llamar OcultarAnimacion aquí - la animación se oculta automáticamente al terminar
@@ -674,7 +693,9 @@ public class GameManager : MonoBehaviour
             StartCoroutine(AtaqueEnemigoPorHuir());
         }
         
-        ActualizarInterfaz();
+        uiManager.ActualizarInfoJugador(vidaJugador1, vidaMaximaJugador1, escudoJugador1, escudoMaximoJugador1,
+                                        OroGuardado, dañoJugador1, numeroPelea);
+        uiManager.ActualizarDañoEnemigo(dañoJugador2, nombreJugador2);
     }
 
     private IEnumerator AtaqueEnemigoPorHuir()
