@@ -61,10 +61,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private RectTransform panelStatsJugadorRectSerialized;
     [SerializeField] private RectTransform panelHudEnemigo;
     [SerializeField] private Canvas hudCanvas;
-    [SerializeField] private float subirHudJugadorCm = 0f;
-    [SerializeField] private float fallbackDpi = 96f;
-    [SerializeField] private float playerBottomMargin = 0f;
-    [SerializeField] private float escudoOffsetX = 30f;
+    
     
     [Header("Prefabs UI Batalla")]
     [SerializeField] private GameObject tarjetaVidaPrefab;

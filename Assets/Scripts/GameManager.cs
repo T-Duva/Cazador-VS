@@ -500,17 +500,12 @@ public class GameManager : MonoBehaviour
         
         if (!ataqueEnProceso) yield break; // Si se detuvo, salir
         
-        vidaAntes = vidaJugador1;
-        escudoAntes = escudoJugador1;
-        int vidaAntes = vidaJugador1;
-        int escudoAntes = escudoJugador1;
+        int vidaAntesJugador = vidaJugador1;
+        int escudoAntesJugador = escudoJugador1;
         AplicarDaño(ref escudoJugador1, ref vidaJugador1, dañoEnemigo);
-        int vidaDespues = vidaJugador1;
-        int escudoDespues = escudoJugador1;
-        uiManager.AnimarDañoObjetivo(false, dañoEnemigo, vidaAntes, vidaDespues, vidaMaximaJugador1, escudoAntes, escudoDespues, escudoMaximoJugador1);
-        vidaDespues = vidaJugador1;
-        escudoDespues = escudoJugador1;
-        uiManager.AnimarDañoObjetivo(false, dañoEnemigo, vidaAntes, vidaDespues, vidaMaximaJugador1, escudoAntes, escudoDespues, escudoMaximoJugador1);
+        int vidaDespuesJugador = vidaJugador1;
+        int escudoDespuesJugador = escudoJugador1;
+        uiManager.AnimarDañoObjetivo(false, dañoEnemigo, vidaAntesJugador, vidaDespuesJugador, vidaMaximaJugador1, escudoAntesJugador, escudoDespuesJugador, escudoMaximoJugador1);
         
         // Mostrar animación hurt en el jugador
         if (dañoEnemigo > 0 && tipoJugador == "Mago")
