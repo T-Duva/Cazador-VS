@@ -577,16 +577,23 @@ MonoBehaviour:
   panelStatsJugadorRectSerialized: {fileID: 0}
   panelHudEnemigo: {fileID: 0}
   hudCanvas: {fileID: 0}
-  subirHudJugadorCm: 0
-  fallbackDpi: 96
-  playerBottomMargin: 0
-  escudoOffsetX: 30
   tarjetaVidaPrefab: {fileID: 461839482151239110, guid: 3aff896718ceb2b4b9e323822e36114f, type: 3}
   tarjetaEscudoPrefab: {fileID: 5353668923790008682, guid: 6b87ae5d941e4fa4091ac80046929644, type: 3}
   tarjetaOroPrefab: {fileID: 994467011687485393, guid: 56060830e7895b84a8f2f6e8e2b06c57, type: 3}
   "tarjetaDa\xF1oPrefab": {fileID: 8752559767822246834, guid: afed0b7483eadc94c8543a6abbaa8991, type: 3}
   tarjetaBatallaPrefab: {fileID: 2248982468662213328, guid: 8c42b4df1fc056f419d1811671133a7f, type: 3}
   "tarjetaDa\xF1oEnemigoPrefab": {fileID: 5706940552308731723, guid: d2f2797451fdeb1449a9375e4472c49e, type: 3}
+  "duracionAnimacionDa\xF1o": 2
+  "desplazamientoDa\xF1o": 40
+  "colorDa\xF1oVida": {r: 1, g: 0.3, b: 0.3, a: 1}
+  "colorDa\xF1oEscudo": {r: 0.4, g: 0.8, b: 1, a: 1}
+  iconoAtaque: {fileID: -4465352093126601094, guid: c493884397f67e642a731e78eaa14fae, type: 3}
+  iconoParar: {fileID: 7101595605455372354, guid: f9a74644f1c9a3c44964d63f06a5db85, type: 3}
+  iconoDefensa: {fileID: 1461869118707162932, guid: 52406a5cf0e2f154c904c3ec8c0e8768, type: 3}
+  "tama\xF1oBotonAtaque": {x: 120, y: 120}
+  "tama\xF1oBotonDefensa": {x: 120, y: 120}
+  offsetBotonAtaque: {x: -120, y: 0}
+  offsetBotonDefensa: {x: 120, y: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

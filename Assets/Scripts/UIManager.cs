@@ -21,6 +21,7 @@ public class UIManager : MonoBehaviour
     private GameObject panelJuego;
     private GameObject panelDescanso;
     private GameObject panelTienda;
+    private GameObject panelPostPelea;
     #endregion
     
     #region UI - Menu
@@ -47,7 +48,7 @@ public class UIManager : MonoBehaviour
     private Button btnHuir;
     private Button btnAutomatico;
     private Button btnManual;
-    private Button btnDetener;
+    private Button btnDefensa;
     private Text lblContadorAtaque;
     private Text lblInfoJugador;
     private Text lblInfoEnemigo;
@@ -76,6 +77,16 @@ public class UIManager : MonoBehaviour
     [SerializeField] private float desplazamientoDaño = 40f;
     [SerializeField] private Color colorDañoVida = new Color(1f, 0.3f, 0.3f, 1f);
     [SerializeField] private Color colorDañoEscudo = new Color(0.4f, 0.8f, 1f, 1f);
+    
+    [Header("Iconos Botones Batalla")]
+    [SerializeField] private Sprite iconoAtaque;
+    [SerializeField] private Sprite iconoParar;
+    [SerializeField] private Sprite iconoDefensa;
+    [SerializeField] private Sprite iconoEscudoRoto;
+    [SerializeField] private Vector2 tamañoBotonAtaque = new Vector2(120f, 120f);
+    [SerializeField] private Vector2 tamañoBotonDefensa = new Vector2(120f, 120f);
+    [SerializeField] private Vector2 offsetBotonAtaque = new Vector2(-120f, 0f);
+    [SerializeField] private Vector2 offsetBotonDefensa = new Vector2(120f, 0f);
     private RectTransform panelStatsJugadorRect;
     private bool _offsetAplicado = false;
     private Coroutine animacionDañoJugador;
@@ -83,16 +94,9 @@ public class UIManager : MonoBehaviour
     #endregion
     
     #region UI - Descanso
-    private Button btnDescansoBatalla;
-    private Button btnDescansoIrDescanso;
-    private Button btnDescansoAbandonar;
     #endregion
     
     #region UI - Tienda
-    private Button btnTiendaPocion;
-    private Button btnTiendaArmadura;
-    private Button btnTiendaVolver;
-    private Text lblOroTienda;
     #endregion
     
     #region Canvas
@@ -162,11 +166,8 @@ public class UIManager : MonoBehaviour
         panelJuego = CrearPanel("PanelJuego", new Color(0.15f, 0.15f, 0.2f, 1f));
         CrearPanelJuego();
         
-        panelDescanso = CrearPanel("PanelDescanso", new Color(0.1f, 0.15f, 0.1f, 1f));
-        CrearPanelDescanso();
-        
-        panelTienda = CrearPanel("PanelTienda", new Color(0.1f, 0.1f, 0.15f, 1f));
-        CrearPanelTienda();
+        panelPostPelea = CrearPanel("PanelPostPelea", new Color(0.1f, 0.1f, 0.15f, 1f));
+        CrearPanelPostPelea();
     }
     
     private GameObject CrearPanel(string nombre, Color color)
@@ -342,37 +343,28 @@ public class UIManager : MonoBehaviour
         lblContadorAtaque.transform.SetParent(panelJuego.transform, false);
         lblContadorAtaque.gameObject.SetActive(false);
         
-        btnAtacar = CrearBotonConColor("BtnAtaque", "⚔️ ATAQUE", 22, new Color(0.2f, 0.7f, 0.3f, 1f));
+        btnAtacar = CrearBotonConIcono("BtnAtaque", iconoAtaque, "ATAQUE");
         RectTransform ataqueRect = btnAtacar.GetComponent<RectTransform>();
         ataqueRect.anchorMin = new Vector2(0.5f, 0.15f);
         ataqueRect.anchorMax = new Vector2(0.5f, 0.15f);
-        ataqueRect.anchoredPosition = new Vector2(0, 0);
-        ataqueRect.sizeDelta = new Vector2(250, 45);
+        ataqueRect.anchoredPosition = offsetBotonAtaque;
+        ataqueRect.sizeDelta = tamañoBotonAtaque;
         btnAtacar.transform.SetParent(panelJuego.transform, false);
         btnAtacar.gameObject.SetActive(true);
         btnAtacar.onClick.AddListener(() => gameManager.BtnAtaque_Click());
         
-        btnAutomatico = CrearBotonConColor("BtnAutomatico", "🔄 AUTOMÁTICO", 20, new Color(0.2f, 0.6f, 0.8f, 1f));
-        RectTransform autoRect = btnAutomatico.GetComponent<RectTransform>();
-        autoRect.anchorMin = new Vector2(0.5f, 0.15f);
-        autoRect.anchorMax = new Vector2(0.5f, 0.15f);
-        autoRect.anchoredPosition = new Vector2(-130, 0);
-        autoRect.sizeDelta = new Vector2(220, 40);
-        btnAutomatico.transform.SetParent(panelJuego.transform, false);
-        btnAutomatico.gameObject.SetActive(false);
-        btnAutomatico.onClick.AddListener(() => gameManager.BtnAutomatico_Click());
+        btnManual = null;
+        btnAutomatico = null;
         
-        btnManual = CrearBotonConColor("BtnManual", "⚔️ MANUAL", 20, new Color(0.8f, 0.2f, 0.2f, 1f));
-        RectTransform manualRect = btnManual.GetComponent<RectTransform>();
-        manualRect.anchorMin = new Vector2(0.5f, 0.15f);
-        manualRect.anchorMax = new Vector2(0.5f, 0.15f);
-        manualRect.anchoredPosition = new Vector2(130, 0);
-        manualRect.sizeDelta = new Vector2(220, 40);
-        btnManual.transform.SetParent(panelJuego.transform, false);
-        btnManual.gameObject.SetActive(false);
-        btnManual.onClick.AddListener(() => gameManager.BtnManual_Click());
-        
-        btnDetener = btnAutomatico;
+        btnDefensa = CrearBotonConIcono("BtnDefensa", iconoDefensa, "DEFENSA");
+        RectTransform defensaRect = btnDefensa.GetComponent<RectTransform>();
+        defensaRect.anchorMin = new Vector2(0.5f, 0.15f);
+        defensaRect.anchorMax = new Vector2(0.5f, 0.15f);
+        defensaRect.anchoredPosition = offsetBotonDefensa;
+        defensaRect.sizeDelta = tamañoBotonDefensa;
+        btnDefensa.transform.SetParent(panelJuego.transform, false);
+        btnDefensa.gameObject.SetActive(true);
+        btnDefensa.onClick.AddListener(() => gameManager.BtnDefensa_Click());
         
         btnHuir = CrearBotonConColor("BtnHuir", "🏃 HUIR (50%) - 💰10", 18, new Color(0.9f, 0.7f, 0.2f, 1f));
         RectTransform huirRect = btnHuir.GetComponent<RectTransform>();
@@ -435,81 +427,39 @@ public class UIManager : MonoBehaviour
     
     private void CrearPanelDescanso()
     {
-        Text titulo = CrearTexto("TituloDescanso", "💤 DESCANSO", 36, new Color(0.5f, 0.8f, 1f, 1f));
-        titulo.rectTransform.anchorMin = new Vector2(0.5f, 0.7f);
-        titulo.rectTransform.anchorMax = new Vector2(0.5f, 0.7f);
-        titulo.rectTransform.anchoredPosition = Vector2.zero;
-        titulo.rectTransform.sizeDelta = new Vector2(300, 50);
-        titulo.transform.SetParent(panelDescanso.transform, false);
-        
-        btnDescansoBatalla = CrearBotonConColor("BtnDescansoBatalla", "⚔️ PRÓXIMA BATALLA", 20, new Color(0.2f, 0.7f, 0.3f, 1f));
-        btnDescansoBatalla.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.5f);
-        btnDescansoBatalla.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.5f);
-        btnDescansoBatalla.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, 60);
-        btnDescansoBatalla.GetComponent<RectTransform>().sizeDelta = new Vector2(250, 45);
-        btnDescansoBatalla.transform.SetParent(panelDescanso.transform, false);
-        btnDescansoBatalla.onClick.AddListener(() => gameManager.BtnDescansoBatalla_Click());
-        
-        btnDescansoIrDescanso = CrearBotonConColor("BtnDescansoIrDescanso", "🛏️ IR A DESCANSO", 20, new Color(0.3f, 0.6f, 0.8f, 1f));
-        btnDescansoIrDescanso.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.5f);
-        btnDescansoIrDescanso.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.5f);
-        btnDescansoIrDescanso.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, 0);
-        btnDescansoIrDescanso.GetComponent<RectTransform>().sizeDelta = new Vector2(250, 45);
-        btnDescansoIrDescanso.transform.SetParent(panelDescanso.transform, false);
-        btnDescansoIrDescanso.onClick.AddListener(() => gameManager.BtnDescansoIrDescanso_Click());
-        
-        btnDescansoAbandonar = CrearBotonConColor("BtnDescansoAbandonar", "🚪 ABANDONAR", 20, new Color(0.7f, 0.2f, 0.2f, 1f));
-        btnDescansoAbandonar.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.5f);
-        btnDescansoAbandonar.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.5f);
-        btnDescansoAbandonar.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, -60);
-        btnDescansoAbandonar.GetComponent<RectTransform>().sizeDelta = new Vector2(250, 45);
-        btnDescansoAbandonar.transform.SetParent(panelDescanso.transform, false);
-        btnDescansoAbandonar.onClick.AddListener(() => {
-            gameManager.ResetearJuego();
-            MostrarPanelMenu();
-        });
+        // Panel eliminado
     }
     
     private void CrearPanelTienda()
     {
-        Text titulo = CrearTexto("TituloTienda", "🏪 TIENDA", 36, new Color(1f, 0.8f, 0.2f, 1f));
-        titulo.rectTransform.anchorMin = new Vector2(0.5f, 0.85f);
-        titulo.rectTransform.anchorMax = new Vector2(0.5f, 0.85f);
+        // Panel eliminado
+    }
+    
+    private void CrearPanelPostPelea()
+    {
+        Text titulo = CrearTexto("TituloPostPelea", "MENU POST PELEA", 28, new Color(1f, 0.9f, 0.2f, 1f));
+        titulo.rectTransform.anchorMin = new Vector2(0.5f, 0.7f);
+        titulo.rectTransform.anchorMax = new Vector2(0.5f, 0.7f);
         titulo.rectTransform.anchoredPosition = Vector2.zero;
-        titulo.rectTransform.sizeDelta = new Vector2(200, 50);
-        titulo.transform.SetParent(panelTienda.transform, false);
+        titulo.rectTransform.sizeDelta = new Vector2(400, 60);
+        titulo.transform.SetParent(panelPostPelea.transform, false);
         
-        lblOroTienda = CrearTexto("LblOroTienda", "💰 Oro: 0", 24, Color.yellow);
-        lblOroTienda.rectTransform.anchorMin = new Vector2(0.5f, 0.75f);
-        lblOroTienda.rectTransform.anchorMax = new Vector2(0.5f, 0.75f);
-        lblOroTienda.rectTransform.anchoredPosition = Vector2.zero;
-        lblOroTienda.rectTransform.sizeDelta = new Vector2(200, 40);
-        lblOroTienda.transform.SetParent(panelTienda.transform, false);
+        Text info = CrearTexto("TextoPostPelea", "Pendiente de implementar", 18, Color.white);
+        info.rectTransform.anchorMin = new Vector2(0.5f, 0.55f);
+        info.rectTransform.anchorMax = new Vector2(0.5f, 0.55f);
+        info.rectTransform.anchoredPosition = Vector2.zero;
+        info.rectTransform.sizeDelta = new Vector2(400, 40);
+        info.transform.SetParent(panelPostPelea.transform, false);
         
-        btnTiendaPocion = CrearBotonConColor("BtnTiendaPocion", "🧪 POCIÓN (+50 ❤️) - 💰50", 18, new Color(0.8f, 0.3f, 0.3f, 1f));
-        btnTiendaPocion.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.6f);
-        btnTiendaPocion.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.6f);
-        btnTiendaPocion.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
-        btnTiendaPocion.GetComponent<RectTransform>().sizeDelta = new Vector2(300, 45);
-        btnTiendaPocion.transform.SetParent(panelTienda.transform, false);
-        btnTiendaPocion.onClick.AddListener(() => gameManager.BtnTiendaPocion_Click());
-        
-        btnTiendaArmadura = CrearBotonConColor("BtnTiendaArmadura", "🛡️ ARMADURA (Restaurar Escudo) - 💰75", 18, new Color(0.3f, 0.5f, 0.8f, 1f));
-        btnTiendaArmadura.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.5f);
-        btnTiendaArmadura.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.5f);
-        btnTiendaArmadura.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
-        btnTiendaArmadura.GetComponent<RectTransform>().sizeDelta = new Vector2(300, 45);
-        btnTiendaArmadura.transform.SetParent(panelTienda.transform, false);
-        btnTiendaArmadura.onClick.AddListener(() => gameManager.BtnTiendaArmadura_Click());
-        
-        btnTiendaVolver = CrearBotonConColor("BtnTiendaVolver", "⚔️ VOLVER A BATALLA", 20, new Color(0.2f, 0.7f, 0.3f, 1f));
-        btnTiendaVolver.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.3f);
-        btnTiendaVolver.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.3f);
-        btnTiendaVolver.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
-        btnTiendaVolver.GetComponent<RectTransform>().sizeDelta = new Vector2(250, 45);
-        btnTiendaVolver.transform.SetParent(panelTienda.transform, false);
-        btnTiendaVolver.onClick.AddListener(() => {
-            gameManager.BtnDescansoBatalla_Click();
+        Button btnMenu = CrearBotonConColor("BtnPostPeleaMenu", "VOLVER AL MENU", 18, new Color(0.2f, 0.7f, 0.3f, 1f));
+        btnMenu.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.4f);
+        btnMenu.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.4f);
+        btnMenu.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+        btnMenu.GetComponent<RectTransform>().sizeDelta = new Vector2(250, 45);
+        btnMenu.transform.SetParent(panelPostPelea.transform, false);
+        btnMenu.onClick.AddListener(() => {
+            gameManager.ResetearJuego();
+            MostrarPanelMenu();
         });
     }
     #endregion
@@ -531,6 +481,77 @@ public class UIManager : MonoBehaviour
         if (rect == null) rect = obj.AddComponent<RectTransform>();
         
         return text;
+    }
+    
+    private Button CrearBotonConIcono(string nombre, Sprite icono, string textoFallback)
+    {
+        GameObject obj = new GameObject(nombre);
+        Button btn = obj.AddComponent<Button>();
+        Image img = obj.AddComponent<Image>();
+        img.color = Color.white;
+        img.sprite = icono;
+        img.preserveAspect = true;
+        
+        if (icono == null && !string.IsNullOrEmpty(textoFallback))
+        {
+            Text text = CrearTexto("Text", textoFallback, 20, Color.white);
+            text.transform.SetParent(obj.transform, false);
+            RectTransform textRect = text.GetComponent<RectTransform>();
+            textRect.anchorMin = new Vector2(0.5f, 0.5f);
+            textRect.anchorMax = new Vector2(0.5f, 0.5f);
+            textRect.anchoredPosition = Vector2.zero;
+            textRect.sizeDelta = new Vector2(200f, 40f);
+        }
+        
+        return btn;
+    }
+    
+    private IEnumerator FlashBoton(Button boton)
+    {
+        Image img = boton.GetComponent<Image>();
+        if (img == null) yield break;
+        
+        Color original = img.color;
+        Vector3 escalaOriginal = boton.transform.localScale;
+        Vector3 escalaGrande = escalaOriginal * 1.08f;
+        
+        float duracion = 0.15f;
+        float t = 0f;
+        while (t < duracion)
+        {
+            float p = t / duracion;
+            boton.transform.localScale = Vector3.Lerp(escalaOriginal, escalaGrande, p);
+            img.color = Color.Lerp(original, Color.white, p);
+            t += Time.deltaTime;
+            yield return null;
+        }
+        
+        t = 0f;
+        while (t < duracion)
+        {
+            float p = t / duracion;
+            boton.transform.localScale = Vector3.Lerp(escalaGrande, escalaOriginal, p);
+            img.color = Color.Lerp(Color.white, original, p);
+            t += Time.deltaTime;
+            yield return null;
+        }
+        
+        boton.transform.localScale = escalaOriginal;
+        img.color = original;
+    }
+    
+    private IEnumerator EjecutarAccionConFeedback(Button boton, Action accion, GameObject dialog)
+    {
+        if (boton != null)
+        {
+            boton.interactable = false;
+        }
+        yield return StartCoroutine(FlashBoton(boton));
+        accion?.Invoke();
+        if (dialog != null)
+        {
+            Destroy(dialog);
+        }
     }
     
     private Button CrearBoton(string nombre, string texto, int fontSize)
@@ -1252,15 +1273,21 @@ public class UIManager : MonoBehaviour
     
     public void MostrarPanelDescanso()
     {
-        OcultarTodosLosPaneles();
-        panelDescanso.SetActive(true);
+        // Panel eliminado
     }
     
     public void MostrarPanelTienda(int oro)
     {
+        // Panel eliminado
+    }
+    
+    public void MostrarMenuPostPelea()
+    {
         OcultarTodosLosPaneles();
-        panelTienda.SetActive(true);
-        lblOroTienda.text = $"💰 Oro: {oro}";
+        if (panelPostPelea != null)
+        {
+            panelPostPelea.SetActive(true);
+        }
     }
     
     private void OcultarTodosLosPaneles()
@@ -1269,6 +1296,7 @@ public class UIManager : MonoBehaviour
         if (panelJuego != null) panelJuego.SetActive(false);
         if (panelDescanso != null) panelDescanso.SetActive(false);
         if (panelTienda != null) panelTienda.SetActive(false);
+        if (panelPostPelea != null) panelPostPelea.SetActive(false);
     }
     #endregion
     
@@ -1292,6 +1320,7 @@ public class UIManager : MonoBehaviour
             pbEscudo1.maxValue = escudoMax;
             pbEscudo1.value = escudo;
         }
+        SetDefensaDisponible(escudo > 0);
     }
     
     public void ActualizarVidaEnemigo(int vida, int vidaMax)
@@ -1443,6 +1472,11 @@ public class UIManager : MonoBehaviour
         if (escudoLabel != null)
         {
             escudoLabel.text = $"🛡️ Escudo: {escudoDespues}/{escudoMax}";
+        }
+        
+        if (!objetivoEsEnemigo)
+        {
+            SetDefensaDisponible(escudoDespues > 0);
         }
         
         if (textoDaño != null)
@@ -1870,6 +1904,51 @@ public class UIManager : MonoBehaviour
     public void SetBtnAtacarEnabled(bool enabled)
     {
         if (btnAtacar != null) btnAtacar.interactable = enabled;
+    }
+    
+    public void ActualizarBotonAtaque(bool atacando)
+    {
+        if (btnAtacar == null) return;
+        Image img = btnAtacar.GetComponent<Image>();
+        if (img != null)
+        {
+            img.sprite = atacando ? iconoParar : iconoAtaque;
+            img.preserveAspect = true;
+        }
+    }
+    
+    public void SetDefensaDisponible(bool disponible)
+    {
+        if (btnDefensa == null) return;
+        btnDefensa.interactable = disponible;
+        Image img = btnDefensa.GetComponent<Image>();
+        if (img != null)
+        {
+            if (disponible && iconoDefensa != null)
+            {
+                img.sprite = iconoDefensa;
+            }
+            else if (!disponible && iconoEscudoRoto != null)
+            {
+                img.sprite = iconoEscudoRoto;
+            }
+            img.preserveAspect = true;
+            Color c = img.color;
+            c.a = disponible ? 1f : 0.6f;
+            img.color = c;
+        }
+    }
+    
+    public void MostrarFeedbackDefensa()
+    {
+        if (btnDefensa == null) return;
+        StartCoroutine(FlashBoton(btnDefensa));
+    }
+    
+    public void MostrarFeedbackAtaque()
+    {
+        if (btnAtacar == null) return;
+        StartCoroutine(FlashBoton(btnAtacar));
     }
     
     public void ActualizarContadorAtaque(int segundos)
@@ -2901,62 +2980,83 @@ public class UIManager : MonoBehaviour
     
     public void MostrarOpcionesDespuesBatalla(int oroGanado, bool puedeRevancha, Action<string> callback)
     {
+        MostrarOpcionesDespuesBatalla(oroGanado, 0, puedeRevancha, callback);
+    }
+    
+    public void MostrarOpcionesDespuesBatalla(int oroBase, int expBase, Action<string> callback)
+    {
+        MostrarOpcionesDespuesBatalla(oroBase, expBase, true, callback);
+    }
+    
+    public void MostrarOpcionesDespuesBatalla(int oroBase, int expBase, bool puedeRevancha, Action<string> callback)
+    {
         GameObject dialog = CrearPanel("DialogoOpciones", new Color(0.1f, 0.1f, 0.15f, 0.95f));
         dialog.transform.SetParent(canvas.transform, false);
         
-        Text titulo = CrearTexto("TituloOpciones", $"🎉 ¡VICTORIA! 🎉\n💰 Oro ganado: {oroGanado}", 20, new Color(1f, 0.9f, 0.2f, 1f));
-        titulo.rectTransform.anchorMin = new Vector2(0.5f, 0.82f);
-        titulo.rectTransform.anchorMax = new Vector2(0.5f, 0.82f);
+        Text titulo = CrearTexto("TituloOpciones", "🎉 ¡VICTORIA! 🎉", 24, new Color(1f, 0.9f, 0.2f, 1f));
+        titulo.rectTransform.anchorMin = new Vector2(0.5f, 0.85f);
+        titulo.rectTransform.anchorMax = new Vector2(0.5f, 0.85f);
         titulo.rectTransform.anchoredPosition = Vector2.zero;
-        titulo.rectTransform.sizeDelta = new Vector2(400, 60);
+        titulo.rectTransform.sizeDelta = new Vector2(400, 40);
         titulo.transform.SetParent(dialog.transform, false);
         
-        Button btnSiguiente = CrearBotonConColor("BtnSiguiente", "⚔️ PRÓXIMA BATALLA", 18, new Color(0.2f, 0.7f, 0.3f, 1f));
-        btnSiguiente.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.5f);
-        btnSiguiente.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.5f);
-        btnSiguiente.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, 80);
-        btnSiguiente.GetComponent<RectTransform>().sizeDelta = new Vector2(250, 45);
-        btnSiguiente.transform.SetParent(dialog.transform, false);
-        btnSiguiente.onClick.AddListener(() => {
-            callback("Siguiente");
-            Destroy(dialog);
+        Button btnMatar = CrearBotonConColor("BtnMatar", "MATAR - Oro x1 / Exp x1", 18, new Color(0.7f, 0.2f, 0.2f, 1f));
+        btnMatar.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.6f);
+        btnMatar.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.6f);
+        btnMatar.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+        btnMatar.GetComponent<RectTransform>().sizeDelta = new Vector2(320, 45);
+        btnMatar.transform.SetParent(dialog.transform, false);
+        btnMatar.onClick.AddListener(() => {
+            StartCoroutine(EjecutarAccionConFeedback(btnMatar, () => callback("Matar"), dialog));
         });
         
+        Button btnRevancha = null;
         if (puedeRevancha)
         {
-            Button btnRevancha = CrearBotonConColor("BtnRevancha", "🔄 REVANCHA", 18, new Color(0.9f, 0.6f, 0.2f, 1f));
+            btnRevancha = CrearBotonConColor("BtnRevancha", "REVANCHA (sin escudo) - Oro x0 / Exp x2", 18, new Color(0.9f, 0.6f, 0.2f, 1f));
             btnRevancha.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.5f);
             btnRevancha.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.5f);
-            btnRevancha.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, 20);
-            btnRevancha.GetComponent<RectTransform>().sizeDelta = new Vector2(250, 45);
+            btnRevancha.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+            btnRevancha.GetComponent<RectTransform>().sizeDelta = new Vector2(360, 45);
             btnRevancha.transform.SetParent(dialog.transform, false);
             btnRevancha.onClick.AddListener(() => {
-                callback("Revancha");
-                Destroy(dialog);
+                StartCoroutine(EjecutarAccionConFeedback(btnRevancha, () => callback("Revancha"), dialog));
             });
         }
         
-        Button btnDescanso = CrearBotonConColor("BtnDescanso", "🛏️ IR A DESCANSO", 18, new Color(0.3f, 0.6f, 0.8f, 1f));
-        btnDescanso.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.5f);
-        btnDescanso.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.5f);
-        btnDescanso.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, -40);
-        btnDescanso.GetComponent<RectTransform>().sizeDelta = new Vector2(250, 45);
-        btnDescanso.transform.SetParent(dialog.transform, false);
-        btnDescanso.onClick.AddListener(() => {
-            callback("Descanso");
-            Destroy(dialog);
+        Button btnClemencia = CrearBotonConColor("BtnClemencia", "CLEMENCIA - Oro x2 / Exp x0", 18, new Color(0.2f, 0.7f, 0.3f, 1f));
+        btnClemencia.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.4f);
+        btnClemencia.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.4f);
+        btnClemencia.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+        btnClemencia.GetComponent<RectTransform>().sizeDelta = new Vector2(320, 45);
+        btnClemencia.transform.SetParent(dialog.transform, false);
+        btnClemencia.onClick.AddListener(() => {
+            StartCoroutine(EjecutarAccionConFeedback(btnClemencia, () => callback("Clemencia"), dialog));
         });
         
-        Button btnAbandonar = CrearBotonConColor("BtnAbandonar", "🚪 ABANDONAR", 18, new Color(0.7f, 0.2f, 0.2f, 1f));
-        btnAbandonar.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.5f);
-        btnAbandonar.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.5f);
-        btnAbandonar.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, -100);
-        btnAbandonar.GetComponent<RectTransform>().sizeDelta = new Vector2(250, 45);
-        btnAbandonar.transform.SetParent(dialog.transform, false);
-        btnAbandonar.onClick.AddListener(() => {
-            callback("Abandonar");
-            Destroy(dialog);
-        });
+        Text infoMatar = CrearTexto("InfoMatar", "Mata al enemigo.\nOro x1 y Exp x1", 14, Color.white);
+        infoMatar.rectTransform.anchorMin = new Vector2(0.85f, 0.6f);
+        infoMatar.rectTransform.anchorMax = new Vector2(0.85f, 0.6f);
+        infoMatar.rectTransform.anchoredPosition = Vector2.zero;
+        infoMatar.rectTransform.sizeDelta = new Vector2(240, 40);
+        infoMatar.transform.SetParent(dialog.transform, false);
+        
+        if (btnRevancha != null)
+        {
+            Text infoRevancha = CrearTexto("InfoRevancha", "El enemigo se cura.\nOro x0 y Exp x2", 14, Color.white);
+            infoRevancha.rectTransform.anchorMin = new Vector2(0.85f, 0.5f);
+            infoRevancha.rectTransform.anchorMax = new Vector2(0.85f, 0.5f);
+            infoRevancha.rectTransform.anchoredPosition = Vector2.zero;
+            infoRevancha.rectTransform.sizeDelta = new Vector2(240, 40);
+            infoRevancha.transform.SetParent(dialog.transform, false);
+        }
+        
+        Text infoClemencia = CrearTexto("InfoClemencia", "Se perdona la vida del enemigo.\nOro x2 y Exp x0", 14, Color.white);
+        infoClemencia.rectTransform.anchorMin = new Vector2(0.85f, 0.4f);
+        infoClemencia.rectTransform.anchorMax = new Vector2(0.85f, 0.4f);
+        infoClemencia.rectTransform.anchoredPosition = Vector2.zero;
+        infoClemencia.rectTransform.sizeDelta = new Vector2(240, 40);
+        infoClemencia.transform.SetParent(dialog.transform, false);
     }
     
     public void MostrarGameOver(Action callback)
@@ -3027,6 +3127,43 @@ public class UIManager : MonoBehaviour
         btnOk.GetComponent<RectTransform>().sizeDelta = new Vector2(150, 40);
         btnOk.transform.SetParent(dialog.transform, false);
         btnOk.onClick.AddListener(() => Destroy(dialog));
+    }
+    
+    public void MostrarMensajeConfirmacion(string mensaje, Action onAceptar, Action onCancelar)
+    {
+        GameObject dialog = CrearPanel("DialogoConfirmacion", new Color(0.1f, 0.1f, 0.15f, 0.95f));
+        dialog.transform.SetParent(canvas.transform, false);
+        
+        Text texto = CrearTexto("TextoConfirmacion", mensaje, 18, Color.white);
+        texto.rectTransform.anchorMin = new Vector2(0.5f, 0.6f);
+        texto.rectTransform.anchorMax = new Vector2(0.5f, 0.6f);
+        texto.rectTransform.anchoredPosition = Vector2.zero;
+        texto.rectTransform.sizeDelta = new Vector2(520, 120);
+        texto.transform.SetParent(dialog.transform, false);
+        
+        Button btnAceptar = CrearBotonConColor("BtnAceptar", "ACEPTAR", 18, new Color(0.2f, 0.7f, 0.3f, 1f));
+        RectTransform aceptarRect = btnAceptar.GetComponent<RectTransform>();
+        aceptarRect.anchorMin = new Vector2(0.35f, 0.35f);
+        aceptarRect.anchorMax = new Vector2(0.35f, 0.35f);
+        aceptarRect.anchoredPosition = Vector2.zero;
+        aceptarRect.sizeDelta = new Vector2(160, 40);
+        btnAceptar.transform.SetParent(dialog.transform, false);
+        btnAceptar.onClick.AddListener(() => {
+            Destroy(dialog);
+            onAceptar?.Invoke();
+        });
+        
+        Button btnCancelar = CrearBotonConColor("BtnCancelar", "CANCELAR", 18, new Color(0.8f, 0.2f, 0.2f, 1f));
+        RectTransform cancelarRect = btnCancelar.GetComponent<RectTransform>();
+        cancelarRect.anchorMin = new Vector2(0.65f, 0.35f);
+        cancelarRect.anchorMax = new Vector2(0.65f, 0.35f);
+        cancelarRect.anchoredPosition = Vector2.zero;
+        cancelarRect.sizeDelta = new Vector2(160, 40);
+        btnCancelar.transform.SetParent(dialog.transform, false);
+        btnCancelar.onClick.AddListener(() => {
+            Destroy(dialog);
+            onCancelar?.Invoke();
+        });
     }
     #endregion
 }

@@ -13,6 +13,7 @@ public class GameManager : MonoBehaviour
     #region Estado del juego
     // Variables del juego
     private int OroGuardado = 0;
+    private int experienciaGuardada = 0;
     private string nombreJugador1 = "";
     private string nombreJugador2 = "";
     private int vidaJugador1 = 100;
@@ -22,7 +23,6 @@ public class GameManager : MonoBehaviour
     private int escudoMaximoJugador1 = 100;
     private int dañoJugador1 = 0;
     private int dañoJugador2 = 0;
-    private bool dobleOro = false;
     private System.Random random = new System.Random();
     private int vidaInicialCPU = 0;
     private int numeroPelea = 0;
@@ -32,15 +32,21 @@ public class GameManager : MonoBehaviour
     private int vidaInicialEnemigo = 0;
     private int nivelEnemigoActual = 1;
     private bool revanchaUsada = false;
+    private int puntosSkillDisponibles = 0;
     private int vidaMaximaJugador1 = 100;
     private int vidaMaximaEnemigo = 100;
     private int escudoMaximoEnemigo = 100;
     private string tipoJugador = "";
     private int segundosRestantes = 0;
     private bool ataqueEnProceso = false;
-    private bool modoAutomatico = true; // Modo automático activado por defecto
-    private int puntosSkillDisponibles = 0;
+    private bool modoAutomatico = false; // Modo automático desactivado por defecto
+    private bool defensaPendiente = false;
+    private bool detenerSolicitado = false;
+    private bool infoDefensaMostrada = false;
+    private bool saltarProximoAtaqueJugador = false;
     private string tipoEnemigo = "";
+    private bool revanchaActiva = false;
+    private int escudoJugador1AntesRevancha = -1;
     #endregion
 
     #region Referencias UI
@@ -155,6 +161,8 @@ public class GameManager : MonoBehaviour
         golpesAcertados = 0;
         revanchaUsada = false;
         ataqueEnProceso = false;
+        revanchaActiva = false;
+        escudoJugador1AntesRevancha = -1;
         
         // Generar tipo de enemigo aleatorio en cada batalla (diferente al jugador)
         GenerarTipoEnemigoAleatorio();
@@ -174,10 +182,29 @@ public class GameManager : MonoBehaviour
         ActualizarTextoBotonHuir();
         
         // Configurar modo de ataque
-        modoAutomatico = true;
-        uiManager.MostrarBotonesAtaque(true); // Mostrar automático, ocultar manual
+        modoAutomatico = false;
+        uiManager.ActualizarBotonAtaque(false);
         
-        // No iniciar automáticamente, esperar a que el jugador presione AUTOMÁTICO
+        // No iniciar automáticamente, esperar a que el jugador presione ATAQUE
+    }
+    
+    private void IniciarRevancha()
+    {
+        numeroRounds = 0;
+        golpesAcertados = 0;
+        ataqueEnProceso = false;
+        
+        // Mantener tipo y nombre del enemigo
+        vidaJugador2 = vidaInicialEnemigo;
+        escudoJugador2 = 0;
+        escudoMaximoEnemigo = 0;
+        
+        uiManager.MostrarPanelJuego();
+        ActualizarInterfaz();
+        ActualizarTextoBotonHuir();
+        
+        modoAutomatico = false;
+        uiManager.ActualizarBotonAtaque(false);
     }
     #endregion
     
@@ -308,68 +335,40 @@ public class GameManager : MonoBehaviour
     #region Ataque - Botones / Modo
     public void BtnAtaque_Click()
     {
-        // Alternar entre mostrar/ocultar las opciones Manual/Automático
-        uiManager.ToggleOpcionesAtaque();
-    }
-    
-    public void BtnAutomatico_Click()
-    {
-        // Si el botón dice DETENER, detener el ataque
-        if (uiManager.EsBotonDetener())
+        uiManager.MostrarFeedbackAtaque();
+        if (ataqueEnProceso || modoAutomatico)
         {
-            BtnDetener_Click();
+            detenerSolicitado = true; // esperar a terminar animación
             return;
         }
         
-        // Si dice AUTOMÁTICO, iniciar ataque automático
         modoAutomatico = true;
-        
-        // Ocultar opciones y el botón principal, mostrar solo DETENER
-        uiManager.OcultarOpcionesYMostrarDetener();
-        
-        // Transformar el botón automático en DETENER y mostrarlo arriba
-        uiManager.MostrarBotonDetener();
+        detenerSolicitado = false;
+        uiManager.ActualizarBotonAtaque(true);
         IniciarAtaqueAutomatico();
     }
     
-    public void BtnDetener_Click()
+    public void BtnDefensa_Click()
     {
-        // Detener el ataque automático inmediatamente
-        ataqueEnProceso = false;
-        modoAutomatico = false;
-        
-        // Detener todas las corrutinas de ataque
-        StopAllCoroutines();
-        
-        // Limpiar el timer
-        if (timerAtaque != null)
+        if (escudoJugador1 <= 0)
         {
-            StopCoroutine(timerAtaque);
-            timerAtaque = null;
+            uiManager.MostrarMensaje("Necesitas escudo");
+            return;
+        }
+        if (!infoDefensaMostrada)
+        {
+            uiManager.MostrarMensajeConfirmacion(
+                "El ESCUDO te permite reducir 50% del daño del próximo ataque (siempre que tenga durabilidad).",
+                () => {
+                    infoDefensaMostrada = true;
+                    ActivarDefensaYAvanzarTurno();
+                },
+                () => { }
+            );
+            return;
         }
         
-        uiManager.OcultarContadorAtaque();
-        uiManager.OcultarAnimacion();
-        
-        // Volver al botón principal ATAQUE (no mostrar opciones, solo el botón principal)
-        uiManager.VolverABotonAtaque();
-    }
-    
-    public void BtnManual_Click()
-    {
-        modoAutomatico = false;
-        
-        // Detener cualquier ataque en curso
-        if (timerAtaque != null)
-        {
-            StopCoroutine(timerAtaque);
-            timerAtaque = null;
-        }
-        uiManager.OcultarContadorAtaque();
-        ataqueEnProceso = false;
-        
-        // Ocultar opciones y volver al botón principal (que ahora será ATACAR en modo manual)
-        uiManager.MostrarModoManual();
+        ActivarDefensaYAvanzarTurno();
     }
     
     private void IniciarAtaqueAutomatico()
@@ -423,6 +422,119 @@ public class GameManager : MonoBehaviour
         
         IniciarCicloAtaques();
     }
+    
+    private void DetenerAtaqueAuto()
+    {
+        ataqueEnProceso = false;
+        modoAutomatico = false;
+        
+        StopAllCoroutines();
+        
+        if (timerAtaque != null)
+        {
+            StopCoroutine(timerAtaque);
+            timerAtaque = null;
+        }
+        
+        uiManager.OcultarContadorAtaque();
+        uiManager.OcultarAnimacion();
+        uiManager.ActualizarBotonAtaque(false);
+    }
+    
+    private int AplicarDefensaSiCorresponde(int daño)
+    {
+        if (!defensaPendiente) return daño;
+        defensaPendiente = false;
+        return Mathf.CeilToInt(daño * 0.5f);
+    }
+    
+    private void ActivarDefensaYAvanzarTurno()
+    {
+        defensaPendiente = true;
+        uiManager.MostrarFeedbackDefensa();
+        
+        if (!ataqueEnProceso)
+        {
+            ataqueEnProceso = true;
+            saltarProximoAtaqueJugador = false;
+            StartCoroutine(EjecutarAtaqueEnemigoSolo());
+            return;
+        }
+        
+        saltarProximoAtaqueJugador = true;
+    }
+    
+    private IEnumerator EjecutarAtaqueEnemigoSolo()
+    {
+        // Ataque del enemigo después de 1.5 segundos
+        yield return new WaitForSeconds(1.5f);
+        
+        if (!ataqueEnProceso) yield break;
+        
+        int dañoEnemigo = random.Next(Math.Max(1, dañoJugador2 - 3), dañoJugador2 + 4);
+        dañoEnemigo = AplicarDefensaSiCorresponde(dañoEnemigo);
+        uiManager.MostrarAnimacionAtaque(tipoEnemigo, false, dañoEnemigo, nombreJugador2, nombreJugador1);
+        
+        int cantidadFramesEnemigo = tipoEnemigo == "Guerrero" ? 8 : tipoEnemigo == "Mago" ? 7 : 9;
+        float tiempoAnimacionEnemigo = (cantidadFramesEnemigo * 0.55f) + 1.5f;
+        yield return new WaitForSeconds(tiempoAnimacionEnemigo);
+        
+        if (!ataqueEnProceso) yield break;
+        
+        int vidaAntesJugador = vidaJugador1;
+        int escudoAntesJugador = escudoJugador1;
+        AplicarDaño(ref escudoJugador1, ref vidaJugador1, dañoEnemigo);
+        int vidaDespuesJugador = vidaJugador1;
+        int escudoDespuesJugador = escudoJugador1;
+        uiManager.AnimarDañoObjetivo(false, dañoEnemigo, vidaAntesJugador, vidaDespuesJugador, vidaMaximaJugador1, escudoAntesJugador, escudoDespuesJugador, escudoMaximoJugador1);
+        
+        if (dañoEnemigo > 0 && tipoJugador == "Mago")
+        {
+            uiManager.MostrarAnimacionHurt(tipoJugador, true);
+        }
+        uiManager.OcultarAnimacion();
+        
+        uiManager.ActualizarInfoJugador(vidaJugador1, vidaMaximaJugador1, escudoJugador1, escudoMaximoJugador1,
+                                        OroGuardado, dañoJugador1, numeroPelea);
+        uiManager.ActualizarDañoEnemigo(dañoJugador2, nombreJugador2);
+        ActualizarTextoBotonHuir();
+        
+        if (vidaJugador1 <= 0)
+        {
+            ataqueEnProceso = false;
+            detenerSolicitado = false;
+            if (modoAutomatico)
+            {
+                uiManager.ActualizarBotonAtaque(false);
+            }
+            ProcesarGameOver();
+            yield break;
+        }
+        
+        if (detenerSolicitado)
+        {
+            detenerSolicitado = false;
+            modoAutomatico = false;
+            ataqueEnProceso = false;
+            uiManager.ActualizarBotonAtaque(false);
+            yield break;
+        }
+        
+        if (modoAutomatico && ataqueEnProceso)
+        {
+            yield return new WaitForSeconds(1.5f);
+            if (modoAutomatico && ataqueEnProceso)
+            {
+                IniciarCicloAtaques();
+            }
+        }
+        else if (!modoAutomatico)
+        {
+            ataqueEnProceso = false;
+            uiManager.ActualizarBotonAtaque(false);
+            uiManager.SetBtnAtacarEnabled(true);
+        }
+    }
 
     private void IniciarCicloAtaques()
     {
@@ -430,6 +542,13 @@ public class GameManager : MonoBehaviour
         
         numeroRounds++;
         golpesAcertados++;
+        
+        if (saltarProximoAtaqueJugador)
+        {
+            saltarProximoAtaqueJugador = false;
+            StartCoroutine(EjecutarAtaqueEnemigoSolo());
+            return;
+        }
         
         // Ataque del jugador
         int daño = random.Next(Math.Max(1, dañoJugador1 - 3), dañoJugador1 + 4);
@@ -473,9 +592,10 @@ public class GameManager : MonoBehaviour
         if (vidaJugador2 <= 0)
         {
             ataqueEnProceso = false;
+            detenerSolicitado = false;
             if (modoAutomatico)
             {
-                uiManager.TransformarDetenerEnAutomatico();
+                uiManager.ActualizarBotonAtaque(false);
             }
             ProcesarVictoria();
             yield break;
@@ -483,85 +603,8 @@ public class GameManager : MonoBehaviour
         
         if (!ataqueEnProceso) yield break; // Si se detuvo, salir
         
-        // Ataque del enemigo después de 3 segundos
-        yield return new WaitForSeconds(1.5f);
-        
-        if (!ataqueEnProceso) yield break; // Si se detuvo, salir
-        
-        int dañoEnemigo = random.Next(Math.Max(1, dañoJugador2 - 3), dañoJugador2 + 4);
-        uiManager.MostrarAnimacionAtaque(tipoEnemigo, false, dañoEnemigo, nombreJugador2, nombreJugador1);
-        
-        // Calcular tiempo necesario para la animación completa del enemigo
-        int cantidadFramesEnemigo = tipoEnemigo == "Guerrero" ? 8 : tipoEnemigo == "Mago" ? 7 : 9; // Mago = 7, Cazador = 9
-        float tiempoAnimacionEnemigo = (cantidadFramesEnemigo * 0.55f) + 1.5f; // tiempo por frame + 1.5 segundos después
-        
-        // Esperar a que la animación termine completamente
-        yield return new WaitForSeconds(tiempoAnimacionEnemigo);
-        
-        if (!ataqueEnProceso) yield break; // Si se detuvo, salir
-        
-        int vidaAntesJugador = vidaJugador1;
-        int escudoAntesJugador = escudoJugador1;
-        AplicarDaño(ref escudoJugador1, ref vidaJugador1, dañoEnemigo);
-        int vidaDespuesJugador = vidaJugador1;
-        int escudoDespuesJugador = escudoJugador1;
-        uiManager.AnimarDañoObjetivo(false, dañoEnemigo, vidaAntesJugador, vidaDespuesJugador, vidaMaximaJugador1, escudoAntesJugador, escudoDespuesJugador, escudoMaximoJugador1);
-        
-        // Mostrar animación hurt en el jugador
-        if (dañoEnemigo > 0 && tipoJugador == "Mago")
-        {
-            uiManager.MostrarAnimacionHurt(tipoJugador, true);
-        }
-        
-        uiManager.ActualizarInfoJugador(vidaJugador1, vidaMaximaJugador1, escudoJugador1, escudoMaximoJugador1,
-                                        OroGuardado, dañoJugador1, numeroPelea);
-        uiManager.ActualizarDañoEnemigo(dañoJugador2, nombreJugador2);
-        ActualizarTextoBotonHuir();
-        
-        // NO llamar OcultarAnimacion aquí - la animación se oculta automáticamente al terminar
-        
-        if (vidaJugador1 <= 0)
-        {
-            ataqueEnProceso = false;
-            if (modoAutomatico)
-            {
-                uiManager.TransformarDetenerEnAutomatico();
-            }
-            ProcesarGameOver();
-            yield break;
-        }
-        
-        if (!ataqueEnProceso) yield break; // Si se detuvo, salir
-        
-        // Continuar ciclo solo si está en modo automático
-        if (modoAutomatico && ataqueEnProceso)
-        {
-            yield return new WaitForSeconds(1.5f);
-            if (modoAutomatico && ataqueEnProceso)
-            {
-                IniciarCicloAtaques(); // Continuar automáticamente
-            }
-        }
-        else if (!modoAutomatico)
-        {
-            // En modo manual, detener y volver al botón ATAQUE principal
-            ataqueEnProceso = false;
-            // IMPORTANTE: Resetear modoAutomatico para permitir elegir de nuevo
-            modoAutomatico = false; // Ya está en false, pero lo dejamos explícito
-            uiManager.VolverABotonAtaque();
-            // Habilitar el botón para que pueda volver a atacar o cambiar de modo
-            uiManager.SetBtnAtacarEnabled(true);
-        }
-        else
-        {
-            // Si terminó el ataque, reiniciar timer
-            if (modoAutomatico)
-            {
-                uiManager.TransformarDetenerEnAutomatico();
-                uiManager.MostrarOpcionesAtaque();
-            }
-            IniciarTimerAtaque();
-        }
+        yield return StartCoroutine(EjecutarAtaqueEnemigoSolo());
+        yield break;
     }
 
     private void IniciarTimerAtaque()
@@ -614,43 +657,40 @@ public class GameManager : MonoBehaviour
             return;
         }
         
-        // Calcular oro ganado
-        int oroGanado = (numeroPelea * golpesAcertados) + (nivelEnemigo * 2);
-        if (dobleOro) oroGanado *= 2;
-        if (oroGanado < 1) oroGanado = 1;
-        
-        OroGuardado += oroGanado;
-        dobleOro = false;
-        
-        // Verificar si hay puntos de skill
-        if (numeroPelea % 5 == 0)
+        if (revanchaActiva && escudoJugador1AntesRevancha >= 0)
         {
-            puntosSkillDisponibles += 10;
+            escudoJugador1 = escudoJugador1AntesRevancha;
+            revanchaActiva = false;
+            escudoJugador1AntesRevancha = -1;
         }
         
-        uiManager.MostrarOpcionesDespuesBatalla(oroGanado, !revanchaUsada, (string opcion) => {
-            if (opcion == "Siguiente")
+        int oroBase = (numeroPelea * golpesAcertados) + (nivelEnemigo * 2);
+        if (oroBase < 1) oroBase = 1;
+        int expBase = Mathf.Max(1, nivelEnemigo);
+        
+        uiManager.MostrarOpcionesDespuesBatalla(oroBase, expBase, !revanchaUsada, (string opcion) => {
+            if (opcion == "Matar")
             {
-                dobleOro = true;
-                IniciarNuevaBatalla();
+                OroGuardado += oroBase;
+                experienciaGuardada += expBase;
+                uiManager.MostrarMenuPostPelea();
             }
             else if (opcion == "Revancha")
             {
                 revanchaUsada = true;
+                experienciaGuardada += expBase * 2;
+                revanchaActiva = true;
+                escudoJugador1AntesRevancha = escudoJugador1;
+                escudoJugador1 = 0;
                 vidaJugador2 = vidaInicialEnemigo;
-                escudoJugador2 = 0; // Sin escudo en revancha
-                escudoMaximoEnemigo = 0; // Asegurar que el escudo máximo también sea 0
-                numeroPelea++;
-                IniciarNuevaBatalla();
+                escudoJugador2 = 0;
+                escudoMaximoEnemigo = 0;
+                IniciarRevancha();
             }
-            else if (opcion == "Descanso")
+            else if (opcion == "Clemencia")
             {
-                MostrarDescanso();
-            }
-            else if (opcion == "Abandonar")
-            {
-                ResetearJuego();
-                MostrarMenu();
+                OroGuardado += oroBase * 2;
+                uiManager.MostrarMenuPostPelea();
             }
         });
     }
@@ -679,7 +719,7 @@ public class GameManager : MonoBehaviour
         if (random.NextDouble() < probabilidad)
         {
             uiManager.MostrarMensaje("¡Lograste huir!");
-            MostrarDescanso();
+            MostrarMenu();
         }
         else
         {
@@ -698,6 +738,7 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(1f);
         
         int dañoEnemigo = random.Next(Math.Max(1, dañoJugador2 - 3), dañoJugador2 + 4);
+        dañoEnemigo = AplicarDefensaSiCorresponde(dañoEnemigo);
         uiManager.MostrarAnimacionAtaque(tipoEnemigo, false, dañoEnemigo, nombreJugador2, nombreJugador1);
         
         yield return new WaitForSeconds(1f);
@@ -764,58 +805,13 @@ public class GameManager : MonoBehaviour
     {
         uiManager.MostrarPanelMenu();
     }
-
-    private void MostrarDescanso()
-    {
-        uiManager.MostrarPanelDescanso();
-    }
-
-    public void BtnDescansoBatalla_Click()
-    {
-        IniciarNuevaBatalla();
-    }
-
-    public void BtnDescansoIrDescanso_Click()
-    {
-        vidaJugador1 = Mathf.Min(vidaJugador1 + (int)(vidaMaximaJugador1 * 0.1f), vidaMaximaJugador1);
-        ActualizarInterfaz();
-        MostrarTienda();
-    }
-
-    private void MostrarTienda()
-    {
-        uiManager.MostrarPanelTienda(OroGuardado);
-    }
-    #endregion
-
-    #region Botones - Descanso / Tienda
-    public void BtnTiendaPocion_Click()
-    {
-        if (OroGuardado >= 50)
-        {
-            OroGuardado -= 50;
-            vidaJugador1 = Mathf.Min(vidaJugador1 + 50, vidaMaximaJugador1);
-            ActualizarInterfaz();
-            uiManager.MostrarPanelTienda(OroGuardado);
-        }
-    }
-
-    public void BtnTiendaArmadura_Click()
-    {
-        if (OroGuardado >= 75)
-        {
-            OroGuardado -= 75;
-            escudoJugador1 = escudoMaximoJugador1;
-            ActualizarInterfaz();
-            uiManager.MostrarPanelTienda(OroGuardado);
-        }
-    }
     #endregion
 
     #region Reset
     public void ResetearJuego()
     {
         OroGuardado = 0;
+        experienciaGuardada = 0;
         nombreJugador1 = "";
         nombreJugador2 = "";
         vidaJugador1 = 100;
@@ -825,7 +821,7 @@ public class GameManager : MonoBehaviour
         escudoMaximoJugador1 = 100;
         dañoJugador1 = 0;
         dañoJugador2 = 0;
-        dobleOro = false;
+        // experienciaGuardada y oro se resetean con el juego
         numeroPelea = 0;
         numeroRounds = 0;
         golpesAcertados = 0;
