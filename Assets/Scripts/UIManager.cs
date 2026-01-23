@@ -52,6 +52,8 @@ public class UIManager : MonoBehaviour
     private Text lblContadorAtaque;
     private Text lblInfoJugador;
     private Text lblInfoEnemigo;
+    private Text lblClemencias;
+    private Text lblMuertes;
     private GameObject panelStatsJugador;
     private GameObject panelStatsEnemigo;
     private Text lblNombreEnemigo;
@@ -423,6 +425,22 @@ public class UIManager : MonoBehaviour
         lblInfoEnemigo.rectTransform.sizeDelta = Vector2.zero;
         lblInfoEnemigo.gameObject.SetActive(false);
         lblInfoEnemigo.transform.SetParent(panelJuego.transform, false);
+        
+        lblClemencias = CrearTexto("LblClemencias", "Clemencia: 0", 14, Color.white);
+        lblClemencias.rectTransform.anchorMin = new Vector2(0f, 1f);
+        lblClemencias.rectTransform.anchorMax = new Vector2(0f, 1f);
+        lblClemencias.rectTransform.pivot = new Vector2(0f, 1f);
+        lblClemencias.rectTransform.anchoredPosition = new Vector2(-5f, -10f);
+        lblClemencias.rectTransform.sizeDelta = new Vector2(120f, 20f);
+        lblClemencias.transform.SetParent(panelJuego.transform, false);
+        
+        lblMuertes = CrearTexto("LblMuertes", "Muertes: 0", 14, Color.white);
+        lblMuertes.rectTransform.anchorMin = new Vector2(0f, 1f);
+        lblMuertes.rectTransform.anchorMax = new Vector2(0f, 1f);
+        lblMuertes.rectTransform.pivot = new Vector2(0f, 1f);
+        lblMuertes.rectTransform.anchoredPosition = new Vector2(-5f, -28f);
+        lblMuertes.rectTransform.sizeDelta = new Vector2(120f, 20f);
+        lblMuertes.transform.SetParent(panelJuego.transform, false);
     }
     
     private void CrearPanelDescanso()
@@ -1279,6 +1297,12 @@ public class UIManager : MonoBehaviour
     public void MostrarPanelTienda(int oro)
     {
         // Panel eliminado
+    }
+    
+    public void ActualizarContadoresPostBatalla(int clemencias, int muertes)
+    {
+        if (lblClemencias != null) lblClemencias.text = $"Clemencia: {clemencias}";
+        if (lblMuertes != null) lblMuertes.text = $"Muertes: {muertes}";
     }
     
     public void MostrarMenuPostPelea()

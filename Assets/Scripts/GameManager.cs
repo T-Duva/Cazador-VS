@@ -14,6 +14,8 @@ public class GameManager : MonoBehaviour
     // Variables del juego
     private int OroGuardado = 0;
     private int experienciaGuardada = 0;
+    private int contadorClemencias = 0;
+    private int contadorMuertes = 0;
     private string nombreJugador1 = "";
     private string nombreJugador2 = "";
     private int vidaJugador1 = 100;
@@ -180,6 +182,7 @@ public class GameManager : MonoBehaviour
         uiManager.MostrarPanelJuego();
         ActualizarInterfaz();
         ActualizarTextoBotonHuir();
+        uiManager.ActualizarContadoresPostBatalla(contadorClemencias, contadorMuertes);
         
         // Configurar modo de ataque
         modoAutomatico = false;
@@ -673,6 +676,8 @@ public class GameManager : MonoBehaviour
             {
                 OroGuardado += oroBase;
                 experienciaGuardada += expBase;
+                contadorMuertes++;
+                uiManager.ActualizarContadoresPostBatalla(contadorClemencias, contadorMuertes);
                 uiManager.MostrarMenuPostPelea();
             }
             else if (opcion == "Revancha")
@@ -690,6 +695,8 @@ public class GameManager : MonoBehaviour
             else if (opcion == "Clemencia")
             {
                 OroGuardado += oroBase * 2;
+                contadorClemencias++;
+                uiManager.ActualizarContadoresPostBatalla(contadorClemencias, contadorMuertes);
                 uiManager.MostrarMenuPostPelea();
             }
         });
@@ -812,6 +819,8 @@ public class GameManager : MonoBehaviour
     {
         OroGuardado = 0;
         experienciaGuardada = 0;
+        contadorClemencias = 0;
+        contadorMuertes = 0;
         nombreJugador1 = "";
         nombreJugador2 = "";
         vidaJugador1 = 100;
