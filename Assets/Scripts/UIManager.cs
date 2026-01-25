@@ -97,8 +97,8 @@ public class UIManager : MonoBehaviour
     [Header("Spritesheet Guerrero Ataque")]
     [SerializeField] private Sprite guerreroAtaqueSheet;
     [SerializeField] private Vector2Int guerreroCellSize = new Vector2Int(256, 256);
-    [SerializeField] private int[] guerreroIdleFrames = new int[] { 0, 1, 2, 3, 4 };
-    [SerializeField] private int[] guerreroRunRightFrames = new int[] { 5, 6, 7, 8 };
+    [SerializeField] private int[] guerreroIdleFrames = new int[] { 0, 1, 4, 3, 2 };
+    [SerializeField] private int[] guerreroRunRightFrames = new int[] { 5, 7, 8 };
     [SerializeField] private int[] guerreroAttackFrames = new int[] { 9, 10, 11, 12 };
     [SerializeField] private int[] guerreroRunLeftFrames = new int[] { 13, 14, 15, 16 };
     [SerializeField] private float guerreroIdleFrameTime = 0.2f;
@@ -108,6 +108,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private bool guerreroQuitarBlanco = true;
     [SerializeField] private float guerreroUmbralBlanco = 0.92f;
     private Texture2D guerreroSheetProcesado;
+    private bool guerreroAtaqueEnCurso = false;
     private RectTransform panelStatsJugadorRect;
     private bool _offsetAplicado = false;
     private Coroutine animacionDañoJugador;
@@ -2344,12 +2345,18 @@ public class UIManager : MonoBehaviour
         if (animacionAtaque != null)
         {
             animacionAtaque.gameObject.SetActive(false);
-            DetenerAnimacionesIdle();
-            if (corrutinaAnimacion != null)
+            if (tipo == "Guerrero" && esJugador && guerreroAtaqueSheet != null)
             {
-                StopCoroutine(corrutinaAnimacion);
+                if (guerreroAtaqueEnCurso) return;
+                guerreroAtaqueEnCurso = true;
+                DetenerAnimacionesIdle();
+                if (corrutinaAnimacion != null)
+                {
+                    StopCoroutine(corrutinaAnimacion);
+                }
+                corrutinaAnimacion = StartCoroutine(ReproducirAtaqueGuerreroCompleto(daño));
+                return;
             }
-            corrutinaAnimacion = StartCoroutine(ReproducirAtaquePersonaje(tipo, esJugador));
         }
     }
     
@@ -2585,7 +2592,7 @@ public class UIManager : MonoBehaviour
         }
     }
     
-    private IEnumerator ReproducirAtaqueGuerreroSheet()
+    private IEnumerator ReproducirAtaqueGuerreroCompleto(int daño)
     {
         if (imgJugador == null) yield break;
         if (!imgJugador.gameObject.activeInHierarchy)
@@ -2608,44 +2615,27 @@ public class UIManager : MonoBehaviour
         Sprite[] attack = ObtenerSpritesGuerrero(guerreroAttackFrames);
         Sprite[] runLeft = ObtenerSpritesGuerrero(guerreroRunLeftFrames);
         
-        int runRightCount = Mathf.Max(1, runRight.Length);
-        for (int i = 0; i < runRightCount; i++)
-        {
-            float t = runRightCount == 1 ? 1f : (float)i / (runRightCount - 1);
-            jugadorRect.anchoredPosition = Vector2.Lerp(inicio, objetivo, t);
-            if (i < runRight.Length && runRight[i] != null)
-            {
-                imgJugador.sprite = runRight[i];
-                imgJugador.color = Color.white;
-            }
-            yield return new WaitForSeconds(guerreroRunFrameTime);
-        }
+        yield return StartCoroutine(MoverConFrames(imgJugador, inicio, objetivo, runRight, guerreroRunFrameTime));
         
         for (int i = 0; i < attack.Length; i++)
         {
             if (attack[i] != null)
             {
-                imgJugador.sprite = attack[i];
-                imgJugador.color = Color.white;
+                ApplySpriteToImage(imgJugador, attack[i]);
             }
             yield return new WaitForSeconds(guerreroAttackFrameTime);
         }
         
-        int runLeftCount = Mathf.Max(1, runLeft.Length);
-        for (int i = 0; i < runLeftCount; i++)
+        if (gameManager != null)
         {
-            float t = runLeftCount == 1 ? 1f : (float)i / (runLeftCount - 1);
-            jugadorRect.anchoredPosition = Vector2.Lerp(objetivo, inicio, t);
-            if (i < runLeft.Length && runLeft[i] != null)
-            {
-                imgJugador.sprite = runLeft[i];
-                imgJugador.color = Color.white;
-            }
-            yield return new WaitForSeconds(guerreroRunFrameTime);
+            gameManager.IniciarDañoEnemigoDesdeUI(daño);
         }
+        
+        yield return StartCoroutine(MoverConFrames(imgJugador, objetivo, inicio, runLeft, guerreroRunFrameTime));
         
         jugadorRect.anchoredPosition = inicio;
         IniciarAnimacionIdle("Guerrero", true);
+        guerreroAtaqueEnCurso = false;
     }
     
     private IEnumerator ReproducirAtaquePersonaje(string tipo, bool esJugador)
@@ -2717,6 +2707,28 @@ public class UIManager : MonoBehaviour
         imagen.sprite = sprite;
         imagen.color = Color.white;
         imagen.preserveAspect = true;
+    }
+
+    private IEnumerator MoverConFrames(Image imagen, Vector2 inicio, Vector2 fin, Sprite[] frames, float frameTime)
+    {
+        if (imagen == null) yield break;
+        int frameCount = Mathf.Max(1, frames.Length);
+        float total = frameCount * frameTime;
+        float tiempo = 0f;
+        int frameIndex = 0;
+        while (tiempo < total)
+        {
+            float t = total <= 0f ? 1f : Mathf.Clamp01(tiempo / total);
+            imagen.rectTransform.anchoredPosition = Vector2.Lerp(inicio, fin, t);
+            if (frameIndex < frames.Length && frames[frameIndex] != null)
+            {
+                ApplySpriteToImage(imagen, frames[frameIndex]);
+            }
+            frameIndex = (frameIndex + 1) % frameCount;
+            tiempo += frameTime;
+            yield return new WaitForSeconds(frameTime);
+        }
+        imagen.rectTransform.anchoredPosition = fin;
     }
     
     private Sprite[] ObtenerSpritesRun(string tipo, bool haciaDerecha)

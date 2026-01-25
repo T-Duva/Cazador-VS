@@ -557,6 +557,10 @@ public class GameManager : MonoBehaviour
         int daño = random.Next(Math.Max(1, dañoJugador1 - 3), dañoJugador1 + 4);
         
         uiManager.MostrarAnimacionAtaque(tipoJugador, true, daño, nombreJugador1, nombreJugador2);
+        if (tipoJugador == "Guerrero")
+        {
+            return;
+        }
         
         StartCoroutine(EsperarYAplicarDañoJugador(daño));
     }
@@ -571,7 +575,19 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(tiempoAnimacion);
         
         if (!ataqueEnProceso) yield break; // Si se detuvo, salir
-        
+        yield return StartCoroutine(ContinuarDespuesDañoJugador(daño));
+        yield break;
+    }
+
+    public void IniciarDañoEnemigoDesdeUI(int daño)
+    {
+        if (!ataqueEnProceso) return;
+        StartCoroutine(ContinuarDespuesDañoJugador(daño));
+    }
+
+    private IEnumerator ContinuarDespuesDañoJugador(int daño)
+    {
+        if (!ataqueEnProceso) yield break;
         int vidaAntes = vidaJugador2;
         int escudoAntes = escudoJugador2;
         AplicarDaño(ref escudoJugador2, ref vidaJugador2, daño);
@@ -579,18 +595,16 @@ public class GameManager : MonoBehaviour
         int escudoDespues = escudoJugador2;
         uiManager.AnimarDañoObjetivo(true, daño, vidaAntes, vidaDespues, vidaMaximaEnemigo, escudoAntes, escudoDespues, escudoMaximoEnemigo);
         
-        // Mostrar animación hurt en el enemigo
         if (daño > 0 && tipoEnemigo == "Mago")
         {
             uiManager.MostrarAnimacionHurt(tipoEnemigo, false);
         }
+        uiManager.OcultarAnimacion();
         
         uiManager.ActualizarInfoJugador(vidaJugador1, vidaMaximaJugador1, escudoJugador1, escudoMaximoJugador1,
                                         OroGuardado, dañoJugador1, numeroPelea);
         uiManager.ActualizarDañoEnemigo(dañoJugador2, nombreJugador2);
         ActualizarTextoBotonHuir();
-        
-        // NO llamar OcultarAnimacion aquí - la animación se oculta automáticamente al terminar
         
         if (vidaJugador2 <= 0)
         {
@@ -604,7 +618,11 @@ public class GameManager : MonoBehaviour
             yield break;
         }
         
-        if (!ataqueEnProceso) yield break; // Si se detuvo, salir
+        if (!ataqueEnProceso) yield break;
+        
+        yield return new WaitForSeconds(1.5f);
+        
+        if (!ataqueEnProceso) yield break;
         
         yield return StartCoroutine(EjecutarAtaqueEnemigoSolo());
         yield break;
