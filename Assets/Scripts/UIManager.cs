@@ -22,6 +22,10 @@ public class UIManager : MonoBehaviour
     private GameObject panelDescanso;
     private GameObject panelTienda;
     private GameObject panelPostPelea;
+    private GameObject panelMapa;
+    private GameObject panelCiudad;
+    private GameObject panelMorada;
+    private GameObject panelTiendaCiudad;
     #endregion
     
     #region UI - Menu
@@ -89,6 +93,21 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Vector2 tamañoBotonDefensa = new Vector2(120f, 120f);
     [SerializeField] private Vector2 offsetBotonAtaque = new Vector2(-120f, 0f);
     [SerializeField] private Vector2 offsetBotonDefensa = new Vector2(120f, 0f);
+    
+    [Header("Spritesheet Guerrero Ataque")]
+    [SerializeField] private Sprite guerreroAtaqueSheet;
+    [SerializeField] private Vector2Int guerreroCellSize = new Vector2Int(256, 256);
+    [SerializeField] private int[] guerreroIdleFrames = new int[] { 0, 1, 2, 3, 4 };
+    [SerializeField] private int[] guerreroRunRightFrames = new int[] { 5, 6, 7, 8 };
+    [SerializeField] private int[] guerreroAttackFrames = new int[] { 9, 10, 11, 12 };
+    [SerializeField] private int[] guerreroRunLeftFrames = new int[] { 13, 14, 15, 16 };
+    [SerializeField] private float guerreroIdleFrameTime = 0.2f;
+    [SerializeField] private float guerreroRunFrameTime = 0.08f;
+    [SerializeField] private float guerreroAttackFrameTime = 0.1f;
+    [SerializeField] private float guerreroPixelsPerUnit = 100f;
+    [SerializeField] private bool guerreroQuitarBlanco = true;
+    [SerializeField] private float guerreroUmbralBlanco = 0.92f;
+    private Texture2D guerreroSheetProcesado;
     private RectTransform panelStatsJugadorRect;
     private bool _offsetAplicado = false;
     private Coroutine animacionDañoJugador;
@@ -170,6 +189,18 @@ public class UIManager : MonoBehaviour
         
         panelPostPelea = CrearPanel("PanelPostPelea", new Color(0.1f, 0.1f, 0.15f, 1f));
         CrearPanelPostPelea();
+        
+        panelMapa = CrearPanel("PanelMapa", new Color(0.12f, 0.12f, 0.2f, 1f));
+        CrearPanelMapa();
+        
+        panelCiudad = CrearPanel("PanelCiudad", new Color(0.12f, 0.12f, 0.2f, 1f));
+        CrearPanelCiudad();
+        
+        panelMorada = CrearPanel("PanelMorada", new Color(0.12f, 0.12f, 0.2f, 1f));
+        CrearPanelMorada();
+        
+        panelTiendaCiudad = CrearPanel("PanelTiendaCiudad", new Color(0.12f, 0.12f, 0.2f, 1f));
+        CrearPanelTiendaCiudad();
     }
     
     private GameObject CrearPanel(string nombre, Color color)
@@ -469,15 +500,124 @@ public class UIManager : MonoBehaviour
         info.rectTransform.sizeDelta = new Vector2(400, 40);
         info.transform.SetParent(panelPostPelea.transform, false);
         
-        Button btnMenu = CrearBotonConColor("BtnPostPeleaMenu", "VOLVER AL MENU", 18, new Color(0.2f, 0.7f, 0.3f, 1f));
-        btnMenu.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.4f);
-        btnMenu.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.4f);
-        btnMenu.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
-        btnMenu.GetComponent<RectTransform>().sizeDelta = new Vector2(250, 45);
-        btnMenu.transform.SetParent(panelPostPelea.transform, false);
-        btnMenu.onClick.AddListener(() => {
-            gameManager.ResetearJuego();
-            MostrarPanelMenu();
+        Button btnAvanzar = CrearBotonConColor("BtnPostPeleaAvanzar", "AVANZAR", 18, new Color(0.2f, 0.7f, 0.3f, 1f));
+        btnAvanzar.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.45f);
+        btnAvanzar.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.45f);
+        btnAvanzar.GetComponent<RectTransform>().anchoredPosition = new Vector2(-80, 0);
+        btnAvanzar.GetComponent<RectTransform>().sizeDelta = new Vector2(160, 40);
+        btnAvanzar.transform.SetParent(panelPostPelea.transform, false);
+        btnAvanzar.onClick.AddListener(() => {
+            MostrarMapa();
+        });
+        
+        Button btnCiudad = CrearBotonConColor("BtnPostPeleaCiudad", "CIUDAD", 18, new Color(0.3f, 0.6f, 0.8f, 1f));
+        btnCiudad.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.45f);
+        btnCiudad.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.45f);
+        btnCiudad.GetComponent<RectTransform>().anchoredPosition = new Vector2(80, 0);
+        btnCiudad.GetComponent<RectTransform>().sizeDelta = new Vector2(160, 40);
+        btnCiudad.transform.SetParent(panelPostPelea.transform, false);
+        btnCiudad.onClick.AddListener(() => {
+            MostrarCiudad();
+        });
+    }
+    
+    private void CrearPanelMapa()
+    {
+        Text titulo = CrearTexto("TituloMapa", "MAPA", 28, new Color(1f, 0.9f, 0.2f, 1f));
+        titulo.rectTransform.anchorMin = new Vector2(0.5f, 0.7f);
+        titulo.rectTransform.anchorMax = new Vector2(0.5f, 0.7f);
+        titulo.rectTransform.anchoredPosition = Vector2.zero;
+        titulo.rectTransform.sizeDelta = new Vector2(300, 40);
+        titulo.transform.SetParent(panelMapa.transform, false);
+        
+        Button btnCiudad = CrearBotonConColor("BtnMapaCiudad", "IR A CIUDAD", 18, new Color(0.3f, 0.6f, 0.8f, 1f));
+        btnCiudad.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.45f);
+        btnCiudad.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.45f);
+        btnCiudad.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+        btnCiudad.GetComponent<RectTransform>().sizeDelta = new Vector2(200, 40);
+        btnCiudad.transform.SetParent(panelMapa.transform, false);
+        btnCiudad.onClick.AddListener(() => {
+            MostrarCiudad();
+        });
+    }
+    
+    private void CrearPanelCiudad()
+    {
+        Text titulo = CrearTexto("TituloCiudad", "CIUDAD", 28, new Color(1f, 0.9f, 0.2f, 1f));
+        titulo.rectTransform.anchorMin = new Vector2(0.5f, 0.8f);
+        titulo.rectTransform.anchorMax = new Vector2(0.5f, 0.8f);
+        titulo.rectTransform.anchoredPosition = Vector2.zero;
+        titulo.rectTransform.sizeDelta = new Vector2(300, 40);
+        titulo.transform.SetParent(panelCiudad.transform, false);
+        
+        Button btnMorada = CrearBotonConColor("BtnCiudadMorada", "MORADA", 18, new Color(0.2f, 0.7f, 0.3f, 1f));
+        btnMorada.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.6f);
+        btnMorada.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.6f);
+        btnMorada.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+        btnMorada.GetComponent<RectTransform>().sizeDelta = new Vector2(200, 40);
+        btnMorada.transform.SetParent(panelCiudad.transform, false);
+        btnMorada.onClick.AddListener(() => {
+            MostrarMorada();
+        });
+        
+        Button btnTienda = CrearBotonConColor("BtnCiudadTienda", "TIENDA", 18, new Color(0.9f, 0.6f, 0.2f, 1f));
+        btnTienda.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.5f);
+        btnTienda.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.5f);
+        btnTienda.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+        btnTienda.GetComponent<RectTransform>().sizeDelta = new Vector2(200, 40);
+        btnTienda.transform.SetParent(panelCiudad.transform, false);
+        btnTienda.onClick.AddListener(() => {
+            MostrarTiendaCiudad();
+        });
+        
+        Button btnSalir = CrearBotonConColor("BtnCiudadSalir", "SALIR DE LA CIUDAD", 18, new Color(0.7f, 0.2f, 0.2f, 1f));
+        btnSalir.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.35f);
+        btnSalir.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.35f);
+        btnSalir.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+        btnSalir.GetComponent<RectTransform>().sizeDelta = new Vector2(240, 40);
+        btnSalir.transform.SetParent(panelCiudad.transform, false);
+        btnSalir.onClick.AddListener(() => {
+            MostrarMapa();
+        });
+    }
+    
+    private void CrearPanelMorada()
+    {
+        Text titulo = CrearTexto("TituloMorada", "MORADA", 28, new Color(1f, 0.9f, 0.2f, 1f));
+        titulo.rectTransform.anchorMin = new Vector2(0.5f, 0.7f);
+        titulo.rectTransform.anchorMax = new Vector2(0.5f, 0.7f);
+        titulo.rectTransform.anchoredPosition = Vector2.zero;
+        titulo.rectTransform.sizeDelta = new Vector2(300, 40);
+        titulo.transform.SetParent(panelMorada.transform, false);
+        
+        Button btnVolver = CrearBotonConColor("BtnMoradaVolver", "VOLVER A LA CIUDAD", 18, new Color(0.3f, 0.6f, 0.8f, 1f));
+        btnVolver.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.45f);
+        btnVolver.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.45f);
+        btnVolver.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+        btnVolver.GetComponent<RectTransform>().sizeDelta = new Vector2(240, 40);
+        btnVolver.transform.SetParent(panelMorada.transform, false);
+        btnVolver.onClick.AddListener(() => {
+            MostrarCiudad();
+        });
+    }
+    
+    private void CrearPanelTiendaCiudad()
+    {
+        Text titulo = CrearTexto("TituloTiendaCiudad", "TIENDA", 28, new Color(1f, 0.9f, 0.2f, 1f));
+        titulo.rectTransform.anchorMin = new Vector2(0.5f, 0.7f);
+        titulo.rectTransform.anchorMax = new Vector2(0.5f, 0.7f);
+        titulo.rectTransform.anchoredPosition = Vector2.zero;
+        titulo.rectTransform.sizeDelta = new Vector2(300, 40);
+        titulo.transform.SetParent(panelTiendaCiudad.transform, false);
+        
+        Button btnVolver = CrearBotonConColor("BtnTiendaVolver", "VOLVER A LA CIUDAD", 18, new Color(0.3f, 0.6f, 0.8f, 1f));
+        btnVolver.GetComponent<RectTransform>().anchorMin = new Vector2(0.5f, 0.45f);
+        btnVolver.GetComponent<RectTransform>().anchorMax = new Vector2(0.5f, 0.45f);
+        btnVolver.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+        btnVolver.GetComponent<RectTransform>().sizeDelta = new Vector2(240, 40);
+        btnVolver.transform.SetParent(panelTiendaCiudad.transform, false);
+        btnVolver.onClick.AddListener(() => {
+            MostrarCiudad();
         });
     }
     #endregion
@@ -1314,13 +1454,39 @@ public class UIManager : MonoBehaviour
         }
     }
     
+    public void MostrarMapa()
+    {
+        OcultarTodosLosPaneles();
+        if (panelMapa != null) panelMapa.SetActive(true);
+    }
+    
+    public void MostrarCiudad()
+    {
+        OcultarTodosLosPaneles();
+        if (panelCiudad != null) panelCiudad.SetActive(true);
+    }
+    
+    public void MostrarMorada()
+    {
+        OcultarTodosLosPaneles();
+        if (panelMorada != null) panelMorada.SetActive(true);
+    }
+    
+    public void MostrarTiendaCiudad()
+    {
+        OcultarTodosLosPaneles();
+        if (panelTiendaCiudad != null) panelTiendaCiudad.SetActive(true);
+    }
+    
     private void OcultarTodosLosPaneles()
     {
         if (panelMenu != null) panelMenu.SetActive(false);
         if (panelJuego != null) panelJuego.SetActive(false);
-        if (panelDescanso != null) panelDescanso.SetActive(false);
-        if (panelTienda != null) panelTienda.SetActive(false);
         if (panelPostPelea != null) panelPostPelea.SetActive(false);
+        if (panelMapa != null) panelMapa.SetActive(false);
+        if (panelCiudad != null) panelCiudad.SetActive(false);
+        if (panelMorada != null) panelMorada.SetActive(false);
+        if (panelTiendaCiudad != null) panelTiendaCiudad.SetActive(false);
     }
     #endregion
     
@@ -2177,40 +2343,13 @@ public class UIManager : MonoBehaviour
     {
         if (animacionAtaque != null)
         {
-            int cantidadFrames = 0;
-            string carpeta = "";
-            string animacion = "attack"; // Usar la nueva estructura de carpetas
-            
-            if (tipo == "Guerrero")
+            animacionAtaque.gameObject.SetActive(false);
+            DetenerAnimacionesIdle();
+            if (corrutinaAnimacion != null)
             {
-                cantidadFrames = 8;
-                carpeta = "Guerrero";
+                StopCoroutine(corrutinaAnimacion);
             }
-            else if (tipo == "Mago")
-            {
-                cantidadFrames = 7; // 7 frames para attack del mago
-                carpeta = "Mago";
-            }
-            else if (tipo == "Cazador")
-            {
-                cantidadFrames = 9;
-                carpeta = "Cazador";
-            }
-            
-            if (cantidadFrames > 0)
-            {
-                DetenerAnimacionesIdle();
-                
-                if (corrutinaAnimacion != null)
-                {
-                    StopCoroutine(corrutinaAnimacion);
-                }
-                corrutinaAnimacion = StartCoroutine(ReproducirAnimacion(carpeta, animacion, cantidadFrames, daño, esJugador));
-            }
-            else
-            {
-                animacionAtaque.gameObject.SetActive(true);
-            }
+            corrutinaAnimacion = StartCoroutine(ReproducirAtaquePersonaje(tipo, esJugador));
         }
     }
     
@@ -2218,33 +2357,34 @@ public class UIManager : MonoBehaviour
     {
         if (animacionAtaque != null)
         {
-            int cantidadFrames = 2; // 2 frames para hurt
-            string carpeta = "";
-            string animacion = "hurt";
-            
-            if (tipo == "Mago")
-            {
-                carpeta = "Mago";
-            }
-            else
-            {
-                MostrarAnimacionAtaque(tipo, esJugador, 0, "", "");
-                return;
-            }
-            
-            DetenerAnimacionesIdle();
-            
-            if (corrutinaAnimacion != null)
-            {
-                StopCoroutine(corrutinaAnimacion);
-            }
-            corrutinaAnimacion = StartCoroutine(ReproducirAnimacion(carpeta, animacion, cantidadFrames, 0, esJugador, false));
+            animacionAtaque.gameObject.SetActive(false);
         }
     }
     
     public void IniciarAnimacionIdle(string tipo, bool esJugador)
     {
         if (animacionAtaque == null) return;
+        
+        if (tipo == "Guerrero" && guerreroAtaqueSheet != null)
+        {
+            if (esJugador)
+            {
+                if (corrutinaIdleJugador != null)
+                {
+                    StopCoroutine(corrutinaIdleJugador);
+                }
+                corrutinaIdleJugador = StartCoroutine(ReproducirIdleGuerreroSheet(true));
+            }
+            else
+            {
+                if (corrutinaIdleEnemigo != null)
+                {
+                    StopCoroutine(corrutinaIdleEnemigo);
+                }
+                corrutinaIdleEnemigo = StartCoroutine(ReproducirIdleGuerreroSheet(false));
+            }
+            return;
+        }
         
         int cantidadFrames = 0;
         string carpeta = "";
@@ -2411,6 +2551,288 @@ public class UIManager : MonoBehaviour
                 IniciarAnimacionIdle(tipoEnemigo, false);
             }
         }
+    }
+
+    private IEnumerator ReproducirIdleGuerreroSheet(bool esJugador)
+    {
+        Image imagenObjetivo = esJugador ? imgJugador : imgEnemigo;
+        if (imagenObjetivo == null) yield break;
+        if (!imagenObjetivo.gameObject.activeInHierarchy)
+        {
+            imagenObjetivo.gameObject.SetActive(true);
+        }
+        imagenObjetivo.color = Color.white;
+        imagenObjetivo.preserveAspect = true;
+        
+        Sprite[] sprites = ObtenerSpritesGuerrero(guerreroIdleFrames);
+        if (sprites.Length == 0) yield break;
+        
+        while (true)
+        {
+            for (int i = 0; i < sprites.Length; i++)
+            {
+                if (imagenObjetivo == null || !imagenObjetivo.gameObject.activeInHierarchy)
+                {
+                    yield break;
+                }
+                if (sprites[i] != null)
+                {
+                    imagenObjetivo.sprite = sprites[i];
+                    imagenObjetivo.color = Color.white;
+                }
+                yield return new WaitForSeconds(guerreroIdleFrameTime);
+            }
+        }
+    }
+    
+    private IEnumerator ReproducirAtaqueGuerreroSheet()
+    {
+        if (imgJugador == null) yield break;
+        if (!imgJugador.gameObject.activeInHierarchy)
+        {
+            imgJugador.gameObject.SetActive(true);
+        }
+        imgJugador.color = Color.white;
+        imgJugador.preserveAspect = true;
+        
+        RectTransform jugadorRect = imgJugador.rectTransform;
+        Vector2 inicio = jugadorRect.anchoredPosition;
+        Vector2 objetivo = inicio + new Vector2(260f, 0f);
+        if (imgEnemigo != null)
+        {
+            Vector2 enemigoPos = imgEnemigo.rectTransform.anchoredPosition;
+            objetivo = new Vector2(enemigoPos.x - 150f, inicio.y);
+        }
+        
+        Sprite[] runRight = ObtenerSpritesGuerrero(guerreroRunRightFrames);
+        Sprite[] attack = ObtenerSpritesGuerrero(guerreroAttackFrames);
+        Sprite[] runLeft = ObtenerSpritesGuerrero(guerreroRunLeftFrames);
+        
+        int runRightCount = Mathf.Max(1, runRight.Length);
+        for (int i = 0; i < runRightCount; i++)
+        {
+            float t = runRightCount == 1 ? 1f : (float)i / (runRightCount - 1);
+            jugadorRect.anchoredPosition = Vector2.Lerp(inicio, objetivo, t);
+            if (i < runRight.Length && runRight[i] != null)
+            {
+                imgJugador.sprite = runRight[i];
+                imgJugador.color = Color.white;
+            }
+            yield return new WaitForSeconds(guerreroRunFrameTime);
+        }
+        
+        for (int i = 0; i < attack.Length; i++)
+        {
+            if (attack[i] != null)
+            {
+                imgJugador.sprite = attack[i];
+                imgJugador.color = Color.white;
+            }
+            yield return new WaitForSeconds(guerreroAttackFrameTime);
+        }
+        
+        int runLeftCount = Mathf.Max(1, runLeft.Length);
+        for (int i = 0; i < runLeftCount; i++)
+        {
+            float t = runLeftCount == 1 ? 1f : (float)i / (runLeftCount - 1);
+            jugadorRect.anchoredPosition = Vector2.Lerp(objetivo, inicio, t);
+            if (i < runLeft.Length && runLeft[i] != null)
+            {
+                imgJugador.sprite = runLeft[i];
+                imgJugador.color = Color.white;
+            }
+            yield return new WaitForSeconds(guerreroRunFrameTime);
+        }
+        
+        jugadorRect.anchoredPosition = inicio;
+        IniciarAnimacionIdle("Guerrero", true);
+    }
+    
+    private IEnumerator ReproducirAtaquePersonaje(string tipo, bool esJugador)
+    {
+        Image atacante = esJugador ? imgJugador : imgEnemigo;
+        Image objetivoImg = esJugador ? imgEnemigo : imgJugador;
+        if (atacante == null) yield break;
+        
+        if (!atacante.gameObject.activeInHierarchy)
+        {
+            atacante.gameObject.SetActive(true);
+        }
+        atacante.color = Color.white;
+        atacante.preserveAspect = true;
+        
+        RectTransform atacanteRect = atacante.rectTransform;
+        Vector2 inicio = atacanteRect.anchoredPosition;
+        Vector2 objetivo = inicio + (esJugador ? new Vector2(260f, 0f) : new Vector2(-260f, 0f));
+        if (objetivoImg != null)
+        {
+            Vector2 targetPos = objetivoImg.rectTransform.anchoredPosition;
+            objetivo = esJugador ? new Vector2(targetPos.x - 150f, inicio.y) : new Vector2(targetPos.x + 150f, inicio.y);
+        }
+        
+        Sprite[] runOut = ObtenerSpritesRun(tipo, esJugador ? true : false);
+        Sprite[] attack = ObtenerSpritesAttack(tipo);
+        Sprite[] runBack = ObtenerSpritesRun(tipo, esJugador ? false : true);
+        
+        int runOutCount = Mathf.Max(1, runOut.Length);
+        for (int i = 0; i < runOutCount; i++)
+        {
+            float t = runOutCount == 1 ? 1f : (float)i / (runOutCount - 1);
+            atacanteRect.anchoredPosition = Vector2.Lerp(inicio, objetivo, t);
+            if (i < runOut.Length && runOut[i] != null)
+            {
+                ApplySpriteToImage(atacante, runOut[i]);
+            }
+            yield return new WaitForSeconds(guerreroRunFrameTime);
+        }
+        
+        for (int i = 0; i < attack.Length; i++)
+        {
+            if (attack[i] != null)
+            {
+                ApplySpriteToImage(atacante, attack[i]);
+            }
+            yield return new WaitForSeconds(guerreroAttackFrameTime);
+        }
+        
+        int runBackCount = Mathf.Max(1, runBack.Length);
+        for (int i = 0; i < runBackCount; i++)
+        {
+            float t = runBackCount == 1 ? 1f : (float)i / (runBackCount - 1);
+            atacanteRect.anchoredPosition = Vector2.Lerp(objetivo, inicio, t);
+            if (i < runBack.Length && runBack[i] != null)
+            {
+                ApplySpriteToImage(atacante, runBack[i]);
+            }
+            yield return new WaitForSeconds(guerreroRunFrameTime);
+        }
+        
+        atacanteRect.anchoredPosition = inicio;
+        IniciarAnimacionIdle(tipo, esJugador);
+    }
+    
+    private void ApplySpriteToImage(Image imagen, Sprite sprite)
+    {
+        if (imagen == null || sprite == null) return;
+        imagen.sprite = sprite;
+        imagen.color = Color.white;
+        imagen.preserveAspect = true;
+    }
+    
+    private Sprite[] ObtenerSpritesRun(string tipo, bool haciaDerecha)
+    {
+        if (tipo == "Guerrero" && guerreroAtaqueSheet != null)
+        {
+            return haciaDerecha ? ObtenerSpritesGuerrero(guerreroRunRightFrames) : ObtenerSpritesGuerrero(guerreroRunLeftFrames);
+        }
+        return ObtenerSpritesAttack(tipo);
+    }
+    
+    private Sprite[] ObtenerSpritesAttack(string tipo)
+    {
+        if (tipo == "Guerrero" && guerreroAtaqueSheet != null)
+        {
+            return ObtenerSpritesGuerrero(guerreroAttackFrames);
+        }
+        
+        int cantidadFrames = 0;
+        string carpeta = "";
+        if (tipo == "Guerrero")
+        {
+            cantidadFrames = 8;
+            carpeta = "Guerrero";
+        }
+        else if (tipo == "Mago")
+        {
+            cantidadFrames = 7;
+            carpeta = "Mago";
+        }
+        else if (tipo == "Cazador")
+        {
+            cantidadFrames = 9;
+            carpeta = "Cazador";
+        }
+        if (cantidadFrames == 0) return Array.Empty<Sprite>();
+        return CargarSpritesDesdeRecursos(carpeta, "attack", cantidadFrames);
+    }
+    
+    private Sprite[] CargarSpritesDesdeRecursos(string carpeta, string animacion, int cantidadFrames)
+    {
+        Sprite[] sprites = new Sprite[cantidadFrames];
+        for (int i = 0; i < cantidadFrames; i++)
+        {
+            #if UNITY_EDITOR
+            string rutaNueva = $"Assets/Sprites/Personajes/{carpeta}/{animacion}/{i + 1}.png";
+            sprites[i] = AssetDatabase.LoadAssetAtPath<Sprite>(rutaNueva);
+            if (sprites[i] == null)
+            {
+                string ruta = $"Assets/Sprites/Personajes/{carpeta}/{i + 1}.png";
+                sprites[i] = AssetDatabase.LoadAssetAtPath<Sprite>(ruta);
+            }
+            if (sprites[i] == null)
+            {
+                sprites[i] = Resources.Load<Sprite>($"Sprites/Personajes/{carpeta}/{animacion}/{i + 1}");
+            }
+            #else
+            sprites[i] = Resources.Load<Sprite>($"Sprites/Personajes/{carpeta}/{animacion}/{i + 1}");
+            #endif
+        }
+        return sprites;
+    }
+    
+    private Sprite[] ObtenerSpritesGuerrero(int[] indices)
+    {
+        if (guerreroAtaqueSheet == null || indices == null) return Array.Empty<Sprite>();
+        List<Sprite> result = new List<Sprite>();
+        for (int i = 0; i < indices.Length; i++)
+        {
+            Sprite sprite = CrearSpriteDesdeSheet(ObtenerTexturaGuerrero(), indices[i]);
+            if (sprite != null)
+            {
+                result.Add(sprite);
+            }
+        }
+        return result.ToArray();
+    }
+    
+    private Sprite CrearSpriteDesdeSheet(Texture2D sheet, int index)
+    {
+        if (sheet == null || guerreroCellSize.x <= 0 || guerreroCellSize.y <= 0) return null;
+        int columns = sheet.width / guerreroCellSize.x;
+        int rows = sheet.height / guerreroCellSize.y;
+        if (columns <= 0 || rows <= 0) return null;
+        
+        int row = index / columns;
+        int col = index % columns;
+        if (row >= rows) return null;
+        
+        int x = col * guerreroCellSize.x;
+        int y = sheet.height - ((row + 1) * guerreroCellSize.y);
+        Rect rect = new Rect(x, y, guerreroCellSize.x, guerreroCellSize.y);
+        return Sprite.Create(sheet, rect, new Vector2(0.5f, 0.5f), guerreroPixelsPerUnit);
+    }
+    
+    private Texture2D ObtenerTexturaGuerrero()
+    {
+        if (guerreroAtaqueSheet == null) return null;
+        Texture2D baseTex = guerreroAtaqueSheet.texture;
+        if (!guerreroQuitarBlanco || baseTex == null) return baseTex;
+        if (guerreroSheetProcesado != null) return guerreroSheetProcesado;
+        
+        Color[] pixels = baseTex.GetPixels();
+        for (int i = 0; i < pixels.Length; i++)
+        {
+            Color c = pixels[i];
+            if (c.r >= guerreroUmbralBlanco && c.g >= guerreroUmbralBlanco && c.b >= guerreroUmbralBlanco)
+            {
+                c.a = 0f;
+                pixels[i] = c;
+            }
+        }
+        guerreroSheetProcesado = new Texture2D(baseTex.width, baseTex.height, TextureFormat.RGBA32, false);
+        guerreroSheetProcesado.SetPixels(pixels);
+        guerreroSheetProcesado.Apply();
+        return guerreroSheetProcesado;
     }
     
     private IEnumerator ReproducirAnimacionIdle(string carpeta, string animacion, int cantidadFrames, bool esJugador)

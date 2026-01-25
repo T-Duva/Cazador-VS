@@ -439,10 +439,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   canvas: {fileID: 2035260831}
   uiManager: {fileID: 2035260833}
-  guerreroJugadorSprite: {fileID: 21300000, guid: e9380cca4f309f04c85e0683d04bc44a, type: 3}
+  guerreroJugadorSprite: {fileID: 0}
   magoJugadorSprite: {fileID: 21300000, guid: f4b50f8975db7d14aaba903c6f3ed50f, type: 3}
   cazadorJugadorSprite: {fileID: 21300000, guid: 4230015e8f49fd44a88cee25f79699a7, type: 3}
-  guerreroEnemigoSprite: {fileID: 21300000, guid: e9380cca4f309f04c85e0683d04bc44a, type: 3}
+  guerreroEnemigoSprite: {fileID: 0}
   magoEnemigoSprite: {fileID: 21300000, guid: f4b50f8975db7d14aaba903c6f3ed50f, type: 3}
   cazadorEnemigoSprite: {fileID: 21300000, guid: 4230015e8f49fd44a88cee25f79699a7, type: 3}
 --- !u!4 &1706480406
@@ -590,10 +590,21 @@ MonoBehaviour:
   iconoAtaque: {fileID: -4465352093126601094, guid: c493884397f67e642a731e78eaa14fae, type: 3}
   iconoParar: {fileID: 7101595605455372354, guid: f9a74644f1c9a3c44964d63f06a5db85, type: 3}
   iconoDefensa: {fileID: 1461869118707162932, guid: 52406a5cf0e2f154c904c3ec8c0e8768, type: 3}
+  iconoEscudoRoto: {fileID: 0}
   "tama\xF1oBotonAtaque": {x: 120, y: 120}
   "tama\xF1oBotonDefensa": {x: 120, y: 120}
   offsetBotonAtaque: {x: -120, y: 0}
   offsetBotonDefensa: {x: 120, y: 0}
+  guerreroAtaqueSheet: {fileID: 7144224101251169984, guid: e98889d45132c254483f46e31373aee0, type: 3}
+  guerreroCellSize: {x: 256, y: 256}
+  guerreroIdleFrames: 0000000001000000020000000300000004000000
+  guerreroRunRightFrames: 05000000060000000700000008000000
+  guerreroAttackFrames: 090000000a0000000b0000000c000000
+  guerreroRunLeftFrames: 0d0000000e0000000f00000010000000
+  guerreroIdleFrameTime: 0.12
+  guerreroRunFrameTime: 0.08
+  guerreroAttackFrameTime: 0.1
+  guerreroPixelsPerUnit: 100
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
