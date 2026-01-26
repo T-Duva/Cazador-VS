@@ -42,7 +42,7 @@ public class UIManager : MonoBehaviour
     private Slider pbVida2;
     private Text lblEscudo2;
     private Slider pbEscudo2;
-    private Image imgJugador;
+    [SerializeField] private Image imgJugador;
     private Image imgEnemigo;
     private Image animacionAtaque;
     private Coroutine corrutinaAnimacion;
@@ -2358,6 +2358,11 @@ public class UIManager : MonoBehaviour
                 return;
             }
         }
+    }
+
+    public void IniciarAtaqueGuerrero()
+    {
+        MostrarAnimacionAtaque("Guerrero", true, 10, "", "");
     }
     
     public void MostrarAnimacionHurt(string tipo, bool esJugador)

@@ -69,7 +69,7 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
     flipGreenChannel: 0
-  isReadable: 0
+  isReadable: 1
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
@@ -522,7 +522,23 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Ataque Guerrero_0: 7144224101251169984
+      Ataque Guerrero_1: -542769682582754017
+      Ataque Guerrero_10: -5523748701303088549
+      Ataque Guerrero_11: -6604579285253256190
+      Ataque Guerrero_12: -4808660961781739803
+      Ataque Guerrero_13: 1897136360991166705
+      Ataque Guerrero_14: 3365211174550491190
+      Ataque Guerrero_15: -2298416118760659751
+      Ataque Guerrero_2: 1252949529888190318
+      Ataque Guerrero_3: -2875741171736793649
+      Ataque Guerrero_4: -1355397557727355597
+      Ataque Guerrero_5: -6720348963361816778
+      Ataque Guerrero_6: -4628375223430062707
+      Ataque Guerrero_7: -6197964286505168266
+      Ataque Guerrero_8: -2365831866822410956
+      Ataque Guerrero_9: -730598121489896214
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
