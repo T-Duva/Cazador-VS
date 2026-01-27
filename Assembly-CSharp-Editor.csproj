@@ -67,8 +67,10 @@
     <Compile Include="Assets\Editor\AutoSetupOnLoad.cs" />
     <Compile Include="Assets\Editor\SetupGame.cs" />
     <Compile Include="Assets\Editor\ReimportarIconosHUD.cs" />
+    <Compile Include="Assets\Editor\CropSpriteSheet.cs" />
     <Compile Include="Assets\Editor\ProcesarSpriteMago.cs" />
     <Compile Include="Assets\Editor\RemoveMissingScripts.cs" />
+    <Compile Include="Assets\Editor\AssignCaballeroFramesFromSprite.cs" />
     <Compile Include="Assets\Editor\AsignarSpritesAuto.cs" />
     <Compile Include="Assets\Editor\CreateFolders.cs" />
     <Compile Include="Assets\Editor\BuildGame.cs" />

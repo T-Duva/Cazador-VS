@@ -102,6 +102,7 @@ public class UIManager : MonoBehaviour
     
     [Header("Caballero SpriteSheet (Idle + Ataque)")]
     [SerializeField] private Sprite caballeroSheet;
+    [SerializeField] private Vector2 caballeroTargetSize = new Vector2(240f, 360f);
     [SerializeField] private float caballeroIdleFrameTime = 0.12f;
     [SerializeField] private float caballeroAttackFrameTime = 0.1f;
     [SerializeField] private int caballeroIdleFrameCount = 16;
@@ -904,6 +905,7 @@ public class UIManager : MonoBehaviour
         
         string tipoJugador = gameManager.GetTipoJugador();
         string tipoEnemigo = gameManager.GetTipoEnemigo();
+        bool usarCaballeroFrames = tipoJugador == "Guerrero" && HasCaballeroFramesReady();
         if (!string.IsNullOrEmpty(tipoJugador))
         {
             IniciarAnimacionIdle(tipoJugador, true);
@@ -913,15 +915,20 @@ public class UIManager : MonoBehaviour
             IniciarAnimacionIdle(tipoEnemigo, false);
         }
         
-        if (spriteJugador != null && imgJugador != null)
+        if (!usarCaballeroFrames && spriteJugador != null && imgJugador != null)
         {
             imgJugador.sprite = spriteJugador;
             imgJugador.color = Color.white;
             imgJugador.gameObject.SetActive(true);
         }
-        else if (imgJugador != null)
+        else if (!usarCaballeroFrames && imgJugador != null)
         {
             imgJugador.gameObject.SetActive(false);
+        }
+        else if (usarCaballeroFrames && imgJugador != null)
+        {
+            imgJugador.gameObject.SetActive(true);
+            imgJugador.color = Color.white;
         }
         
         if (spriteEnemigo != null && imgEnemigo != null)
@@ -1926,21 +1933,22 @@ public class UIManager : MonoBehaviour
     
     public void MostrarAnimacionIdleCaballero()
     {
-        if (imgCaballero == null || caballeroSheet == null) return;
+        if (caballeroSheet == null) return;
+        if (imgJugador == null) return;
+        if (imgCaballero != null)
+        {
+            imgCaballero.gameObject.SetActive(false);
+        }
         
         if (corrutinaIdleCaballero != null)
         {
             StopCoroutine(corrutinaIdleCaballero);
         }
         
-        imgCaballero.gameObject.SetActive(true);
-        imgCaballero.color = Color.white;
-        imgCaballero.preserveAspect = true;
-        if (TryGetCaballeroSheet(out Texture2D sheet, out float cellW, out float cellH))
-        {
-            RectTransform rect = imgCaballero.rectTransform;
-            rect.sizeDelta = new Vector2(cellW, cellH);
-        }
+        imgJugador.gameObject.SetActive(true);
+        imgJugador.color = Color.white;
+        imgJugador.preserveAspect = true;
+        ApplyCaballeroSize(imgJugador);
         corrutinaIdleCaballero = StartCoroutine(ReproducirIdleCaballero());
     }
 
@@ -1971,11 +1979,11 @@ public class UIManager : MonoBehaviour
         int index = 0;
         while (true)
         {
-            if (imgCaballero == null) yield break;
+            if (imgJugador == null) yield break;
             Sprite sprite = sprites[index];
             if (sprite != null)
             {
-                ApplySpriteToImage(imgCaballero, sprite);
+                ApplySpriteToImage(imgJugador, sprite);
             }
             index = (index + 1) % sprites.Length;
             yield return new WaitForSeconds(caballeroIdleFrameTime);
@@ -1985,7 +1993,7 @@ public class UIManager : MonoBehaviour
     private IEnumerator IniciarIdleCaballeroDespuesDeInit()
     {
         yield return null;
-        if (caballeroSheet != null && imgCaballero != null)
+        if (caballeroSheet != null && imgJugador != null)
         {
             MostrarAnimacionIdleCaballero();
         }
@@ -2221,6 +2229,29 @@ public class UIManager : MonoBehaviour
         imagen.sprite = sprite;
         imagen.color = Color.white;
         imagen.preserveAspect = true;
+        if (imagen == imgJugador && ShouldForceCaballeroSize())
+        {
+            ApplyCaballeroSize(imagen);
+        }
+    }
+
+    private bool ShouldForceCaballeroSize()
+    {
+        if (gameManager == null) return false;
+        if (caballeroTargetSize.x <= 0f || caballeroTargetSize.y <= 0f) return false;
+        return gameManager.GetTipoJugador() == "Guerrero";
+    }
+
+    private void ApplyCaballeroSize(Image imagen)
+    {
+        if (imagen == null) return;
+        RectTransform rect = imagen.rectTransform;
+        rect.sizeDelta = caballeroTargetSize;
+    }
+
+    private bool HasCaballeroFramesReady()
+    {
+        return caballeroFrames != null && caballeroFrames.Length >= 32 && caballeroFrames[0] != null;
     }
 
     private IEnumerator MoverConFrames(Image imagen, Vector2 inicio, Vector2 fin, Sprite[] frames, float frameTime)
@@ -2313,6 +2344,11 @@ public class UIManager : MonoBehaviour
     
     private Sprite[] ObtenerSpritesCaballeroIdle()
     {
+        if (TryGetCaballeroFrames(false, out Sprite[] framesFromArray))
+        {
+            return framesFromArray;
+        }
+        
         if (!TryGetCaballeroSheet(out Texture2D sheet, out float cellW, out float cellH)) return Array.Empty<Sprite>();
         
         int[] frames = caballeroIdleFrames != null && caballeroIdleFrames.Length > 0
@@ -2333,6 +2369,11 @@ public class UIManager : MonoBehaviour
     
     private Sprite[] ObtenerSpritesCaballeroAtaque()
     {
+        if (TryGetCaballeroFrames(true, out Sprite[] framesFromArray))
+        {
+            return framesFromArray;
+        }
+        
         if (!TryGetCaballeroSheet(out Texture2D sheet, out float cellW, out float cellH)) return Array.Empty<Sprite>();
         
         int[] frames = caballeroAttackFrames != null && caballeroAttackFrames.Length > 0
@@ -2349,6 +2390,39 @@ public class UIManager : MonoBehaviour
             }
         }
         return result.ToArray();
+    }
+
+    private bool TryGetCaballeroFrames(bool ataque, out Sprite[] result)
+    {
+        result = Array.Empty<Sprite>();
+        if (caballeroFrames == null || caballeroFrames.Length < 32)
+        {
+            return false;
+        }
+        
+        int[] frames = ataque
+            ? (caballeroAttackFrames != null && caballeroAttackFrames.Length > 0
+                ? caballeroAttackFrames
+                : Enumerable.Range(16, Mathf.Clamp(caballeroAttackFrameCount, 1, 16)).ToArray())
+            : (caballeroIdleFrames != null && caballeroIdleFrames.Length > 0
+                ? caballeroIdleFrames
+                : Enumerable.Range(0, Mathf.Clamp(caballeroIdleFrameCount, 1, 16)).ToArray());
+        
+        List<Sprite> list = new List<Sprite>(frames.Length);
+        for (int i = 0; i < frames.Length; i++)
+        {
+            int index = frames[i];
+            if (index < 0 || index >= caballeroFrames.Length) continue;
+            Sprite sprite = caballeroFrames[index];
+            if (sprite != null)
+            {
+                list.Add(sprite);
+            }
+        }
+        
+        if (list.Count == 0) return false;
+        result = list.ToArray();
+        return true;
     }
     
     private bool TryGetCaballeroSheet(out Texture2D sheet, out float cellW, out float cellH)

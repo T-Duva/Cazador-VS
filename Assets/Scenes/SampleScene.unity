@@ -119,81 +119,6 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &372662225
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 372662228}
-  - component: {fileID: 372662227}
-  - component: {fileID: 372662226}
-  m_Layer: 0
-  m_Name: ImgCaballero
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &372662226
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 372662225}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 0
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 288645827, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &372662227
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 372662225}
-  m_CullTransparentMesh: 1
---- !u!224 &372662228
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 372662225}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 2037271478}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -160.25, y: 0}
-  m_SizeDelta: {x: 88, y: 88}
-  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &448523631
 GameObject:
   m_ObjectHideFlags: 0
@@ -1052,10 +977,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   canvas: {fileID: 2035260831}
   uiManager: {fileID: 2035260833}
-  guerreroJugadorSprite: {fileID: 288645827, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  guerreroJugadorSprite: {fileID: 0}
   magoJugadorSprite: {fileID: 21300000, guid: f4b50f8975db7d14aaba903c6f3ed50f, type: 3}
   cazadorJugadorSprite: {fileID: 21300000, guid: 4230015e8f49fd44a88cee25f79699a7, type: 3}
-  guerreroEnemigoSprite: {fileID: 288645827, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  guerreroEnemigoSprite: {fileID: 0}
   magoEnemigoSprite: {fileID: 21300000, guid: f4b50f8975db7d14aaba903c6f3ed50f, type: 3}
   cazadorEnemigoSprite: {fileID: 21300000, guid: 4230015e8f49fd44a88cee25f79699a7, type: 3}
 --- !u!4 &1706480406
@@ -1138,7 +1063,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 288645827, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  m_Sprite: {fileID: -264983920, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -1266,7 +1191,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   imgJugador: {fileID: 1837177837}
-  imgCaballero: {fileID: 372662226}
   panelStatsJugadorRectSerialized: {fileID: 2037271478}
   panelHudEnemigo: {fileID: 0}
   hudCanvas: {fileID: 0}
@@ -1290,11 +1214,16 @@ MonoBehaviour:
   offsetBotonDefensa: {x: 120, y: 0}
   guerreroRunFrameTime: 0.2
   guerreroAttackFrameTime: 0.2
-  caballeroSheet: {fileID: 288645827, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
-  caballeroIdleFrameTime: 0.12
-  caballeroAttackFrameTime: 0.1
+  caballeroSheet: {fileID: -264983920, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  caballeroColumns: 8
+  caballeroRows: 4
+  caballeroTargetSize: {x: 120, y: 240}
+  caballeroTrimTransparent: 0
+  caballeroMoverDuranteAtaque: 1
+  caballeroIdleFrameTime: 0.15
+  caballeroAttackFrameTime: 0.2
   caballeroIdleFrameCount: 16
-  caballeroAttackFrameCount: 16
+  caballeroAttackFrameCount: 17
   caballeroIdleFrames: 000000000100000002000000030000000400000005000000060000000700000008000000090000000a0000000b0000000c0000000d0000000e0000000f000000
   caballeroAttackFrames: 100000001100000012000000130000001400000015000000160000001700000018000000190000001a0000001b0000001c0000001d0000001e0000001f00000000000000
 --- !u!1 &2037271477
@@ -1327,7 +1256,6 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 372662228}
   - {fileID: 1837177835}
   m_Father: {fileID: 2035260832}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
