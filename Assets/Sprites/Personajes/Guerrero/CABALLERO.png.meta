@@ -166,8 +166,8 @@ TextureImporter:
   - serializedVersion: 4
     buildTarget: DefaultTexturePlatform
     maxTextureSize: 2048
-    resizeAlgorithm: 0
-    textureFormat: -1
+    resizeAlgorithm: 1
+    textureFormat: 4
     textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
@@ -209,11 +209,11 @@ TextureImporter:
       name: CABALLERO_0
       rect:
         serializedVersion: 2
-        x: 10
-        y: 437
-        width: 31
-        height: 60
-      alignment: 0
+        x: 0
+        y: 375
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -231,11 +231,11 @@ TextureImporter:
       name: CABALLERO_1
       rect:
         serializedVersion: 2
-        x: 51
-        y: 410
-        width: 78
-        height: 87
-      alignment: 0
+        x: 62
+        y: 375
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -253,11 +253,11 @@ TextureImporter:
       name: CABALLERO_2
       rect:
         serializedVersion: 2
-        x: 137
-        y: 437
-        width: 33
-        height: 61
-      alignment: 0
+        x: 124
+        y: 375
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -275,11 +275,11 @@ TextureImporter:
       name: CABALLERO_3
       rect:
         serializedVersion: 2
-        x: 210
-        y: 438
-        width: 27
-        height: 60
-      alignment: 0
+        x: 186
+        y: 375
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -297,11 +297,11 @@ TextureImporter:
       name: CABALLERO_4
       rect:
         serializedVersion: 2
-        x: 224
-        y: 411
-        width: 55
-        height: 87
-      alignment: 0
+        x: 248
+        y: 375
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -319,11 +319,11 @@ TextureImporter:
       name: CABALLERO_5
       rect:
         serializedVersion: 2
-        x: 313
-        y: 411
-        width: 45
-        height: 87
-      alignment: 0
+        x: 310
+        y: 375
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -341,11 +341,11 @@ TextureImporter:
       name: CABALLERO_6
       rect:
         serializedVersion: 2
-        x: 375
-        y: 439
-        width: 29
-        height: 59
-      alignment: 0
+        x: 372
+        y: 375
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -363,11 +363,11 @@ TextureImporter:
       name: CABALLERO_7
       rect:
         serializedVersion: 2
-        x: 418
-        y: 396
-        width: 71
-        height: 103
-      alignment: 0
+        x: 434
+        y: 375
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -385,11 +385,11 @@ TextureImporter:
       name: CABALLERO_8
       rect:
         serializedVersion: 2
-        x: 2
-        y: 307
-        width: 39
-        height: 64
-      alignment: 0
+        x: 0
+        y: 250
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -407,11 +407,11 @@ TextureImporter:
       name: CABALLERO_9
       rect:
         serializedVersion: 2
-        x: 66
-        y: 284
-        width: 49
-        height: 103
-      alignment: 0
+        x: 62
+        y: 250
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -429,11 +429,11 @@ TextureImporter:
       name: CABALLERO_10
       rect:
         serializedVersion: 2
-        x: 128
-        y: 311
-        width: 56
-        height: 60
-      alignment: 0
+        x: 124
+        y: 250
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -451,11 +451,11 @@ TextureImporter:
       name: CABALLERO_11
       rect:
         serializedVersion: 2
-        x: 202
-        y: 311
-        width: 28
-        height: 60
-      alignment: 0
+        x: 186
+        y: 250
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -473,11 +473,11 @@ TextureImporter:
       name: CABALLERO_12
       rect:
         serializedVersion: 2
-        x: 243
-        y: 307
-        width: 37
-        height: 65
-      alignment: 0
+        x: 248
+        y: 250
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -495,11 +495,11 @@ TextureImporter:
       name: CABALLERO_13
       rect:
         serializedVersion: 2
-        x: 302
-        y: 308
-        width: 42
-        height: 68
-      alignment: 0
+        x: 310
+        y: 250
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -518,10 +518,10 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 372
-        y: 313
-        width: 49
-        height: 59
-      alignment: 0
+        y: 250
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -539,11 +539,11 @@ TextureImporter:
       name: CABALLERO_15
       rect:
         serializedVersion: 2
-        x: 442
-        y: 285
-        width: 52
-        height: 87
-      alignment: 0
+        x: 434
+        y: 250
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -561,11 +561,11 @@ TextureImporter:
       name: CABALLERO_16
       rect:
         serializedVersion: 2
-        x: 1
-        y: 172
-        width: 45
-        height: 96
-      alignment: 0
+        x: 0
+        y: 125
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -583,11 +583,11 @@ TextureImporter:
       name: CABALLERO_17
       rect:
         serializedVersion: 2
-        x: 72
-        y: 186
-        width: 41
-        height: 62
-      alignment: 0
+        x: 62
+        y: 125
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -605,11 +605,11 @@ TextureImporter:
       name: CABALLERO_18
       rect:
         serializedVersion: 2
-        x: 144
-        y: 178
-        width: 36
-        height: 96
-      alignment: 0
+        x: 124
+        y: 125
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -627,11 +627,11 @@ TextureImporter:
       name: CABALLERO_19
       rect:
         serializedVersion: 2
-        x: 193
-        y: 188
-        width: 44
-        height: 75
-      alignment: 0
+        x: 186
+        y: 125
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -649,11 +649,11 @@ TextureImporter:
       name: CABALLERO_20
       rect:
         serializedVersion: 2
-        x: 241
-        y: 190
-        width: 54
-        height: 86
-      alignment: 0
+        x: 248
+        y: 125
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -671,11 +671,11 @@ TextureImporter:
       name: CABALLERO_21
       rect:
         serializedVersion: 2
-        x: 303
-        y: 168
-        width: 51
-        height: 79
-      alignment: 0
+        x: 310
+        y: 125
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -693,11 +693,11 @@ TextureImporter:
       name: CABALLERO_22
       rect:
         serializedVersion: 2
-        x: 367
-        y: 173
-        width: 53
-        height: 83
-      alignment: 0
+        x: 372
+        y: 125
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -715,11 +715,11 @@ TextureImporter:
       name: CABALLERO_23
       rect:
         serializedVersion: 2
-        x: 437
-        y: 155
-        width: 52
-        height: 95
-      alignment: 0
+        x: 434
+        y: 125
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -737,11 +737,11 @@ TextureImporter:
       name: CABALLERO_24
       rect:
         serializedVersion: 2
-        x: 1
-        y: 39
-        width: 51
-        height: 80
-      alignment: 0
+        x: 0
+        y: 0
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -759,11 +759,11 @@ TextureImporter:
       name: CABALLERO_25
       rect:
         serializedVersion: 2
-        x: 66
-        y: 43
-        width: 59
-        height: 76
-      alignment: 0
+        x: 62
+        y: 0
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -781,11 +781,11 @@ TextureImporter:
       name: CABALLERO_26
       rect:
         serializedVersion: 2
-        x: 127
-        y: 61
-        width: 60
-        height: 59
-      alignment: 0
+        x: 124
+        y: 0
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -803,11 +803,11 @@ TextureImporter:
       name: CABALLERO_27
       rect:
         serializedVersion: 2
-        x: 182
-        y: 39
-        width: 69
-        height: 104
-      alignment: 0
+        x: 186
+        y: 0
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -825,11 +825,11 @@ TextureImporter:
       name: CABALLERO_28
       rect:
         serializedVersion: 2
-        x: 254
-        y: 64
-        width: 52
-        height: 55
-      alignment: 0
+        x: 248
+        y: 0
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -847,11 +847,11 @@ TextureImporter:
       name: CABALLERO_29
       rect:
         serializedVersion: 2
-        x: 317
-        y: 25
-        width: 50
-        height: 107
-      alignment: 0
+        x: 310
+        y: 0
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -869,11 +869,11 @@ TextureImporter:
       name: CABALLERO_30
       rect:
         serializedVersion: 2
-        x: 378
-        y: 13
-        width: 67
-        height: 107
-      alignment: 0
+        x: 372
+        y: 0
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -891,11 +891,11 @@ TextureImporter:
       name: CABALLERO_31
       rect:
         serializedVersion: 2
-        x: 437
-        y: 64
-        width: 57
-        height: 54
-      alignment: 0
+        x: 434
+        y: 0
+        width: 62
+        height: 125
+      alignment: 9
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
@@ -923,7 +923,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries:
       - key: SpriteEditor.SliceSettings
-        value: '{"sliceOnImport":true,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
+        value: '{"sliceOnImport":true,"gridCellCount":{"x":8.0,"y":4.0},"gridSpriteSize":{"x":62.0,"y":125.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":9,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
       - key: SpriteEditor.SliceOnImport
         value: True
     nameFileIdTable:

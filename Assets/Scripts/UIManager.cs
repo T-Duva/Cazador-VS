@@ -103,6 +103,9 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Sprite caballeroSheet;
     [SerializeField] private int caballeroColumns = 8;
     [SerializeField] private int caballeroRows = 4;
+    [SerializeField] private Vector2 caballeroTargetSize = new Vector2(240f, 360f);
+    [SerializeField] private bool caballeroTrimTransparent = false;
+    [SerializeField] private bool caballeroMoverDuranteAtaque = false;
     [SerializeField] private float caballeroIdleFrameTime = 0.12f;
     [SerializeField] private float caballeroAttackFrameTime = 0.1f;
     [SerializeField] private int caballeroIdleFrameCount = 16;
@@ -1983,21 +1986,7 @@ public class UIManager : MonoBehaviour
         target.gameObject.SetActive(true);
         target.color = Color.white;
         target.preserveAspect = true;
-        if (TryGetCaballeroSheet(out Texture2D sheet, out float cellW, out float cellH, out int columns, out int rows))
-        {
-            RectTransform rect = target.rectTransform;
-            float targetW = cellW;
-            float targetH = cellH;
-            float minSize = 150f;
-            float minSide = Mathf.Min(targetW, targetH);
-            if (minSide > 0f && minSide < minSize)
-            {
-                float scale = minSize / minSide;
-                targetW *= scale;
-                targetH *= scale;
-            }
-            rect.sizeDelta = new Vector2(targetW, targetH);
-        }
+        AplicarTamañoCaballero();
         corrutinaIdleCaballero = StartCoroutine(ReproducirIdleCaballero());
     }
 
@@ -2159,33 +2148,7 @@ public class UIManager : MonoBehaviour
         }
         imgJugador.color = Color.white;
         imgJugador.preserveAspect = true;
-        
-        RectTransform jugadorRect = imgJugador.rectTransform;
-        Canvas canvas = jugadorRect.GetComponentInParent<Canvas>();
-        // Guardamos la posición anchoredPosition original para volver después
-        Vector2 inicio = jugadorRect.anchoredPosition;
-        // Calculamos posiciones ABSOLUTAS en el Canvas (no relativas a anchors)
-        Vector2 jugadorPosAbsoluta = RectTransformUtility.PixelAdjustPoint(jugadorRect.position, jugadorRect, canvas);
-        Vector2 enemigoPosAbsoluta = Vector2.zero;
-        if (imgEnemigo != null)
-        {
-            RectTransform enemigoRect = imgEnemigo.rectTransform;
-            enemigoPosAbsoluta = RectTransformUtility.PixelAdjustPoint(enemigoRect.position, enemigoRect, canvas);
-        }
-        // La distancia que queremos recorrer hacia el enemigo
-        float distanciaAvance = 0f;
-        if (imgEnemigo != null)
-        {
-            // Calculamos cuánto tiene que avanzar para llegar cerca del enemigo
-            distanciaAvance = enemigoPosAbsoluta.x - jugadorPosAbsoluta.x - 120f;
-        }
-        else
-        {
-            // Si no hay enemigo, avanza 400 píxeles por defecto
-            distanciaAvance = 400f;
-        }
-        // El objetivo es la posición inicial más el avance
-        Vector2 objetivo = inicio + new Vector2(distanciaAvance, 0f);
+        AplicarTamañoCaballero();
         
         Sprite[] attackFrames = ObtenerSpritesCaballeroAtaque();
         if (attackFrames.Length == 0)
@@ -2194,17 +2157,48 @@ public class UIManager : MonoBehaviour
             yield break;
         }
         
-        yield return StartCoroutine(MoverConFrames(imgJugador, inicio, objetivo, attackFrames, caballeroAttackFrameTime));
-        
-        Debug.Log("[UIManager] Llamando a IniciarDañoEnemigoDesdeUI. daño=" + daño + ", gameManager=" + (gameManager != null));
-        if (gameManager != null)
+        if (!caballeroMoverDuranteAtaque)
         {
-            gameManager.IniciarDañoEnemigoDesdeUI(daño);
+            for (int i = 0; i < attackFrames.Length; i++)
+            {
+                if (attackFrames[i] != null)
+                {
+                    ApplySpriteToImage(imgJugador, attackFrames[i]);
+                }
+                yield return new WaitForSeconds(caballeroAttackFrameTime);
+            }
+            
+            if (gameManager != null)
+            {
+                gameManager.IniciarDañoEnemigoDesdeUI(daño);
+            }
+        }
+        else
+        {
+            RectTransform jugadorRect = imgJugador.rectTransform;
+            Canvas canvas = jugadorRect.GetComponentInParent<Canvas>();
+            Vector2 inicio = jugadorRect.anchoredPosition;
+            Vector2 jugadorPosAbsoluta = RectTransformUtility.PixelAdjustPoint(jugadorRect.position, jugadorRect, canvas);
+            Vector2 enemigoPosAbsoluta = Vector2.zero;
+            if (imgEnemigo != null)
+            {
+                RectTransform enemigoRect = imgEnemigo.rectTransform;
+                enemigoPosAbsoluta = RectTransformUtility.PixelAdjustPoint(enemigoRect.position, enemigoRect, canvas);
+            }
+            float distanciaAvance = imgEnemigo != null ? enemigoPosAbsoluta.x - jugadorPosAbsoluta.x - 120f : 400f;
+            Vector2 objetivo = inicio + new Vector2(distanciaAvance, 0f);
+            
+            yield return StartCoroutine(MoverConFrames(imgJugador, inicio, objetivo, attackFrames, caballeroAttackFrameTime));
+            
+            if (gameManager != null)
+            {
+                gameManager.IniciarDañoEnemigoDesdeUI(daño);
+            }
+            
+            yield return StartCoroutine(MoverConFrames(imgJugador, objetivo, inicio, attackFrames, caballeroAttackFrameTime));
+            jugadorRect.anchoredPosition = inicio;
         }
         
-        yield return StartCoroutine(MoverConFrames(imgJugador, objetivo, inicio, attackFrames, caballeroAttackFrameTime));
-        
-        jugadorRect.anchoredPosition = inicio;
         IniciarAnimacionIdle("Guerrero", true);
         guerreroAtaqueEnCurso = false;
     }
@@ -2474,12 +2468,22 @@ public class UIManager : MonoBehaviour
         float x = col * cellW;
         float y = sheet.height - ((row + 1) * cellH);
         Rect rect = new Rect(x, y, cellW, cellH);
-        Rect contentRect;
-        if (TryGetContenidoVisible(sheet, rect, out contentRect))
+        if (caballeroTrimTransparent)
         {
-            return Sprite.Create(sheet, contentRect, new Vector2(0.5f, 0.5f), pixelsPerUnit);
+            Rect contentRect;
+            if (TryGetContenidoVisible(sheet, rect, out contentRect))
+            {
+                return Sprite.Create(sheet, contentRect, new Vector2(0.5f, 0.5f), pixelsPerUnit);
+            }
         }
         return Sprite.Create(sheet, rect, new Vector2(0.5f, 0.5f), pixelsPerUnit);
+    }
+
+    private void AplicarTamañoCaballero()
+    {
+        if (imgJugador == null) return;
+        RectTransform rect = imgJugador.rectTransform;
+        rect.sizeDelta = caballeroTargetSize;
     }
 
     private bool TryGetContenidoVisible(Texture2D sheet, Rect cellRect, out Rect contentRect)
