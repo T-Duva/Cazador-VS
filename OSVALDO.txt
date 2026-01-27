@@ -153,6 +153,21 @@ CURSOR (IA de codigo)
   - Se añade HasCaballeroFramesReady() para usar caballeroFrames y mantener ImgJugador activo.
 
 ========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - tarde]
+- Explicacion: usar nueva sprite sheet CABALLERO.png (1078x1080) para mejorar resolucion.
+- Nota tecnica: el ancho debe ser divisible por 8 y el alto por 4 para cortar en 8x4.
+- Recomendacion: ajustar CABALLERO.png a 1080x1080 (o 1072x1080) antes de slice.
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - tarde]
+- Codigo modificado:
+  - Assets/Editor/AssignCaballeroFramesFromSprite.cs: ahora usa CABALLERO.png y mensaje de slicing 8x4.
+
+========================
 CURSOR (IA de codigo)
 ========================
 [2026-01-28 - tarde]
