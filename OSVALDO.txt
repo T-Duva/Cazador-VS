@@ -1,4 +1,36 @@
 ========================
+CURSOR - VERIFICAR ASIGNACIÓN Y ACTIVAR ANIMACIÓN CON caballeroFrames
+========================
+[2026-01-28]
+
+ÉXITO: Los 32 frames se asignaron correctamente a caballeroFrames.
+
+AHORA HACÉ ESTO:
+
+1. Abrí el Inspector de UIManager (seleccioná el GameObject Canvas o donde esté el componente UIManager).
+
+2. Scrolleá hasta la sección "Caballero SpriteSheet" y confirmá que:
+   - El array "Caballero Frames" tiene "Size: 32"
+   - Cada slot (0..31) tiene un sprite asignado (no dice "None" ni "Missing")
+   - Los primeros 16 son idle, los últimos 16 son ataque
+
+3. Sacá un screenshot del Inspector mostrando el array caballeroFrames lleno y pegalo/guardalo.
+
+4. Ahora hay que actualizar la lógica de animación en UIManager.cs para que USE caballeroFrames en lugar de caballeroSheet.
+   - Buscá en UIManager.cs cualquier referencia a "caballeroSheet" o lógica que corte sprites manualmente.
+   - Reemplazala por lógica que use directamente caballeroFrames[index].
+   - Ejemplo conceptual:
+     // Para idle: imgJugador.sprite = caballeroFrames[idleFrameIndex];
+     // Para ataque: imgJugador.sprite = caballeroFrames[16 + attackFrameIndex];
+
+5. Si no sabés exactamente qué modificar, pegá aquí las primeras 100 líneas del método que maneja la animación del caballero (el que cambia frames en idle/ataque) y MERLIN te dará el código exacto.
+
+6. Después de modificar, guardá, compilá y hacé Play para probar.
+
+REPORTÁ:
+- Screenshot del Inspector con caballeroFrames lleno
+- Cualquier duda sobre qué método modificar para usar caballeroFrames
+========================
 MERLIN (IA de ayuda)
 ========================
 ========================
