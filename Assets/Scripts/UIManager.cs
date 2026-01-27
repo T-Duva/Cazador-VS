@@ -48,6 +48,7 @@ public class UIManager : MonoBehaviour
     private Coroutine corrutinaAnimacion;
     private Coroutine corrutinaIdleJugador;
     private Coroutine corrutinaIdleEnemigo;
+    private Coroutine corrutinaIdleCaballero;
     private Button btnAtacar;
     private Button btnHuir;
     private Button btnAutomatico;
@@ -94,21 +95,21 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Vector2 offsetBotonAtaque = new Vector2(-120f, 0f);
     [SerializeField] private Vector2 offsetBotonDefensa = new Vector2(120f, 0f);
     
-    [Header("Spritesheet Guerrero Ataque")]
-    [SerializeField] private Sprite guerreroAtaqueSheet;
-    [SerializeField] private Vector2Int guerreroCellSize = new Vector2Int(256, 256);
-    [SerializeField] private int[] guerreroIdleFrames = new int[] { 0, 1, 4, 3, 2 };
-    [SerializeField] private int[] guerreroRunRightFrames = new int[] { 5, 7, 8 };
-    [SerializeField] private int[] guerreroAttackFrames = new int[] { 9, 10, 11, 12 };
-    [SerializeField] private int[] guerreroRunLeftFrames = new int[] { 13, 14, 15, 16 };
-    [SerializeField] private float guerreroIdleFrameTime = 0.2f;
-    [SerializeField] private float guerreroRunFrameTime = 0.08f;
-    [SerializeField] private float guerreroAttackFrameTime = 0.1f;
-    [SerializeField] private float guerreroPixelsPerUnit = 100f;
-    [SerializeField] private bool guerreroQuitarBlanco = true;
-    [SerializeField] private float guerreroUmbralBlanco = 0.92f;
-    private Texture2D guerreroSheetProcesado;
+    [SerializeField] private float guerreroRunFrameTime = 0.1f;
+    [SerializeField] private float guerreroAttackFrameTime = 0.11f;
     private bool guerreroAtaqueEnCurso = false;
+    
+    [Header("Caballero SpriteSheet (Idle + Ataque)")]
+    [SerializeField] private Sprite caballeroSheet;
+    [SerializeField] private int caballeroColumns = 8;
+    [SerializeField] private int caballeroRows = 4;
+    [SerializeField] private float caballeroIdleFrameTime = 0.12f;
+    [SerializeField] private float caballeroAttackFrameTime = 0.1f;
+    [SerializeField] private int caballeroIdleFrameCount = 16;
+    [SerializeField] private int caballeroAttackFrameCount = 16;
+    [SerializeField] private int[] caballeroIdleFrames;
+    [SerializeField] private int[] caballeroAttackFrames;
+    
     private RectTransform panelStatsJugadorRect;
     private bool _offsetAplicado = false;
     private Coroutine animacionDañoJugador;
@@ -176,6 +177,7 @@ public class UIManager : MonoBehaviour
         
         CrearPaneles();
         MostrarPanelMenu();
+        StartCoroutine(IniciarIdleCaballeroDespuesDeInit());
     }
     #endregion
     
@@ -286,9 +288,21 @@ public class UIManager : MonoBehaviour
         pbEscudo1Rect.sizeDelta = new Vector2(200, 20);
         pbEscudo1.transform.SetParent(panelJuego.transform, false);
         
-        GameObject imgObj = new GameObject("ImgJugador");
-        imgObj.transform.SetParent(panelJuego.transform, false);
-        imgJugador = imgObj.AddComponent<Image>();
+        if (imgJugador == null)
+        {
+            imgJugador = BuscarImagenJugadorExistente();
+        }
+        if (imgJugador == null)
+        {
+            GameObject imgObj = new GameObject("ImgJugador");
+            imgObj.transform.SetParent(panelJuego.transform, false);
+            imgJugador = imgObj.AddComponent<Image>();
+        }
+        else
+        {
+            imgJugador.gameObject.name = "ImgJugador";
+            imgJugador.transform.SetParent(panelJuego.transform, false);
+        }
         imgJugador.rectTransform.anchorMin = new Vector2(0.1f, 0.3f);
         imgJugador.rectTransform.anchorMax = new Vector2(0.1f, 0.3f);
         imgJugador.rectTransform.anchoredPosition = Vector2.zero;
@@ -360,14 +374,6 @@ public class UIManager : MonoBehaviour
         animacionAtaque.rectTransform.sizeDelta = new Vector2(300, 300);
         animacionAtaque.color = new Color(1f, 1f, 1f, 0f);
         animacionAtaque.gameObject.SetActive(false);
-        
-        CrearMarcoRojo(animObj, 10f, 300, 300);
-        
-        Transform marcoRojo = animObj.transform.Find("Marco");
-        if (marcoRojo != null)
-        {
-            marcoRojo.gameObject.SetActive(false);
-        }
         
         lblContadorAtaque = CrearTexto("LblContadorAtaque", "", 36, Color.yellow);
         lblContadorAtaque.rectTransform.anchorMin = new Vector2(0.5f, 0.2f);
@@ -839,448 +845,6 @@ public class UIManager : MonoBehaviour
     }
     #endregion
     
-    #region Helpers - Marcos y decoracion
-    private void CrearMarcoEnemigoSegunTipo(GameObject parentObj, string tipoEnemigo, float ancho, float alto)
-    {
-        Transform marcoAnterior = parentObj.transform.Find("Marco");
-        if (marcoAnterior != null)
-        {
-            #if UNITY_EDITOR
-            DestroyImmediate(marcoAnterior.gameObject);
-            #else
-            Destroy(marcoAnterior.gameObject);
-            #endif
-        }
-        
-        Color colorEnemigo;
-        if (tipoEnemigo == "Cazador")
-        {
-            colorEnemigo = new Color(0.2f, 0.8f, 0.4f, 1f); // Verde
-        }
-        else if (tipoEnemigo == "Guerrero")
-        {
-            colorEnemigo = new Color(0.8f, 0.2f, 0.2f, 1f); // Rojo
-        }
-        else if (tipoEnemigo == "Mago")
-        {
-            colorEnemigo = new Color(0.2f, 0.2f, 0.8f, 1f); // Azul
-        }
-        else
-        {
-            colorEnemigo = new Color(0.6f, 0.6f, 0.6f, 1f); // Gris
-        }
-        
-        int tipoMarco = UnityEngine.Random.Range(0, 6); // 6 tipos diferentes
-        
-        GameObject marcoObj = new GameObject("Marco");
-        marcoObj.transform.SetParent(parentObj.transform, false);
-        
-        marcoObj.transform.SetAsFirstSibling();
-        
-        marcoObj.SetActive(true);
-        
-        switch (tipoMarco)
-        {
-            case 0: // Marco estilo "gótico" con puntas
-                CrearMarcoGotico(marcoObj, colorEnemigo, 8f, ancho, alto);
-                break;
-            case 1: // Marco estilo "energía" con rayos
-                CrearMarcoEnergia(marcoObj, colorEnemigo, 7f, ancho, alto);
-                break;
-            case 2: // Marco estilo "piedra preciosa" con múltiples capas
-                CrearMarcoPiedraPreciosa(marcoObj, colorEnemigo, 9f, ancho, alto);
-                break;
-            case 3: // Marco estilo "espada" con líneas afiladas
-                CrearMarcoEspada(marcoObj, colorEnemigo, 8f, ancho, alto);
-                break;
-            case 4: // Marco estilo "cristal" con brillo
-                CrearMarcoCristal(marcoObj, colorEnemigo, 7f, ancho, alto);
-                break;
-            case 5: // Marco estilo "fuego" con efectos
-                CrearMarcoFuego(marcoObj, colorEnemigo, 8f, ancho, alto);
-                break;
-        }
-    }
-    
-    private void CrearMarcoGotico(GameObject parent, Color color, float grosor, float ancho, float alto)
-    {
-        CrearBordeRectangulo(parent, "Borde", color, grosor, ancho, alto);
-        CrearPuntaGotic(parent, "Punta1", color, grosor * 2.5f, -ancho/2, alto/2, 0f);
-        CrearPuntaGotic(parent, "Punta2", color, grosor * 2.5f, ancho/2, alto/2, 90f);
-        CrearPuntaGotic(parent, "Punta3", color, grosor * 2.5f, -ancho/2, -alto/2, -90f);
-        CrearPuntaGotic(parent, "Punta4", color, grosor * 2.5f, ancho/2, -alto/2, 180f);
-        CrearDecoracionesGotico(parent, color, grosor, ancho, alto);
-    }
-    
-    private void CrearMarcoEnergia(GameObject parent, Color color, float grosor, float ancho, float alto)
-    {
-        Color energiaBrillante = new Color(color.r, color.g, color.b, 1f);
-        CrearBordeRectangulo(parent, "BordePrincipal", energiaBrillante, grosor, ancho, alto);
-        for (int i = 0; i < 4; i++)
-        {
-            float angle = i * 90f;
-            float x = (i % 2 == 0 ? -1 : 1) * ancho / 2;
-            float y = (i < 2 ? 1 : -1) * alto / 2;
-            CrearRayoEnergia(parent, "Rayo" + i, color, grosor * 1.5f, x, y, angle);
-        }
-        CrearLineasEnergia(parent, color, grosor, ancho, alto);
-    }
-    
-    private void CrearMarcoPiedraPreciosa(GameObject parent, Color color, float grosor, float ancho, float alto)
-    {
-        CrearBordeRectangulo(parent, "Capa1", new Color(color.r * 0.4f, color.g * 0.4f, color.b * 0.4f, 1f), grosor + 1f, ancho + 2f, alto + 2f);
-        CrearBordeRectangulo(parent, "Capa2", new Color(color.r * 0.7f, color.g * 0.7f, color.b * 0.7f, 1f), grosor, ancho, alto);
-        CrearBordeRectangulo(parent, "Capa3", new Color(Mathf.Min(1f, color.r * 1.3f), Mathf.Min(1f, color.g * 1.3f), Mathf.Min(1f, color.b * 1.3f), 1f), grosor * 0.5f, ancho - grosor * 1.5f, alto - grosor * 1.5f);
-        CrearGema(parent, "Gema1", color, grosor * 2f, -ancho/2, alto/2);
-        CrearGema(parent, "Gema2", color, grosor * 2f, ancho/2, alto/2);
-        CrearGema(parent, "Gema3", color, grosor * 2f, -ancho/2, -alto/2);
-        CrearGema(parent, "Gema4", color, grosor * 2f, ancho/2, -alto/2);
-    }
-    
-    private void CrearMarcoEspada(GameObject parent, Color color, float grosor, float ancho, float alto)
-    {
-        CrearBordeRectangulo(parent, "Borde", color, grosor, ancho, alto);
-        CrearEspadaDecorativa(parent, "Espada1", color, grosor * 2f, -ancho/2, alto/2, 45f);
-        CrearEspadaDecorativa(parent, "Espada2", color, grosor * 2f, ancho/2, alto/2, 135f);
-        CrearEspadaDecorativa(parent, "Espada3", color, grosor * 2f, -ancho/2, -alto/2, -45f);
-        CrearEspadaDecorativa(parent, "Espada4", color, grosor * 2f, ancho/2, -alto/2, -135f);
-        CrearLineasCorte(parent, color, grosor * 0.5f, ancho, alto);
-    }
-    
-    private void CrearMarcoCristal(GameObject parent, Color color, float grosor, float ancho, float alto)
-    {
-        Color cristal = new Color(color.r, color.g, color.b, 0.7f);
-        CrearBordeRectangulo(parent, "BordeCristal", cristal, grosor, ancho, alto);
-        Color brillo = new Color(1f, 1f, 1f, 0.8f);
-        CrearBrillo(parent, "Brillo1", brillo, grosor * 1.5f, -ancho/2, alto/2);
-        CrearBrillo(parent, "Brillo2", brillo, grosor * 1.5f, ancho/2, alto/2);
-        CrearBrillo(parent, "Brillo3", brillo, grosor * 1.5f, -ancho/2, -alto/2);
-        CrearBrillo(parent, "Brillo4", brillo, grosor * 1.5f, ancho/2, -alto/2);
-        CrearReflejos(parent, color, grosor, ancho, alto);
-    }
-    
-    private void CrearMarcoFuego(GameObject parent, Color color, float grosor, float ancho, float alto)
-    {
-        Color fuegoBase = new Color(color.r, color.g * 0.5f, 0f, 1f);
-        CrearBordeRectangulo(parent, "BordeFuego", fuegoBase, grosor, ancho, alto);
-        CrearLlama(parent, "Llama1", color, grosor * 2f, -ancho/2, alto/2);
-        CrearLlama(parent, "Llama2", color, grosor * 2f, ancho/2, alto/2);
-        CrearLlama(parent, "Llama3", color, grosor * 2f, -ancho/2, -alto/2);
-        CrearLlama(parent, "Llama4", color, grosor * 2f, ancho/2, -alto/2);
-        CrearChispas(parent, color, grosor, ancho, alto);
-    }
-    
-    private void CrearMarcoBlanco(GameObject parentObj, float grosor, float ancho, float alto)
-    {
-        Transform marcoAnterior = parentObj.transform.Find("Marco");
-        if (marcoAnterior != null)
-        {
-            #if UNITY_EDITOR
-            DestroyImmediate(marcoAnterior.gameObject);
-            #else
-            Destroy(marcoAnterior.gameObject);
-            #endif
-        }
-        
-        GameObject marcoObj = new GameObject("Marco");
-        marcoObj.transform.SetParent(parentObj.transform, false);
-        
-        RectTransform marcoRect = marcoObj.GetComponent<RectTransform>();
-        if (marcoRect == null)
-        {
-            marcoRect = marcoObj.AddComponent<RectTransform>();
-        }
-        marcoRect.anchorMin = new Vector2(0.5f, 0.5f);
-        marcoRect.anchorMax = new Vector2(0.5f, 0.5f);
-        marcoRect.anchoredPosition = Vector2.zero;
-        marcoRect.sizeDelta = new Vector2(ancho, alto);
-        
-        CrearBordeRectangulo(marcoObj, "BordeBlanco", Color.white, grosor, ancho, alto);
-        
-        marcoObj.SetActive(true);
-    }
-    
-    private void CrearMarcoRojo(GameObject parentObj, float grosor, float ancho, float alto)
-    {
-        Transform marcoAnterior = parentObj.transform.Find("Marco");
-        if (marcoAnterior != null)
-        {
-            #if UNITY_EDITOR
-            DestroyImmediate(marcoAnterior.gameObject);
-            #else
-            Destroy(marcoAnterior.gameObject);
-            #endif
-        }
-        
-        GameObject marcoObj = new GameObject("Marco");
-        marcoObj.transform.SetParent(parentObj.transform, false);
-        
-        RectTransform marcoRect = marcoObj.GetComponent<RectTransform>();
-        if (marcoRect == null)
-        {
-            marcoRect = marcoObj.AddComponent<RectTransform>();
-        }
-        marcoRect.anchorMin = new Vector2(0.5f, 0.5f);
-        marcoRect.anchorMax = new Vector2(0.5f, 0.5f);
-        marcoRect.anchoredPosition = Vector2.zero;
-        marcoRect.sizeDelta = new Vector2(ancho, alto);
-        
-        Color rojo = new Color(1f, 0.2f, 0.2f, 1f);
-        CrearBordeRectangulo(marcoObj, "BordeRojo", rojo, grosor, ancho, alto);
-        
-        marcoObj.SetActive(true);
-    }
-    
-    private void CrearMarcoFijo(GameObject parentObj, Color colorMarco, float grosor, float ancho, float alto)
-    {
-        Transform marcoAnterior = parentObj.transform.Find("Marco");
-        if (marcoAnterior != null)
-        {
-            #if UNITY_EDITOR
-            DestroyImmediate(marcoAnterior.gameObject);
-            #else
-            Destroy(marcoAnterior.gameObject);
-            #endif
-        }
-        
-        GameObject marcoObj = new GameObject("Marco");
-        marcoObj.transform.SetParent(parentObj.transform, false);
-        
-        RectTransform marcoRect = marcoObj.GetComponent<RectTransform>();
-        if (marcoRect == null)
-        {
-            marcoRect = marcoObj.AddComponent<RectTransform>();
-        }
-        marcoRect.anchorMin = new Vector2(0.5f, 0.5f);
-        marcoRect.anchorMax = new Vector2(0.5f, 0.5f);
-        marcoRect.anchoredPosition = Vector2.zero;
-        marcoRect.sizeDelta = new Vector2(ancho, alto);
-        
-        marcoObj.SetActive(true); // Asegurar que el marco sea visible
-        
-        Color colorSombra = new Color(colorMarco.r * 0.3f, colorMarco.g * 0.3f, colorMarco.b * 0.3f, colorMarco.a * 0.5f);
-        CrearBordeRectangulo(marcoObj, "Sombra", colorSombra, grosor + 2f, ancho + 4f, alto + 4f);
-        
-        CrearBordeRectangulo(marcoObj, "BordeExterior", colorMarco, grosor, ancho, alto);
-        
-        Color colorInterior = new Color(
-            Mathf.Min(1f, colorMarco.r * 1.2f),
-            Mathf.Min(1f, colorMarco.g * 1.2f),
-            Mathf.Min(1f, colorMarco.b * 1.2f),
-            colorMarco.a
-        );
-        CrearBordeRectangulo(marcoObj, "BordeInterior", colorInterior, grosor * 0.5f, ancho - grosor * 1.5f, alto - grosor * 1.5f);
-        
-        float tamañoEsquina = grosor * 2f;
-        CrearEsquinaDecorativa(marcoObj, "Esquina1", colorMarco, tamañoEsquina, -ancho/2, alto/2);
-        CrearEsquinaDecorativa(marcoObj, "Esquina2", colorMarco, tamañoEsquina, ancho/2, alto/2);
-        CrearEsquinaDecorativa(marcoObj, "Esquina3", colorMarco, tamañoEsquina, -ancho/2, -alto/2);
-        CrearEsquinaDecorativa(marcoObj, "Esquina4", colorMarco, tamañoEsquina, ancho/2, -alto/2);
-        
-        CrearPuntosDecorativos(marcoObj, colorMarco, grosor, ancho, alto);
-    }
-    
-    private void CrearBordeRectangulo(GameObject parent, string nombre, Color color, float grosor, float ancho, float alto)
-    {
-        CrearRectangulo(parent, nombre + "_Top", color, ancho + grosor * 2, grosor, 0, alto / 2 + grosor / 2);
-        CrearRectangulo(parent, nombre + "_Bottom", color, ancho + grosor * 2, grosor, 0, -alto / 2 - grosor / 2);
-        CrearRectangulo(parent, nombre + "_Left", color, grosor, alto, -ancho / 2 - grosor / 2, 0);
-        CrearRectangulo(parent, nombre + "_Right", color, grosor, alto, ancho / 2 + grosor / 2, 0);
-    }
-    
-    private void CrearRectangulo(GameObject parent, string nombre, Color color, float ancho, float alto, float posX, float posY)
-    {
-        GameObject rectObj = new GameObject(nombre);
-        rectObj.transform.SetParent(parent.transform, false);
-        Image rectImg = rectObj.AddComponent<Image>();
-        
-        Texture2D texture = new Texture2D(1, 1);
-        texture.SetPixel(0, 0, Color.white);
-        texture.Apply();
-        Sprite sprite = Sprite.Create(texture, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f));
-        rectImg.sprite = sprite;
-        rectImg.color = color;
-        rectImg.raycastTarget = false; // No bloquear raycasts
-        
-        RectTransform rect = rectObj.GetComponent<RectTransform>();
-        rect.anchorMin = new Vector2(0.5f, 0.5f);
-        rect.anchorMax = new Vector2(0.5f, 0.5f);
-        rect.anchoredPosition = new Vector2(posX, posY);
-        rect.sizeDelta = new Vector2(ancho, alto);
-        
-        rectObj.SetActive(true);
-    }
-    
-    private void CrearEsquina(GameObject parent, string nombre, Color color, float tamaño, float posX, float posY)
-    {
-        GameObject esquinaObj = new GameObject(nombre);
-        esquinaObj.transform.SetParent(parent.transform, false);
-        Image esquinaImg = esquinaObj.AddComponent<Image>();
-        
-        Texture2D texture = new Texture2D(1, 1);
-        texture.SetPixel(0, 0, Color.white);
-        texture.Apply();
-        Sprite sprite = Sprite.Create(texture, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f));
-        esquinaImg.sprite = sprite;
-        esquinaImg.color = color;
-        esquinaImg.raycastTarget = false; // No bloquear raycasts
-        
-        RectTransform rect = esquinaObj.GetComponent<RectTransform>();
-        rect.anchorMin = new Vector2(0.5f, 0.5f);
-        rect.anchorMax = new Vector2(0.5f, 0.5f);
-        rect.anchoredPosition = new Vector2(posX, posY);
-        rect.sizeDelta = new Vector2(tamaño, tamaño);
-        
-        esquinaObj.SetActive(true);
-    }
-    
-    private void CrearEsquinaDecorativa(GameObject parent, string nombre, Color color, float tamaño, float posX, float posY)
-    {
-        CrearEsquina(parent, nombre + "_Base", color, tamaño, posX, posY);
-        Color brillo = new Color(1f, 1f, 1f, 0.6f);
-        CrearEsquina(parent, nombre + "_Brillo", brillo, tamaño * 0.5f, posX, posY);
-    }
-    
-    private void CrearPuntosDecorativos(GameObject parent, Color color, float grosor, float ancho, float alto)
-    {
-        float puntoSize = grosor * 0.5f;
-        int puntosPorLado = 4;
-        float espacio = ancho / (puntosPorLado + 1);
-        
-        for (int i = 1; i <= puntosPorLado; i++)
-        {
-            CrearPunto(parent, "PuntoTop" + i, color, puntoSize, -ancho/2 + espacio * i, alto/2);
-            CrearPunto(parent, "PuntoBot" + i, color, puntoSize, -ancho/2 + espacio * i, -alto/2);
-        }
-        
-        espacio = alto / (puntosPorLado + 1);
-        for (int i = 1; i <= puntosPorLado; i++)
-        {
-            CrearPunto(parent, "PuntoLeft" + i, color, puntoSize, -ancho/2, -alto/2 + espacio * i);
-            CrearPunto(parent, "PuntoRight" + i, color, puntoSize, ancho/2, -alto/2 + espacio * i);
-        }
-    }
-    
-    private void CrearPunto(GameObject parent, string nombre, Color color, float tamaño, float posX, float posY)
-    {
-        GameObject puntoObj = new GameObject(nombre);
-        puntoObj.transform.SetParent(parent.transform, false);
-        Image puntoImg = puntoObj.AddComponent<Image>();
-        
-        Texture2D texture = new Texture2D(1, 1);
-        texture.SetPixel(0, 0, Color.white);
-        texture.Apply();
-        Sprite sprite = Sprite.Create(texture, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f));
-        puntoImg.sprite = sprite;
-        puntoImg.color = color;
-        puntoImg.raycastTarget = false; // No bloquear raycasts
-        
-        RectTransform rect = puntoObj.GetComponent<RectTransform>();
-        rect.anchorMin = new Vector2(0.5f, 0.5f);
-        rect.anchorMax = new Vector2(0.5f, 0.5f);
-        rect.anchoredPosition = new Vector2(posX, posY);
-        rect.sizeDelta = new Vector2(tamaño, tamaño);
-        
-        puntoObj.SetActive(true);
-    }
-    
-    private void CrearPuntaGotic(GameObject parent, string nombre, Color color, float tamaño, float posX, float posY, float rotacion)
-    {
-        CrearEsquina(parent, nombre, color, tamaño, posX, posY);
-    }
-    
-    private void CrearDecoracionesGotico(GameObject parent, Color color, float grosor, float ancho, float alto)
-    {
-        float margenExterior = grosor * 1.5f;
-        for (int i = 0; i < 3; i++)
-        {
-            float offsetX = (i - 1) * (ancho * 0.3f);
-            CrearRectangulo(parent, "DecorGoticTop" + i, color, grosor * 0.5f, grosor * 1.5f, offsetX, alto/2 + margenExterior);
-            CrearRectangulo(parent, "DecorGoticBot" + i, color, grosor * 0.5f, grosor * 1.5f, offsetX, -alto/2 - margenExterior);
-        }
-    }
-    
-    private void CrearRayoEnergia(GameObject parent, string nombre, Color color, float tamaño, float posX, float posY, float angulo)
-    {
-        CrearEsquina(parent, nombre, color, tamaño, posX, posY);
-    }
-    
-    private void CrearLineasEnergia(GameObject parent, Color color, float grosor, float ancho, float alto)
-    {
-        Color energia = new Color(color.r, color.g, color.b, 0.5f);
-        float margenExterior = grosor * 2f;
-        CrearRectangulo(parent, "LineaEnergia1", energia, ancho * 1.2f, grosor * 0.3f, 0, alto/2 + margenExterior);
-        CrearRectangulo(parent, "LineaEnergia2", energia, ancho * 1.2f, grosor * 0.3f, 0, -alto/2 - margenExterior);
-        CrearRectangulo(parent, "LineaEnergia3", energia, grosor * 0.3f, alto * 1.2f, ancho/2 + margenExterior, 0);
-        CrearRectangulo(parent, "LineaEnergia4", energia, grosor * 0.3f, alto * 1.2f, -ancho/2 - margenExterior, 0);
-    }
-    
-    private void CrearGema(GameObject parent, string nombre, Color color, float tamaño, float posX, float posY)
-    {
-        Color gemaBrillo = new Color(Mathf.Min(1f, color.r * 1.5f), Mathf.Min(1f, color.g * 1.5f), Mathf.Min(1f, color.b * 1.5f), 1f);
-        CrearEsquina(parent, nombre + "_Base", color, tamaño, posX, posY);
-        CrearEsquina(parent, nombre + "_Brillo", gemaBrillo, tamaño * 0.6f, posX, posY);
-    }
-    
-    private void CrearEspadaDecorativa(GameObject parent, string nombre, Color color, float tamaño, float posX, float posY, float angulo)
-    {
-        CrearRectangulo(parent, nombre, color, tamaño * 0.3f, tamaño, posX, posY);
-    }
-    
-    private void CrearLineasCorte(GameObject parent, Color color, float grosor, float ancho, float alto)
-    {
-        Color corte = new Color(color.r, color.g, color.b, 0.7f);
-        float margenExterior = grosor * 1.5f;
-        CrearRectangulo(parent, "Corte1", corte, grosor * 0.5f, grosor * 2f, -ancho/2 - margenExterior, alto/2 + margenExterior);
-        CrearRectangulo(parent, "Corte2", corte, grosor * 0.5f, grosor * 2f, ancho/2 + margenExterior, alto/2 + margenExterior);
-        CrearRectangulo(parent, "Corte3", corte, grosor * 0.5f, grosor * 2f, -ancho/2 - margenExterior, -alto/2 - margenExterior);
-        CrearRectangulo(parent, "Corte4", corte, grosor * 0.5f, grosor * 2f, ancho/2 + margenExterior, -alto/2 - margenExterior);
-    }
-    
-    private void CrearBrillo(GameObject parent, string nombre, Color color, float tamaño, float posX, float posY)
-    {
-        CrearEsquina(parent, nombre, color, tamaño, posX, posY);
-    }
-    
-    private void CrearReflejos(GameObject parent, Color color, float grosor, float ancho, float alto)
-    {
-        Color reflejo = new Color(1f, 1f, 1f, 0.3f);
-        float margenExterior = grosor * 1.5f;
-        CrearRectangulo(parent, "Reflejo1", reflejo, ancho * 0.4f, grosor * 0.3f, 0, alto/2 + margenExterior);
-        CrearRectangulo(parent, "Reflejo2", reflejo, grosor * 0.3f, alto * 0.4f, ancho/2 + margenExterior, 0);
-    }
-    
-    private void CrearLlama(GameObject parent, string nombre, Color color, float tamaño, float posX, float posY)
-    {
-        Color llama = new Color(1f, UnityEngine.Random.Range(0.3f, 0.7f), 0f, 0.9f);
-        CrearEsquina(parent, nombre, llama, tamaño, posX, posY);
-        Color llamaBrillo = new Color(1f, 1f, 0.5f, 0.6f);
-        CrearEsquina(parent, nombre + "_Brillo", llamaBrillo, tamaño * 0.5f, posX, posY);
-    }
-    
-    private void CrearChispas(GameObject parent, Color color, float grosor, float ancho, float alto)
-    {
-        float margenExterior = grosor * 1.5f;
-        for (int i = 0; i < 6; i++)
-        {
-            bool enBordeX = UnityEngine.Random.value > 0.5f;
-            float x, y;
-            if (enBordeX)
-            {
-                x = UnityEngine.Random.value > 0.5f ? ancho/2 + margenExterior : -ancho/2 - margenExterior;
-                y = UnityEngine.Random.Range(-alto/2 - margenExterior, alto/2 + margenExterior);
-            }
-            else
-            {
-                x = UnityEngine.Random.Range(-ancho/2 - margenExterior, ancho/2 + margenExterior);
-                y = UnityEngine.Random.value > 0.5f ? alto/2 + margenExterior : -alto/2 - margenExterior;
-            }
-            Color chispa = new Color(1f, UnityEngine.Random.Range(0.5f, 1f), 0f, 0.8f);
-            CrearPunto(parent, "Chispa" + i, chispa, grosor * 0.4f, x, y);
-        }
-    }
-    #endregion
-    
     #region Helpers - Sliders
     private Slider CrearSlider(string nombre, Color color)
     {
@@ -1344,15 +908,6 @@ public class UIManager : MonoBehaviour
             animacionAtaque.gameObject.SetActive(false);
             animacionAtaque.color = new Color(1f, 1f, 1f, 0f);
             animacionAtaque.sprite = null;
-            
-            if (animacionAtaque.transform.parent != null)
-            {
-                Transform marcoRojo = animacionAtaque.transform.parent.Find("Marco");
-                if (marcoRojo != null)
-                {
-                    marcoRojo.gameObject.SetActive(false);
-                }
-            }
         }
         
         Sprite spriteJugador = gameManager.GetSpriteJugador();
@@ -1360,6 +915,8 @@ public class UIManager : MonoBehaviour
         
         string tipoJugador = gameManager.GetTipoJugador();
         string tipoEnemigo = gameManager.GetTipoEnemigo();
+        bool guerreroConSheet = tipoJugador == "Guerrero" && caballeroSheet != null;
+        LimpiarDuplicadosImagenJugador();
         if (!string.IsNullOrEmpty(tipoJugador))
         {
             IniciarAnimacionIdle(tipoJugador, true);
@@ -1369,34 +926,20 @@ public class UIManager : MonoBehaviour
             IniciarAnimacionIdle(tipoEnemigo, false);
         }
         
-        if (spriteJugador != null && imgJugador != null)
+        if (!guerreroConSheet && spriteJugador != null && imgJugador != null)
         {
             imgJugador.sprite = spriteJugador;
             imgJugador.color = Color.white;
             imgJugador.gameObject.SetActive(true);
-            
-            GameObject imgObjJugador = imgJugador.gameObject;
-            
-            CrearMarcoBlanco(imgObjJugador, 8f, 150, 150);
-            
-            Transform marcoJugador = imgObjJugador.transform.Find("Marco");
-            if (marcoJugador != null)
-            {
-                marcoJugador.gameObject.SetActive(true);
-                
-                for (int i = 0; i < marcoJugador.childCount; i++)
-                {
-                    Transform child = marcoJugador.GetChild(i);
-                    if (child != null) child.gameObject.SetActive(true);
-                }
-                
-                marcoJugador.SetAsFirstSibling();
-                imgJugador.transform.SetAsLastSibling();
-            }
         }
-        else if (imgJugador != null)
+        else if (!guerreroConSheet && imgJugador != null)
         {
             imgJugador.gameObject.SetActive(false);
+        }
+        else if (guerreroConSheet && imgJugador != null)
+        {
+            imgJugador.gameObject.SetActive(true);
+            imgJugador.color = Color.white;
         }
         
         if (spriteEnemigo != null && imgEnemigo != null)
@@ -1404,30 +947,37 @@ public class UIManager : MonoBehaviour
             imgEnemigo.sprite = spriteEnemigo;
             imgEnemigo.color = Color.white;
             imgEnemigo.gameObject.SetActive(true);
-            
-            GameObject imgObjEnemigo = imgEnemigo.gameObject;
-            
-            CrearMarcoEnemigoSegunTipo(imgObjEnemigo, tipoEnemigo, 150, 150);
-            
-            Transform marcoEnemigo = imgObjEnemigo.transform.Find("Marco");
-            if (marcoEnemigo != null)
-            {
-                marcoEnemigo.gameObject.SetActive(true);
-                
-                for (int i = 0; i < marcoEnemigo.childCount; i++)
-                {
-                    Transform child = marcoEnemigo.GetChild(i);
-                    if (child != null) child.gameObject.SetActive(true);
-                }
-                
-                marcoEnemigo.SetAsFirstSibling();
-                imgEnemigo.transform.SetAsLastSibling();
-            }
         }
         else if (imgEnemigo != null)
         {
             imgEnemigo.gameObject.SetActive(false);
         }
+    }
+
+    private void LimpiarDuplicadosImagenJugador()
+    {
+        if (imgJugador == null) return;
+        Image[] images = FindObjectsOfType<Image>(true);
+        foreach (Image img in images)
+        {
+            if (img == null || img == imgJugador) continue;
+            string name = img.gameObject.name;
+            if (name == "ImgJugador" || name == "ImageJugador" || name == "ImageJugador(Clone)")
+            {
+                Destroy(img.gameObject);
+            }
+        }
+    }
+
+    private Image BuscarImagenJugadorExistente()
+    {
+        GameObject go = GameObject.Find("ImgJugador");
+        if (go == null) go = GameObject.Find("ImageJugador");
+        if (go != null)
+        {
+            return go.GetComponent<Image>();
+        }
+        return null;
     }
     
     public void MostrarPanelDescanso()
@@ -2345,18 +1895,18 @@ public class UIManager : MonoBehaviour
         if (animacionAtaque != null)
         {
             animacionAtaque.gameObject.SetActive(false);
-            if (tipo == "Guerrero" && esJugador && guerreroAtaqueSheet != null)
+        }
+        
+        if (tipo == "Guerrero" && esJugador && caballeroSheet != null)
+        {
+            if (guerreroAtaqueEnCurso) return;
+            guerreroAtaqueEnCurso = true;
+            DetenerAnimacionesIdle();
+            if (corrutinaAnimacion != null)
             {
-                if (guerreroAtaqueEnCurso) return;
-                guerreroAtaqueEnCurso = true;
-                DetenerAnimacionesIdle();
-                if (corrutinaAnimacion != null)
-                {
-                    StopCoroutine(corrutinaAnimacion);
-                }
-                corrutinaAnimacion = StartCoroutine(ReproducirAtaqueGuerreroCompleto(daño));
-                return;
+                StopCoroutine(corrutinaAnimacion);
             }
+            corrutinaAnimacion = StartCoroutine(ReproducirAtaqueGuerreroCompleto(daño));
         }
     }
 
@@ -2377,24 +1927,9 @@ public class UIManager : MonoBehaviour
     {
         if (animacionAtaque == null) return;
         
-        if (tipo == "Guerrero" && guerreroAtaqueSheet != null)
+        if (tipo == "Guerrero" && esJugador)
         {
-            if (esJugador)
-            {
-                if (corrutinaIdleJugador != null)
-                {
-                    StopCoroutine(corrutinaIdleJugador);
-                }
-                corrutinaIdleJugador = StartCoroutine(ReproducirIdleGuerreroSheet(true));
-            }
-            else
-            {
-                if (corrutinaIdleEnemigo != null)
-                {
-                    StopCoroutine(corrutinaIdleEnemigo);
-                }
-                corrutinaIdleEnemigo = StartCoroutine(ReproducirIdleGuerreroSheet(false));
-            }
+            MostrarAnimacionIdleCaballero();
             return;
         }
         
@@ -2433,6 +1968,39 @@ public class UIManager : MonoBehaviour
         }
     }
     
+    public void MostrarAnimacionIdleCaballero()
+    {
+        if (caballeroSheet == null) return;
+        
+        Image target = imgJugador;
+        if (target == null) return;
+        
+        if (corrutinaIdleCaballero != null)
+        {
+            StopCoroutine(corrutinaIdleCaballero);
+        }
+        
+        target.gameObject.SetActive(true);
+        target.color = Color.white;
+        target.preserveAspect = true;
+        if (TryGetCaballeroSheet(out Texture2D sheet, out float cellW, out float cellH, out int columns, out int rows))
+        {
+            RectTransform rect = target.rectTransform;
+            float targetW = cellW;
+            float targetH = cellH;
+            float minSize = 150f;
+            float minSide = Mathf.Min(targetW, targetH);
+            if (minSide > 0f && minSide < minSize)
+            {
+                float scale = minSize / minSide;
+                targetW *= scale;
+                targetH *= scale;
+            }
+            rect.sizeDelta = new Vector2(targetW, targetH);
+        }
+        corrutinaIdleCaballero = StartCoroutine(ReproducirIdleCaballero());
+    }
+
     private void DetenerAnimacionesIdle()
     {
         if (corrutinaIdleJugador != null)
@@ -2445,29 +2013,46 @@ public class UIManager : MonoBehaviour
             StopCoroutine(corrutinaIdleEnemigo);
             corrutinaIdleEnemigo = null;
         }
+        if (corrutinaIdleCaballero != null)
+        {
+            StopCoroutine(corrutinaIdleCaballero);
+            corrutinaIdleCaballero = null;
+        }
+    }
+
+    private IEnumerator ReproducirIdleCaballero()
+    {
+        Sprite[] sprites = ObtenerSpritesCaballeroIdle();
+        if (sprites.Length == 0) yield break;
+        
+        int index = 0;
+        while (true)
+        {
+            if (imgJugador == null) yield break;
+            Sprite sprite = sprites[index];
+            if (sprite != null)
+            {
+                ApplySpriteToImage(imgJugador, sprite);
+            }
+            index = (index + 1) % sprites.Length;
+            yield return new WaitForSeconds(caballeroIdleFrameTime);
+        }
+    }
+
+    private IEnumerator IniciarIdleCaballeroDespuesDeInit()
+    {
+        yield return null;
+        if (caballeroSheet != null && imgJugador != null)
+        {
+            MostrarAnimacionIdleCaballero();
+        }
     }
     
-    private IEnumerator ReproducirAnimacion(string carpeta, string animacion, int cantidadFrames, int daño, bool esJugador, bool mostrarMarco = true)
+    private IEnumerator ReproducirAnimacion(string carpeta, string animacion, int cantidadFrames, int daño, bool esJugador)
     {
         if (animacionAtaque == null) yield break;
         
         animacionAtaque.gameObject.SetActive(true);
-        
-        if (mostrarMarco && animacionAtaque.transform.parent != null)
-        {
-            Transform marcoRojo = animacionAtaque.transform.parent.Find("Marco");
-            if (marcoRojo != null)
-            {
-                marcoRojo.gameObject.SetActive(true);
-                foreach (Transform child in marcoRojo)
-                {
-                    if (child != null)
-                    {
-                        child.gameObject.SetActive(true);
-                    }
-                }
-            }
-        }
         
         Sprite[] sprites = new Sprite[cantidadFrames];
         
@@ -2565,38 +2150,6 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    private IEnumerator ReproducirIdleGuerreroSheet(bool esJugador)
-    {
-        Image imagenObjetivo = esJugador ? imgJugador : imgEnemigo;
-        if (imagenObjetivo == null) yield break;
-        if (!imagenObjetivo.gameObject.activeInHierarchy)
-        {
-            imagenObjetivo.gameObject.SetActive(true);
-        }
-        imagenObjetivo.color = Color.white;
-        imagenObjetivo.preserveAspect = true;
-        
-        Sprite[] sprites = ObtenerSpritesGuerrero(guerreroIdleFrames);
-        if (sprites.Length == 0) yield break;
-        
-        while (true)
-        {
-            for (int i = 0; i < sprites.Length; i++)
-            {
-                if (imagenObjetivo == null || !imagenObjetivo.gameObject.activeInHierarchy)
-                {
-                    yield break;
-                }
-                if (sprites[i] != null)
-                {
-                    imagenObjetivo.sprite = sprites[i];
-                    imagenObjetivo.color = Color.white;
-                }
-                yield return new WaitForSeconds(guerreroIdleFrameTime);
-            }
-        }
-    }
-    
     private IEnumerator ReproducirAtaqueGuerreroCompleto(int daño)
     {
         if (imgJugador == null) yield break;
@@ -2608,35 +2161,48 @@ public class UIManager : MonoBehaviour
         imgJugador.preserveAspect = true;
         
         RectTransform jugadorRect = imgJugador.rectTransform;
+        Canvas canvas = jugadorRect.GetComponentInParent<Canvas>();
+        // Guardamos la posición anchoredPosition original para volver después
         Vector2 inicio = jugadorRect.anchoredPosition;
-        Vector2 objetivo = inicio + new Vector2(260f, 0f);
+        // Calculamos posiciones ABSOLUTAS en el Canvas (no relativas a anchors)
+        Vector2 jugadorPosAbsoluta = RectTransformUtility.PixelAdjustPoint(jugadorRect.position, jugadorRect, canvas);
+        Vector2 enemigoPosAbsoluta = Vector2.zero;
         if (imgEnemigo != null)
         {
-            Vector2 enemigoPos = imgEnemigo.rectTransform.anchoredPosition;
-            objetivo = new Vector2(enemigoPos.x - 150f, inicio.y);
+            RectTransform enemigoRect = imgEnemigo.rectTransform;
+            enemigoPosAbsoluta = RectTransformUtility.PixelAdjustPoint(enemigoRect.position, enemigoRect, canvas);
         }
-        
-        Sprite[] runRight = ObtenerSpritesGuerrero(guerreroRunRightFrames);
-        Sprite[] attack = ObtenerSpritesGuerrero(guerreroAttackFrames);
-        Sprite[] runLeft = ObtenerSpritesGuerrero(guerreroRunLeftFrames);
-        
-        yield return StartCoroutine(MoverConFrames(imgJugador, inicio, objetivo, runRight, guerreroRunFrameTime));
-        
-        for (int i = 0; i < attack.Length; i++)
+        // La distancia que queremos recorrer hacia el enemigo
+        float distanciaAvance = 0f;
+        if (imgEnemigo != null)
         {
-            if (attack[i] != null)
-            {
-                ApplySpriteToImage(imgJugador, attack[i]);
-            }
-            yield return new WaitForSeconds(guerreroAttackFrameTime);
+            // Calculamos cuánto tiene que avanzar para llegar cerca del enemigo
+            distanciaAvance = enemigoPosAbsoluta.x - jugadorPosAbsoluta.x - 120f;
+        }
+        else
+        {
+            // Si no hay enemigo, avanza 400 píxeles por defecto
+            distanciaAvance = 400f;
+        }
+        // El objetivo es la posición inicial más el avance
+        Vector2 objetivo = inicio + new Vector2(distanciaAvance, 0f);
+        
+        Sprite[] attackFrames = ObtenerSpritesCaballeroAtaque();
+        if (attackFrames.Length == 0)
+        {
+            guerreroAtaqueEnCurso = false;
+            yield break;
         }
         
+        yield return StartCoroutine(MoverConFrames(imgJugador, inicio, objetivo, attackFrames, caballeroAttackFrameTime));
+        
+        Debug.Log("[UIManager] Llamando a IniciarDañoEnemigoDesdeUI. daño=" + daño + ", gameManager=" + (gameManager != null));
         if (gameManager != null)
         {
             gameManager.IniciarDañoEnemigoDesdeUI(daño);
         }
         
-        yield return StartCoroutine(MoverConFrames(imgJugador, objetivo, inicio, runLeft, guerreroRunFrameTime));
+        yield return StartCoroutine(MoverConFrames(imgJugador, objetivo, inicio, attackFrames, caballeroAttackFrameTime));
         
         jugadorRect.anchoredPosition = inicio;
         IniciarAnimacionIdle("Guerrero", true);
@@ -2720,36 +2286,41 @@ public class UIManager : MonoBehaviour
         int frameCount = Mathf.Max(1, frames.Length);
         float total = frameCount * frameTime;
         float tiempo = 0f;
-        int frameIndex = 0;
+        int frameIndex = -1;
+        
         while (tiempo < total)
         {
+            tiempo += Time.deltaTime;
             float t = total <= 0f ? 1f : Mathf.Clamp01(tiempo / total);
-            imagen.rectTransform.anchoredPosition = Vector2.Lerp(inicio, fin, t);
-            if (frameIndex < frames.Length && frames[frameIndex] != null)
+            float suavizado = t * t * (3f - 2f * t); // SmoothStep
+            imagen.rectTransform.anchoredPosition = Vector2.Lerp(inicio, fin, suavizado);
+            
+            int nuevoFrame = frameCount == 0 ? 0 : Mathf.Clamp(Mathf.FloorToInt(tiempo / frameTime), 0, frameCount - 1);
+            if (nuevoFrame != frameIndex)
             {
-                ApplySpriteToImage(imagen, frames[frameIndex]);
+                frameIndex = nuevoFrame;
+                if (frameIndex < frames.Length && frames[frameIndex] != null)
+                {
+                    ApplySpriteToImage(imagen, frames[frameIndex]);
+                }
             }
-            frameIndex = (frameIndex + 1) % frameCount;
-            tiempo += frameTime;
-            yield return new WaitForSeconds(frameTime);
+            
+            yield return null;
         }
+        
         imagen.rectTransform.anchoredPosition = fin;
     }
     
     private Sprite[] ObtenerSpritesRun(string tipo, bool haciaDerecha)
     {
-        if (tipo == "Guerrero" && guerreroAtaqueSheet != null)
-        {
-            return haciaDerecha ? ObtenerSpritesGuerrero(guerreroRunRightFrames) : ObtenerSpritesGuerrero(guerreroRunLeftFrames);
-        }
         return ObtenerSpritesAttack(tipo);
     }
     
     private Sprite[] ObtenerSpritesAttack(string tipo)
     {
-        if (tipo == "Guerrero" && guerreroAtaqueSheet != null)
+        if (tipo == "Guerrero" && caballeroSheet != null)
         {
-            return ObtenerSpritesGuerrero(guerreroAttackFrames);
+            return ObtenerSpritesCaballeroAtaque();
         }
         
         int cantidadFrames = 0;
@@ -2797,13 +2368,21 @@ public class UIManager : MonoBehaviour
         return sprites;
     }
     
-    private Sprite[] ObtenerSpritesGuerrero(int[] indices)
+    private Sprite[] ObtenerSpritesCaballeroIdle()
     {
-        if (guerreroAtaqueSheet == null || indices == null) return Array.Empty<Sprite>();
-        List<Sprite> result = new List<Sprite>();
-        for (int i = 0; i < indices.Length; i++)
+        if (!TryGetCaballeroSheet(out Texture2D sheet, out float cellW, out float cellH, out int columns, out int rows))
         {
-            Sprite sprite = CrearSpriteDesdeSheet(ObtenerTexturaGuerrero(), indices[i]);
+            return Array.Empty<Sprite>();
+        }
+        
+        int[] frames = caballeroIdleFrames != null && caballeroIdleFrames.Length > 0
+            ? caballeroIdleFrames
+            : Enumerable.Range(0, Mathf.Clamp(caballeroIdleFrameCount, 1, 16)).ToArray();
+        List<Sprite> result = new List<Sprite>(frames.Length);
+        float pixelsPerUnit = caballeroSheet.pixelsPerUnit;
+        for (int i = 0; i < frames.Length; i++)
+        {
+            Sprite sprite = CrearSpriteDesdeSheetCaballero(sheet, cellW, cellH, columns, rows, frames[i], pixelsPerUnit);
             if (sprite != null)
             {
                 result.Add(sprite);
@@ -2812,45 +2391,147 @@ public class UIManager : MonoBehaviour
         return result.ToArray();
     }
     
-    private Sprite CrearSpriteDesdeSheet(Texture2D sheet, int index)
+    private Sprite[] ObtenerSpritesCaballeroAtaque()
     {
-        if (sheet == null || guerreroCellSize.x <= 0 || guerreroCellSize.y <= 0) return null;
-        int columns = sheet.width / guerreroCellSize.x;
-        int rows = sheet.height / guerreroCellSize.y;
-        if (columns <= 0 || rows <= 0) return null;
+        if (!TryGetCaballeroSheet(out Texture2D sheet, out float cellW, out float cellH, out int columns, out int rows))
+        {
+            return Array.Empty<Sprite>();
+        }
         
+        int[] frames = caballeroAttackFrames != null && caballeroAttackFrames.Length > 0
+            ? caballeroAttackFrames
+            : Enumerable.Range(16, Mathf.Clamp(caballeroAttackFrameCount, 1, 16)).ToArray();
+        List<Sprite> result = new List<Sprite>(frames.Length);
+        float pixelsPerUnit = caballeroSheet.pixelsPerUnit;
+        for (int i = 0; i < frames.Length; i++)
+        {
+            Sprite sprite = CrearSpriteDesdeSheetCaballero(sheet, cellW, cellH, columns, rows, frames[i], pixelsPerUnit);
+            if (sprite != null)
+            {
+                result.Add(sprite);
+            }
+        }
+        return result.ToArray();
+    }
+    
+    private bool TryGetCaballeroSheet(out Texture2D sheet, out float cellW, out float cellH, out int columns, out int rows)
+    {
+        sheet = null;
+        cellW = 0f;
+        cellH = 0f;
+        columns = 0;
+        rows = 0;
+        if (caballeroSheet == null) return false;
+        sheet = caballeroSheet.texture;
+        if (sheet == null) return false;
+        sheet.filterMode = FilterMode.Point;
+        sheet.wrapMode = TextureWrapMode.Clamp;
+        
+        // Preferir configuración manual si está definida.
+        if (caballeroColumns > 0 && caballeroRows > 0)
+        {
+            columns = caballeroColumns;
+            rows = caballeroRows;
+            cellW = sheet.width / (float)columns;
+            cellH = sheet.height / (float)rows;
+        }
+        else
+        {
+            // Fallback automático (4x8 o 8x4)
+            float cellW_4x8 = sheet.width / 4f;
+            float cellH_4x8 = sheet.height / 8f;
+            float diff_4x8 = Mathf.Abs(cellW_4x8 - cellH_4x8);
+            
+            float cellW_8x4 = sheet.width / 8f;
+            float cellH_8x4 = sheet.height / 4f;
+            float diff_8x4 = Mathf.Abs(cellW_8x4 - cellH_8x4);
+            
+            if (diff_8x4 <= diff_4x8)
+            {
+                columns = 8;
+                rows = 4;
+                cellW = cellW_8x4;
+                cellH = cellH_8x4;
+            }
+            else
+            {
+                columns = 4;
+                rows = 8;
+                cellW = cellW_4x8;
+                cellH = cellH_4x8;
+            }
+        }
+        
+        return cellW > 0f && cellH > 0f && columns > 0 && rows > 0;
+    }
+    
+    private Sprite CrearSpriteDesdeSheetCaballero(Texture2D sheet, float cellW, float cellH, int columns, int rows, int index, float pixelsPerUnit)
+    {
         int row = index / columns;
         int col = index % columns;
         if (row >= rows) return null;
         
-        int x = col * guerreroCellSize.x;
-        int y = sheet.height - ((row + 1) * guerreroCellSize.y);
-        Rect rect = new Rect(x, y, guerreroCellSize.x, guerreroCellSize.y);
-        return Sprite.Create(sheet, rect, new Vector2(0.5f, 0.5f), guerreroPixelsPerUnit);
-    }
-    
-    private Texture2D ObtenerTexturaGuerrero()
-    {
-        if (guerreroAtaqueSheet == null) return null;
-        Texture2D baseTex = guerreroAtaqueSheet.texture;
-        if (!guerreroQuitarBlanco || baseTex == null) return baseTex;
-        if (guerreroSheetProcesado != null) return guerreroSheetProcesado;
-        
-        Color[] pixels = baseTex.GetPixels();
-        for (int i = 0; i < pixels.Length; i++)
+        float x = col * cellW;
+        float y = sheet.height - ((row + 1) * cellH);
+        Rect rect = new Rect(x, y, cellW, cellH);
+        Rect contentRect;
+        if (TryGetContenidoVisible(sheet, rect, out contentRect))
         {
-            Color c = pixels[i];
-            if (c.r >= guerreroUmbralBlanco && c.g >= guerreroUmbralBlanco && c.b >= guerreroUmbralBlanco)
+            return Sprite.Create(sheet, contentRect, new Vector2(0.5f, 0.5f), pixelsPerUnit);
+        }
+        return Sprite.Create(sheet, rect, new Vector2(0.5f, 0.5f), pixelsPerUnit);
+    }
+
+    private bool TryGetContenidoVisible(Texture2D sheet, Rect cellRect, out Rect contentRect)
+    {
+        contentRect = cellRect;
+        if (sheet == null || !sheet.isReadable) return false;
+        
+        int texW = sheet.width;
+        int texH = sheet.height;
+        int startX = Mathf.Clamp(Mathf.RoundToInt(cellRect.x), 0, texW - 1);
+        int startY = Mathf.Clamp(Mathf.RoundToInt(cellRect.y), 0, texH - 1);
+        int width = Mathf.Clamp(Mathf.RoundToInt(cellRect.width), 1, texW - startX);
+        int height = Mathf.Clamp(Mathf.RoundToInt(cellRect.height), 1, texH - startY);
+        
+        Color32[] pixels = sheet.GetPixels32();
+        int minX = startX + width;
+        int maxX = startX;
+        int minY = startY + height;
+        int maxY = startY;
+        bool found = false;
+        
+        for (int y = startY; y < startY + height; y++)
+        {
+            int rowOffset = y * texW;
+            for (int x = startX; x < startX + width; x++)
             {
-                c.a = 0f;
-                pixels[i] = c;
+                Color32 c = pixels[rowOffset + x];
+                if (c.a > 10)
+                {
+                    found = true;
+                    if (x < minX) minX = x;
+                    if (x > maxX) maxX = x;
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                }
             }
         }
-        guerreroSheetProcesado = new Texture2D(baseTex.width, baseTex.height, TextureFormat.RGBA32, false);
-        guerreroSheetProcesado.SetPixels(pixels);
-        guerreroSheetProcesado.Apply();
-        return guerreroSheetProcesado;
+        
+        if (!found) return false;
+        
+        int pad = 1;
+        minX = Mathf.Clamp(minX - pad, 0, texW - 1);
+        minY = Mathf.Clamp(minY - pad, 0, texH - 1);
+        maxX = Mathf.Clamp(maxX + pad, 0, texW - 1);
+        maxY = Mathf.Clamp(maxY + pad, 0, texH - 1);
+        
+        int contentW = Mathf.Max(1, maxX - minX + 1);
+        int contentH = Mathf.Max(1, maxY - minY + 1);
+        contentRect = new Rect(minX, minY, contentW, contentH);
+        return true;
     }
+    
     
     private IEnumerator ReproducirAnimacionIdle(string carpeta, string animacion, int cantidadFrames, bool esJugador)
     {
@@ -2957,12 +2638,6 @@ public class UIManager : MonoBehaviour
             Transform parent = animacionAtaque.transform.parent;
             if (parent != null)
             {
-                Transform marcoRojo = parent.Find("Marco");
-                if (marcoRojo != null)
-                {
-                    marcoRojo.gameObject.SetActive(false);
-                }
-                
                 Transform dañoExistente = parent.Find("DañoTexto");
                 if (dañoExistente != null)
                 {

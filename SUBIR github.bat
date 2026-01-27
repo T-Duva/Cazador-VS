@@ -88,4 +88,6 @@ echo ========================================
 echo   ¡CAMBIOS SUBIDOS EXITOSAMENTE!
 echo ========================================
 echo.
+
+pause
 pause

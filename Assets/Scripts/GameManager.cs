@@ -469,6 +469,7 @@ public class GameManager : MonoBehaviour
     
     private IEnumerator EjecutarAtaqueEnemigoSolo()
     {
+        Debug.Log("[GameManager] EjecutarAtaqueEnemigoSolo iniciado. ataqueEnProceso=" + ataqueEnProceso + ", modoAutomatico=" + modoAutomatico);
         // Ataque del enemigo después de 1.5 segundos
         yield return new WaitForSeconds(1.5f);
         
@@ -581,12 +582,14 @@ public class GameManager : MonoBehaviour
 
     public void IniciarDañoEnemigoDesdeUI(int daño)
     {
+        Debug.Log("[GameManager] IniciarDañoEnemigoDesdeUI recibido. daño=" + daño + ", ataqueEnProceso=" + ataqueEnProceso);
         if (!ataqueEnProceso) return;
         StartCoroutine(ContinuarDespuesDañoJugador(daño));
     }
 
     private IEnumerator ContinuarDespuesDañoJugador(int daño)
     {
+        Debug.Log("[GameManager] ContinuarDespuesDañoJugador iniciado. daño=" + daño + ", ataqueEnProceso=" + ataqueEnProceso);
         if (!ataqueEnProceso) yield break;
         int vidaAntes = vidaJugador2;
         int escudoAntes = escudoJugador2;
@@ -624,6 +627,7 @@ public class GameManager : MonoBehaviour
         
         if (!ataqueEnProceso) yield break;
         
+        Debug.Log("[GameManager] A punto de llamar a EjecutarAtaqueEnemigoSolo");
         yield return StartCoroutine(EjecutarAtaqueEnemigoSolo());
         yield break;
     }
