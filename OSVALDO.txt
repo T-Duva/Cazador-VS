@@ -161,6 +161,14 @@ CURSOR (IA de codigo)
   - ApplySpriteToImage ahora solo asigna sprite y preserveAspect, sin forzar sizeDelta.
 
 ========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - tarde]
+- Codigo modificado:
+  - Assets/Scripts/UIManager.cs: idle del caballero ahora funciona aunque no haya caballeroSheet si caballeroFrames está listo.
+  - Se calcula el tamaño máximo entre los 32 frames y se fija una sola vez para evitar que el sprite cambie de tamaño.
+
+========================
 MERLIN (IA de ayuda)
 ========================
 [2026-01-28 - tarde]
