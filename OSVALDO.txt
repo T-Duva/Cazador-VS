@@ -140,6 +140,15 @@ CURSOR (IA de codigo)
 ========================
 [2026-01-28 - tarde]
 - Codigo modificado:
+  - Assets/Scripts/UIManager.cs: idle del caballero usa ImgJugador y fuerza tamaño fijo (caballeroTargetSize).
+  - Se desactiva imgCaballero si existe para evitar duplicados.
+  - Se aplica tamaño fijo al sprite en cada frame (idle/ataque) cuando el jugador es Guerrero.
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - tarde]
+- Codigo modificado:
   - Assets/Scripts/UIManager.cs: agregado [SerializeField] private Sprite[] caballeroFrames;.
 - Codigo agregado:
   - Assets/Editor/AssignCaballeroFramesFromSprite.cs: asigna 32 sprites desde CABALLERO_CROP_504.png a caballeroFrames.
