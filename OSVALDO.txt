@@ -23,7 +23,33 @@ Tema: Animación CABALLERO 8x4 (idle + ataque)
   - idleCaballeroSheet: CABALLERO.png.
   - caballeroIdleCellSize: X=62, Y=125.
   - caballeroIdleFrames: 0..15 para idle.
-  - (más adelante) attackCaballeroFrames: 16..31 para ataque.
+  - (más adelante) attackCaballeroFrames: 16..31 para ataque.[2026-01-27 - noche] - Problemas actuales:
+1) CABALLERO se ve chiquito y a veces borroso.
+2) El ataque ya no recorre la pantalla de punta a punta, solo pega en el lugar.
+Instrucciones para CURSOR (próximos cambios deseados):
+- Usar CABALLERO.png como hoja 8x4, con:
+  - Columns = 8
+  - Rows = 4
+  - Idle frames = 0..15
+  - Ataque frames = 16..31
+- Mantener un único Image: ImgJugador.
+- Respetar un Target Size fijo para que el caballero se vea grande y nítido en la UI (ej: 120x240).
+- Asegurarse desde código que:
+  - Caballero Trim Transparent = OFF (no cambiar tamaño entre idle/ataque).
+  - Caballero Mover Durante Ataque = ON haga que el caballero:
+    - Se desplace desde su posición actual hacia el enemigo durante los frames de ataque.
+    - Vuelva a su posición inicial al terminar la animación.
+- El ataque debe volver a comportarse igual que antes del cambio a CABALLERO.png:
+  - Movimiento completo de punta a punta durante el ataque.
+  - Hitbox o alcance coherente con la posición final del caballero.
+[2026-01-28]
+CURSOR:  
+1. Creá el archivo: Assets/Editor/ArreglarCaballero.cs en el proyecto Unity.  
+2. Pegá el código que te pase MERLIN en ese archivo.  
+3. Entrá a Unity, esperá que compile, y andá al menú 'Tools > Arreglar Caballero'.  
+4. Hacé click, mirá la consola que diga 'ARREGLO COMPLETADO', y luego Play para ver si el caballero aparece con idle y ataque correcto.  
+5. Si hay algún error, agregalo acá con screenshot o el texto.   
+AVISAME apenas termines estos pasos para pasarte lo que sigue.
 
 ========================
 CURSOR (IA de codigo)
@@ -46,3 +72,23 @@ CURSOR (IA de codigo)
   - El tamano queda fijo (Target Size).
   - El ataque puede ser sin movimiento si Mover Durante Ataque esta OFF.
   - El grid del sheet se define manualmente con Columns/Rows.
+
+========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-27 - tarde]
+- Explicacion: pediste un Editor Script para auto-configurar el caballero y arreglar los problemas actuales.
+- Archivos afectados: Assets/Editor/ArreglarCaballero.cs (nuevo).
+- Intencion: automatizar configuracion de UIManager, ImgJugador y valores de animacion.
+- Pasos en Unity que te dije: ejecutar Tools > Arreglar Caballero en el menu.
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-27 - tarde]
+- Codigo generado:
+  - Assets/Editor/ArreglarCaballero.cs (nuevo EditorWindow).
+- Que hace:
+  - Busca UIManager, CABALLERO.png e Image del jugador.
+  - Asigna valores de columnas/filas, frames, target size y flags.
+  - Configura RectTransform y asigna sprite inicial.
