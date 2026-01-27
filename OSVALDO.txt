@@ -153,6 +153,14 @@ CURSOR (IA de codigo)
   - Se añade HasCaballeroFramesReady() para usar caballeroFrames y mantener ImgJugador activo.
 
 ========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - tarde]
+- Codigo modificado:
+  - Assets/Scripts/UIManager.cs: se quitó el tamaño fijo de caballero para respetar el tamaño de cada sprite (Sprite Editor).
+  - ApplySpriteToImage ahora solo asigna sprite y preserveAspect, sin forzar sizeDelta.
+
+========================
 MERLIN (IA de ayuda)
 ========================
 [2026-01-28 - tarde]
