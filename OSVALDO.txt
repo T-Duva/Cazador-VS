@@ -1,0 +1,39 @@
+OSVALDO - Registro de lo hecho (para seguir el hilo)
+
+SECCION 1 - Hecho por CURSOR (codigo/archivos)
+- Analice GameManager y UIManager. El guerrero/caballero usa un spritesheet (caballeroSheet) con frames recortados por codigo.
+- Ajuste UIManager para soportar sheets 8x4 o 4x8 y permitir columnas/filas configurables.
+- Elimine la dependencia de ImgCaballero (ahora todo va con ImgJugador).
+- Evite que se creen imagenes duplicadas y se limpian duplicados si aparecen.
+- Agregue controles en UIManager:
+  - Caballero Columns / Rows (para forzar grid)
+  - Caballero Target Size (para tamaño fijo)
+  - Caballero Trim Transparent (recorte por transparencia opcional)
+  - Caballero Mover Durante Ataque (para evitar movimiento raro)
+- Ajuste que el idle y el ataque usen ImgJugador con tamaño fijo.
+- Desactive el movimiento durante el ataque por defecto (si se deja OFF).
+
+Archivos tocados por Cursor (principal):
+- Assets/Scripts/UIManager.cs (cambios grandes)
+- Assets/Scripts/GameManager.cs (menor)
+- Assets/Scenes/SampleScene.unity (cambios de escena)
+
+SECCION 2 - Lo que YO (usuario) hice en Unity segun el chat
+- Cambie el recorte del spritesheet: estaba en Automatico.
+- Se ve un solo caballero despues de eso, pero gigante/pixelado.
+- El idle aparece pero se ve mal y cambia de tamaño.
+- En ataque a veces aparece gigante, a veces chico, y a veces un cuadrado gris.
+- En la escena aparece "ImageJugador" (solo uno); "ImgJugador" no aparece.
+- Bilinear estaba activo en el import.
+
+SECCION 3 - Observaciones/estado actual (segun lo que veo yo como Cursor)
+- La animacion sigue siendo inestable por el tamaño del sheet y el recorte.
+- Los frames parecen tener espacios distintos; el recorte automatico produce tamaños variables.
+- Si no se fija un tamaño constante, los frames cambian de tamaño entre si.
+- Si se estira mucho un sheet chico, se ve pixelado (normal).
+
+SECCION 4 - Pendiente para OSVALDO
+- Revisar si conviene recortar en Unity con Sprite Editor manual y usar un Sprite[] fijo en lugar de recorte por codigo.
+- Confirmar el tamano real del sheet (ancho x alto) y el grid correcto (8x4 o 4x8).
+- Verificar si la escena crea "ImageJugador" en runtime y por que.
+- Definir si el caballero debe moverse durante ataque o quedarse fijo.
