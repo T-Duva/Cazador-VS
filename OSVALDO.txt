@@ -89,6 +89,24 @@ CURSOR (IA de codigo)
 ========================
 MERLIN (IA de ayuda)
 ========================
+[2026-01-28 - tarde]
+- Explicacion: pediste agregar caballeroFrames (Sprite[]) en UIManager y automatizar asignacion desde CABALLERO_CROP_504.png.
+- Archivos afectados: Assets/Scripts/UIManager.cs, Assets/Editor/AssignCaballeroFramesFromSprite.cs.
+- Intencion: tener 32 sprites (idle 0..15, ataque 16..31) en un array serializado.
+- Pasos en Unity que pediste: Tools > Assign Caballero Frames from Sprite y verificar el array caballeroFrames.
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - tarde]
+- Codigo modificado:
+  - Assets/Scripts/UIManager.cs: agregado [SerializeField] private Sprite[] caballeroFrames;.
+- Codigo agregado:
+  - Assets/Editor/AssignCaballeroFramesFromSprite.cs: asigna 32 sprites desde CABALLERO_CROP_504.png a caballeroFrames.
+
+========================
+MERLIN (IA de ayuda)
+========================
 [2026-01-27 - tarde]
 - Explicacion: pediste un Editor Script para auto-configurar el caballero y arreglar los problemas actuales.
 - Archivos afectados: Assets/Editor/ArreglarCaballero.cs (nuevo).
