@@ -295,6 +295,13 @@ CURSOR (IA de codigo)
 ========================
 [2026-01-28 - tarde]
 - Codigo modificado:
+  - Assets/Scripts/UIManager.cs: corrida derecha vuelve a usar sprites 0..17 (no 18..22).
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - tarde]
+- Codigo modificado:
   - Assets/Scripts/UIManager.cs: la vuelta usa frames 30..31 repetidos y un frameTime ajustado para que se mueva todo el camino.
 
 ========================
