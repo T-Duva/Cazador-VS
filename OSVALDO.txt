@@ -224,6 +224,14 @@ CURSOR (IA de codigo)
 ========================
 [2026-01-28 - tarde]
 - Codigo modificado:
+  - Assets/Scripts/UIManager.cs: el daño ahora se aplica tras forzar el último frame en el extremo derecho.
+  - El regreso a la izquierda usa frames de idle para evitar imagen congelada.
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - tarde]
+- Codigo modificado:
   - Assets/Scripts/UIManager.cs: agregado [SerializeField] private Sprite[] caballeroFrames;.
 - Codigo agregado:
   - Assets/Editor/AssignCaballeroFramesFromSprite.cs: asigna 32 sprites desde CABALLERO_CROP_504.png a caballeroFrames.
