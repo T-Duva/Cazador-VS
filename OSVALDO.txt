@@ -274,6 +274,13 @@ CURSOR (IA de codigo)
 ========================
 [2026-01-28 - tarde]
 - Codigo modificado:
+  - Assets/Scripts/UIManager.cs: la ida usa runRightFrames (18..22) y si faltan usa idle, luego golpe 23..29, y vuelta con runLeftFrames (30..31).
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - tarde]
+- Codigo modificado:
   - Assets/Scripts/UIManager.cs: agregado [SerializeField] private Sprite[] caballeroFrames;.
 - Codigo agregado:
   - Assets/Editor/AssignCaballeroFramesFromSprite.cs: asigna 32 sprites desde CABALLERO_CROP_504.png a caballeroFrames.
