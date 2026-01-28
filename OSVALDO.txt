@@ -302,6 +302,14 @@ CURSOR (IA de codigo)
 ========================
 [2026-01-28 - tarde]
 - Codigo modificado:
+  - Assets/Scripts/UIManager.cs: corrida derecha 0..23, golpe 24..29, corrida izquierda 30..33 (sin saltear sprites).
+  - Si falta un sprite en esos rangos, se loguea error y se cancela la animación.
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - tarde]
+- Codigo modificado:
   - Assets/Scripts/UIManager.cs: la vuelta usa frames 30..31 repetidos y un frameTime ajustado para que se mueva todo el camino.
 
 ========================
