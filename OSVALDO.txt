@@ -239,6 +239,13 @@ CURSOR (IA de codigo)
 ========================
 [2026-01-28 - tarde]
 - Codigo modificado:
+  - Assets/Scripts/UIManager.cs: fuerza que el ataque avance hacia la derecha aunque el enemigo esté más a la izquierda.
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - tarde]
+- Codigo modificado:
   - Assets/Scripts/UIManager.cs: agregado [SerializeField] private Sprite[] caballeroFrames;.
 - Codigo agregado:
   - Assets/Editor/AssignCaballeroFramesFromSprite.cs: asigna 32 sprites desde CABALLERO_CROP_504.png a caballeroFrames.
