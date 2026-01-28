@@ -295,6 +295,13 @@ CURSOR (IA de codigo)
 ========================
 [2026-01-28 - tarde]
 - Codigo modificado:
+  - Assets/Scripts/UIManager.cs: la vuelta usa frames 30..31 repetidos y un frameTime ajustado para que se mueva todo el camino.
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - tarde]
+- Codigo modificado:
   - Assets/Scripts/UIManager.cs: agregado [SerializeField] private Sprite[] caballeroFrames;.
 - Codigo agregado:
   - Assets/Editor/AssignCaballeroFramesFromSprite.cs: asigna 32 sprites desde CABALLERO_CROP_504.png a caballeroFrames.
