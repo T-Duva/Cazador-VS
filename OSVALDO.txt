@@ -783,6 +783,25 @@ CURSOR (IA de codigo)
 MERLIN (IA de ayuda)
 ========================
 [2026-01-28 - noche]
+- Explicacion: usuario reportó que le quité el log y ahora no sabe cuál sprite está fallando
+- Todavía hay un sprite que salta en Y y necesita identificarlo
+- Necesita logs para poder ver qué sprite está causando el problema
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - noche]
+- Codigo modificado:
+  - Assets/Scripts/UIManager.cs: restaurados logs detallados para identificar sprites problemáticos
+    - Agregado Debug.LogWarning cuando hay desplazamiento Y > 0.01 (muestra sprite, Y actual, Y objetivo, diferencia, pivot)
+    - Agregado Debug.Log informativo para todos los sprites (muestra sprite, Y actual->objetivo, pivot)
+    - Los warnings destacan claramente cuando hay un salto para facilitar la identificación
+    - Esto permite identificar exactamente qué sprite está causando el problema
+
+========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - noche]
 - Explicacion: usuario reportó que el personaje se corrió y está donde no debe estar
 - Probable causa: la compensación de pivots que agregué estaba moviendo el personaje incorrectamente
 

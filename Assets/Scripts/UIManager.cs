@@ -2437,7 +2437,8 @@ public class UIManager : MonoBehaviour
             float posicionYObjetivo = caballeroPosicionYReferencia.Value;
             
             // Si hay una diferencia, interpolar suavemente en lugar de cambiar instantáneamente
-            if (Mathf.Abs(posicionYActual - posicionYObjetivo) > 0.01f)
+            float diferenciaY = Mathf.Abs(posicionYActual - posicionYObjetivo);
+            if (diferenciaY > 0.01f)
             {
                 // Detener cualquier interpolación anterior
                 if (corrutinaSuavizarY != null)
@@ -2446,6 +2447,9 @@ public class UIManager : MonoBehaviour
                 }
                 // Iniciar interpolación suave
                 corrutinaSuavizarY = StartCoroutine(SuavizarPosicionY(imagen.rectTransform, posicionYActual, posicionYObjetivo, 0.1f));
+                
+                // ✅ LOG DETALLADO: Mostrar siempre cuando hay desplazamiento para identificar sprites problemáticos
+                Debug.LogWarning($"[UIManager] ⚠️ Sprite '{sprite.name}': SALTO DETECTADO - Y actual={posicionYActual:F2}, objetivo={posicionYObjetivo:F2}, diferencia={diferenciaY:F2} (pivot={pivotSprite})");
             }
             else
             {
@@ -2453,11 +2457,8 @@ public class UIManager : MonoBehaviour
                 imagen.rectTransform.anchoredPosition = new Vector2(posicionDespues.x, posicionYObjetivo);
             }
             
-            // Log solo si hay desplazamiento significativo
-            if (Mathf.Abs(posicionYActual - posicionYObjetivo) > 0.5f)
-            {
-                Debug.Log($"[UIManager] Sprite '{sprite.name}': suavizando Y de {posicionYActual:F2} a {posicionYObjetivo:F2}");
-            }
+            // Log informativo para todos los sprites (menos verboso)
+            Debug.Log($"[UIManager] Sprite '{sprite.name}': Y={posicionYActual:F2}->{posicionYObjetivo:F2}, pivot={pivotSprite}");
         }
         else
         {
