@@ -2362,9 +2362,55 @@ public class UIManager : MonoBehaviour
     private void ApplySpriteToImage(Image imagen, Sprite sprite)
     {
         if (imagen == null || sprite == null) return;
+        
+        RectTransform rectTransform = imagen.rectTransform;
+        Sprite spriteAnterior = imagen.sprite;
+        
+        // Guardar la posición y tamaño actuales antes de cambiar el sprite
+        Vector2 posicionAnterior = rectTransform.anchoredPosition;
+        Vector2 sizeAnterior = rectTransform.sizeDelta;
+        
+        // Calcular el pivot normalizado del sprite anterior (0-1)
+        Vector2 pivotAnteriorNorm = new Vector2(0.5f, 0.5f); // Default center
+        if (spriteAnterior != null)
+        {
+            Rect rectAnterior = spriteAnterior.rect;
+            if (rectAnterior.width > 0 && rectAnterior.height > 0)
+            {
+                pivotAnteriorNorm = new Vector2(
+                    spriteAnterior.pivot.x / rectAnterior.width,
+                    spriteAnterior.pivot.y / rectAnterior.height
+                );
+            }
+        }
+        
+        // Calcular el pivot normalizado del nuevo sprite (0-1)
+        Rect rectNuevo = sprite.rect;
+        Vector2 pivotNuevoNorm = new Vector2(0.5f, 0.5f);
+        if (rectNuevo.width > 0 && rectNuevo.height > 0)
+        {
+            pivotNuevoNorm = new Vector2(
+                sprite.pivot.x / rectNuevo.width,
+                sprite.pivot.y / rectNuevo.height
+            );
+        }
+        
+        // Aplicar el nuevo sprite
         imagen.sprite = sprite;
         imagen.color = Color.white;
         imagen.preserveAspect = true;
+        
+        // Usar el tamaño anterior o el del sprite si no hay tamaño definido
+        Vector2 sizeActual = sizeAnterior;
+        if (sizeActual.x <= 0 || sizeActual.y <= 0)
+        {
+            sizeActual = rectNuevo.size;
+        }
+        
+        // Calcular la diferencia de pivot y compensar la posición
+        // La diferencia se calcula en unidades del RectTransform
+        Vector2 diferenciaPivot = (pivotAnteriorNorm - pivotNuevoNorm) * sizeActual;
+        rectTransform.anchoredPosition = posicionAnterior + diferenciaPivot;
     }
 
     private bool HasCaballeroFramesReady()

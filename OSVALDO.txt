@@ -461,6 +461,22 @@ CURSOR (IA de codigo)
   - NO se modificó idle (0..15) ni golpe (24..27) como solicitó el usuario
 
 ========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - noche]
+- Explicacion: usuario reportó que el código no está usando los pivots del Sprite Editor, causando que la imagen se mueva cuando cambia de sprite (especialmente sprites 7, 8, 9).
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - noche]
+- Codigo modificado:
+  - Assets/Scripts/UIManager.cs: ApplySpriteToImage ahora calcula y compensa las diferencias de pivot entre sprites
+  - Cuando cambia el sprite, calcula el pivot normalizado (0-1) del sprite anterior y del nuevo
+  - Ajusta la posición del RectTransform para compensar la diferencia de pivot, manteniendo la imagen en la misma posición visual
+  - Esto asegura que los pivots configurados en el Sprite Editor se respeten correctamente
+
+========================
 CURSOR (IA de codigo)
 ========================
 [2026-01-28 - tarde]
