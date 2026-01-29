@@ -518,6 +518,30 @@ CURSOR (IA de codigo)
 MERLIN (IA de ayuda)
 ========================
 [2026-01-28 - noche]
+- Explicacion: usuario reportó que:
+  1. Los sprites 7, 8 y 9 se mueven cada vez que aparecen (no tienen la misma "dinámica" que los demás)
+  2. Están desfasados a las demás
+  3. El script para que la cámara apunte siempre al mismo pie funcionó pero en estas 3 imágenes no
+  4. El ataque quedó perfecto, no tocar
+  5. Falta que vuelva el personaje con la fase de volver corriendo a la izquierda
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - noche]
+- Codigo modificado:
+  - Assets/Scripts/UIManager.cs: agregado comentario sobre sprites 7, 8 y 9
+    - Documentado que estos sprites pueden tener pivots diferentes causando movimiento
+    - Recomendación: verificar en Sprite Editor que tengan el mismo pivot que los demás
+  - Assets/Scripts/UIManager.cs: mejorada fase 4 (vuelta corriendo a la izquierda)
+    - Asegurado que el personaje esté en posición inicial antes de iniciar idle
+    - La fase 4 ya estaba implementada, solo se mejoró el comentario y la restauración de posición
+  - NO se modificó la fase 3 (golpe 24-27) como solicitó el usuario
+
+========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - noche]
 - Explicacion: usuario reportó errores de compilación en AutoPivotCalculator.cs
 - El archivo tenía una función suelta sin clase que la contuviera
 

@@ -2241,7 +2241,10 @@ public class UIManager : MonoBehaviour
             float returnFrameTime = caballeroIdleFrameTime;
             yield return StartCoroutine(MoverConFrames(imgJugador, caballeroObjetivo, caballeroInicio, returnFrames, returnFrameTime));
             
+            // Asegurar que el personaje esté en la posición inicial antes de iniciar idle
             caballeroRect.anchoredPosition = caballeroInicio;
+            
+            // Iniciar idle después de que termine completamente la vuelta
             IniciarAnimacionIdle("Guerrero", true);
             guerreroAtaqueEnCurso = false;
             yield break;
@@ -2364,6 +2367,10 @@ public class UIManager : MonoBehaviour
     /// IMPORTANTE: Los pivots de los sprites son CONSTANTES y solo se LEEN, NUNCA se modifican.
     /// Solo el usuario puede cambiar los pivots a través del Sprite Editor de Unity.
     /// Unity maneja automáticamente los pivots cuando se asigna el sprite.
+    /// 
+    /// NOTA: Los sprites 7, 8 y 9 (CABALLERO_7, CABALLERO_8, CABALLERO_9) pueden tener
+    /// pivots diferentes a los demás, causando que se muevan cuando aparecen en la animación.
+    /// Verificar en el Sprite Editor que estos 3 sprites tengan el mismo pivot que los demás.
     /// </summary>
     private void ApplySpriteToImage(Image imagen, Sprite sprite)
     {
