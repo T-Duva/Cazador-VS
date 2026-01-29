@@ -2416,38 +2416,54 @@ public class UIManager : MonoBehaviour
         {
             // Guardar la posición antes de cambiar el tamaño
             Vector2 posicionAntes = imagen.rectTransform.anchoredPosition;
-            Vector2 pivotSprite = sprite.pivot;
+            Vector2 pivotSpriteAbsoluto = sprite.pivot;
             
-            // ✅ Establecer pivot y posición Y de referencia (usar el primer sprite como referencia)
+            // ✅ Calcular pivot NORMALIZADO (0-1 relativo al rect del sprite)
+            // En el editor Unity muestra pivots normalizados, pero sprite.pivot devuelve valores absolutos
+            Vector2 pivotLocal = new Vector2(
+                (pivotSpriteAbsoluto.x - spriteRect.x) / spriteRect.width,
+                (pivotSpriteAbsoluto.y - spriteRect.y) / spriteRect.height
+            );
+            
+            // ✅ Establecer pivot normalizado y posición Y de referencia (usar el primer sprite como referencia)
             if (!caballeroPivotReferencia.HasValue)
             {
-                caballeroPivotReferencia = pivotSprite;
+                // Guardar el pivot normalizado como referencia
+                caballeroPivotReferencia = pivotLocal;
                 caballeroPosicionYReferencia = posicionAntes.y; // Guardar posición Y inicial como referencia fija
-                Debug.Log($"[UIManager] Pivot de referencia establecido: {pivotSprite} (sprite: {sprite.name})");
+                Debug.Log($"[UIManager] Pivot normalizado de referencia establecido: {pivotLocal} (sprite: {sprite.name}, absoluto: {pivotSpriteAbsoluto})");
                 Debug.Log($"[UIManager] Posición Y de referencia establecida: {caballeroPosicionYReferencia.Value:F2}");
             }
             
-            // Calcular diferencia de pivots para compensar desplazamiento visual
-            Vector2 diferenciaPivot = pivotSprite - caballeroPivotReferencia.Value;
+            // Calcular diferencia de pivots NORMALIZADOS para compensar desplazamiento visual
+            Vector2 diferenciaPivotNormalizado = pivotLocal - caballeroPivotReferencia.Value;
             
             // Establecer el tamaño del contenedor al máximo
             // preserveAspect hará que el sprite se escale manteniendo sus proporciones dentro de ese espacio
             imagen.preserveAspect = true; // ✅ Activar preserveAspect para mantener proporciones sin distorsión
             imagen.rectTransform.sizeDelta = tamañoFijo; // Contenedor del tamaño máximo
             
-            // Calcular el factor de escala (cuánto se escaló el sprite)
-            float escalaX = tamañoFijo.x / spriteRect.width;
-            float escalaY = tamañoFijo.y / spriteRect.height;
-            float escala = Mathf.Min(escalaX, escalaY); // preserveAspect usa la escala menor
-            
-            // ✅ COMPENSAR DESPLAZAMIENTO VISUAL: Ajustar posición Y basándose en diferencia de pivots escalada
-            // Cuando el pivot Y es diferente, Unity desplaza el sprite visualmente aunque el RectTransform tenga la misma Y
             Vector2 posicionDespues = imagen.rectTransform.anchoredPosition;
             float posicionYActual = posicionDespues.y;
+            float posicionYObjetivo = caballeroPosicionYReferencia.Value;
+            float compensacionVisualY = 0f;
             
-            // Compensar el desplazamiento visual causado por la diferencia de pivots
-            float compensacionVisualY = diferenciaPivot.y * escala;
-            float posicionYObjetivo = caballeroPosicionYReferencia.Value - compensacionVisualY;
+            // ✅ COMPENSAR DESPLAZAMIENTO VISUAL solo si hay diferencia significativa en pivots normalizados
+            // Si todos los pivots son (0.5, 0.5), la diferencia será ~0 y no necesitamos compensar
+            if (Mathf.Abs(diferenciaPivotNormalizado.y) > 0.001f)
+            {
+                // Calcular el factor de escala (cuánto se escaló el sprite)
+                float escalaX = tamañoFijo.x / spriteRect.width;
+                float escalaY = tamañoFijo.y / spriteRect.height;
+                float escala = Mathf.Min(escalaX, escalaY); // preserveAspect usa la escala menor
+                
+                // Calcular la altura escalada del sprite (altura real en pantalla)
+                float alturaEscalada = spriteRect.height * escala;
+                
+                // Compensar el desplazamiento visual causado por la diferencia de pivots normalizados
+                compensacionVisualY = diferenciaPivotNormalizado.y * alturaEscalada;
+                posicionYObjetivo = caballeroPosicionYReferencia.Value - compensacionVisualY;
+            }
             
             // Aplicar la posición Y compensada
             imagen.rectTransform.anchoredPosition = new Vector2(posicionDespues.x, posicionYObjetivo);
@@ -2465,13 +2481,13 @@ public class UIManager : MonoBehaviour
                 corrutinaSuavizarY = StartCoroutine(SuavizarPosicionY(imagen.rectTransform, posicionYActual, posicionYObjetivo, 0.1f));
                 
                 // ✅ LOG DETALLADO: Mostrar cuando hay desplazamiento significativo
-                Debug.LogWarning($"[UIManager] ⚠️ Sprite '{sprite.name}': SALTO DETECTADO - Y actual={posicionYActual:F2}, objetivo={posicionYObjetivo:F2}, diferencia={diferenciaY:F2}, compensación visual={compensacionVisualY:F2} (pivot diff Y={diferenciaPivot.y:F2})");
+                Debug.LogWarning($"[UIManager] ⚠️ Sprite '{sprite.name}': SALTO DETECTADO - Y actual={posicionYActual:F2}, objetivo={posicionYObjetivo:F2}, diferencia={diferenciaY:F2}, compensación visual={compensacionVisualY:F2} (pivot normalizado diff Y={diferenciaPivotNormalizado.y:F3})");
             }
             
-            // Log informativo para todos los sprites
-            if (Mathf.Abs(diferenciaPivot.y) > 0.1f || diferenciaY > 0.01f)
+            // Log informativo para todos los sprites (solo si hay diferencia de pivot o desplazamiento)
+            if (Mathf.Abs(diferenciaPivotNormalizado.y) > 0.001f || diferenciaY > 0.01f)
             {
-                Debug.Log($"[UIManager] Sprite '{sprite.name}': Y={posicionYActual:F2}->{posicionYObjetivo:F2}, pivot={pivotSprite}, diff pivot Y={diferenciaPivot.y:F2}, compensación={compensacionVisualY:F2}");
+                Debug.Log($"[UIManager] Sprite '{sprite.name}': Y={posicionYActual:F2}->{posicionYObjetivo:F2}, pivot normalizado={pivotLocal} (absoluto={pivotSpriteAbsoluto}), diff pivot Y={diferenciaPivotNormalizado.y:F3}, compensación={compensacionVisualY:F2}");
             }
         }
         else

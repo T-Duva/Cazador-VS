@@ -826,6 +826,29 @@ CURSOR (IA de codigo)
 MERLIN (IA de ayuda)
 ========================
 [2026-01-28 - noche]
+- Explicacion: usuario dice que en el editor todos los sprites tienen pivot (0.5, 0.5)
+- Problema: estaba comparando pivots absolutos (en píxeles) en lugar de pivots normalizados (0-1)
+- En el editor Unity muestra pivots normalizados, pero sprite.pivot devuelve valores absolutos
+- Si todos tienen (0.5, 0.5) normalizado pero diferentes tamaños de rect, los absolutos son diferentes
+- Ejemplo: sprite 63x124 con (0.5, 0.5) = (31.5, 62.0) absoluto vs sprite 86x131 con (0.5, 0.5) = (43.0, 65.5) absoluto
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - noche]
+- Codigo modificado:
+  - Assets/Scripts/UIManager.cs: corregido para usar pivots normalizados en lugar de absolutos
+    - Calcula pivot normalizado: pivotLocal = (pivot.x - rect.x) / rect.width, (pivot.y - rect.y) / rect.height
+    - Compara pivots normalizados (0-1) en lugar de absolutos (píxeles)
+    - Si todos tienen (0.5, 0.5) normalizado, la diferencia será ~0 y no necesita compensación
+    - Solo compensa si hay diferencia significativa en pivots normalizados (>0.001)
+    - Compensación: compensacionVisualY = diferenciaPivotNormalizado.y * alturaEscalada
+    - Logs actualizados para mostrar pivots normalizados y absolutos
+
+========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - noche]
 - Explicacion: usuario reportó que el personaje se corrió y está donde no debe estar
 - Probable causa: la compensación de pivots que agregué estaba moviendo el personaje incorrectamente
 
