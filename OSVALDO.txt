@@ -712,6 +712,28 @@ CURSOR (IA de codigo)
 MERLIN (IA de ayuda)
 ========================
 [2026-01-28 - noche]
+- Explicacion: usuario reportó que los sprites están saltando
+- Logs muestran que cada sprite ajusta su posición Y de forma acumulativa (14.38, 16.02, 18.80, 21.01...)
+- Problema: estaba usando posicionAntes.y de cada sprite, lo que causaba que cada sprite se ajustara basándose en la posición del sprite anterior
+- Esto creaba un efecto acumulativo donde cada sprite saltaba más que el anterior
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - noche]
+- Codigo modificado:
+  - Assets/Scripts/UIManager.cs: corregido problema de saltos acumulativos usando posición Y de referencia fija
+    - Agregada variable caballeroPosicionYReferencia para guardar la posición Y inicial del primer sprite
+    - Cambiado de usar posicionAntes.y (que cambia con cada sprite) a usar caballeroPosicionYReferencia (fija)
+    - Todos los sprites ahora se compensan basándose en la misma posición Y de referencia
+    - Esto evita el efecto acumulativo donde cada sprite saltaba más que el anterior
+    - La compensación ahora es: nuevaPosicionY = caballeroPosicionYReferencia - compensacionY
+    - Todos los sprites mantienen la misma posición Y base, solo se ajustan por la diferencia de pivots
+
+========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - noche]
 - Explicacion: usuario reportó que el personaje se corrió y está donde no debe estar
 - Probable causa: la compensación de pivots que agregué estaba moviendo el personaje incorrectamente
 

@@ -115,6 +115,7 @@ public class UIManager : MonoBehaviour
     private Sprite[] caballeroFramesOrdered;
     private bool caballeroFramesOrderedReady = false;
     private Vector2? caballeroPivotReferencia = null; // Pivot de referencia para compensar desplazamientos
+    private float? caballeroPosicionYReferencia = null; // Posición Y de referencia fija para todos los sprites
     
     private RectTransform panelStatsJugadorRect;
     private bool _offsetAplicado = false;
@@ -2412,15 +2413,17 @@ public class UIManager : MonoBehaviour
         // Todos los sprites ocuparán el mismo espacio (tamañoFijo) pero mantendrán sus proporciones
         if (usarTamañoFijo)
         {
-            // Guardar la posición antes de cambiar el tamaño para detectar desplazamientos
+            // Guardar la posición antes de cambiar el tamaño
             Vector2 posicionAntes = imagen.rectTransform.anchoredPosition;
             Vector2 pivotSprite = sprite.pivot;
             
-            // ✅ Establecer pivot de referencia (usar el primer sprite como referencia)
+            // ✅ Establecer pivot y posición Y de referencia (usar el primer sprite como referencia)
             if (!caballeroPivotReferencia.HasValue)
             {
                 caballeroPivotReferencia = pivotSprite;
+                caballeroPosicionYReferencia = posicionAntes.y; // Guardar posición Y inicial como referencia fija
                 Debug.Log($"[UIManager] Pivot de referencia establecido: {pivotSprite} (sprite: {sprite.name})");
+                Debug.Log($"[UIManager] Posición Y de referencia establecida: {caballeroPosicionYReferencia.Value:F2}");
             }
             
             // Calcular diferencia de pivots para compensar desplazamiento
@@ -2433,7 +2436,7 @@ public class UIManager : MonoBehaviour
             
             // ✅ Compensar desplazamiento basado en la diferencia de pivots
             // Cuando el pivot Y es diferente, Unity desplaza el sprite verticalmente
-            // Necesitamos compensar ese desplazamiento
+            // Necesitamos compensar ese desplazamiento usando la posición Y de referencia fija
             Vector2 posicionDespues = imagen.rectTransform.anchoredPosition;
             
             // Calcular el factor de escala (cuánto se escaló el sprite)
@@ -2442,15 +2445,15 @@ public class UIManager : MonoBehaviour
             float escala = Mathf.Min(escalaX, escalaY); // preserveAspect usa la escala menor
             
             // Compensar el desplazamiento vertical causado por la diferencia de pivots
+            // Usar la posición Y de referencia fija, no la posición anterior del sprite
             float compensacionY = diferenciaPivot.y * escala;
-            float nuevaPosicionY = posicionAntes.y - compensacionY;
+            float nuevaPosicionY = caballeroPosicionYReferencia.Value - compensacionY;
             
             imagen.rectTransform.anchoredPosition = new Vector2(posicionDespues.x, nuevaPosicionY);
             
-            float desplazamientoY = posicionDespues.y - posicionAntes.y;
             if (Mathf.Abs(diferenciaPivot.y) > 0.1f)
             {
-                Debug.Log($"[UIManager] Sprite '{sprite.name}': diferencia pivot Y={diferenciaPivot.y:F2}, compensación={compensacionY:F2}, posición Y ajustada a {nuevaPosicionY:F2}");
+                Debug.Log($"[UIManager] Sprite '{sprite.name}': diferencia pivot Y={diferenciaPivot.y:F2}, compensación={compensacionY:F2}, posición Y ajustada a {nuevaPosicionY:F2} (referencia={caballeroPosicionYReferencia.Value:F2})");
             }
             
             Debug.Log($"[UIManager] Sprite '{sprite.name}': rect={spriteRect.width}x{spriteRect.height}, pivot={pivotSprite}, diferencia={diferenciaPivot}, contenedor={tamañoFijo} (preserveAspect=true)");
@@ -2467,9 +2470,9 @@ public class UIManager : MonoBehaviour
         // ✅ Forzar el tamaño una vez más después de que Unity procese el layout
         if (usarTamañoFijo)
         {
-            // Guardar la posición Y original para mantenerla constante
-            float posicionYOriginal = imagen.rectTransform.anchoredPosition.y;
-            StartCoroutine(ForzarTamañoFijo(imagen.rectTransform, tamañoFijo, posicionYOriginal));
+            // Usar la posición Y actual (ya ajustada con compensación basada en la referencia fija)
+            float posicionYParaForzar = imagen.rectTransform.anchoredPosition.y;
+            StartCoroutine(ForzarTamañoFijo(imagen.rectTransform, tamañoFijo, posicionYParaForzar));
         }
     }
     
