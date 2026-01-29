@@ -350,6 +350,12 @@ MERLIN (IA de ayuda)
 - Mantener el orden fijo por nombre CABALLERO_0..CABALLERO_31 como default.
 
 ========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - tarde]
+- Usuario eliminó CABALLERO_20. Avisado: el código requiere 0..31 sin huecos.
+
+========================
 CURSOR (IA de codigo)
 ========================
 [2026-01-28 - tarde]
