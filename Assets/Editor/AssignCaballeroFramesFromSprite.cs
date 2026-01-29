@@ -13,12 +13,17 @@ public class AssignCaballeroFramesFromSprite : EditorWindow
     }
     void OnGUI()
     {
-        EditorGUILayout.HelpBox("Asigna los 32 frames desde CABALLERO.png a UIManager.caballeroFrames (Sprite[]). Asegúrate de que CABALLERO.png existe en Assets y esté cortado en 8x4.", MessageType.Info);
+        EditorGUILayout.HelpBox("Valida caballeroFrames (0..31) sin reordenar ni sobrescribir. No modifica el orden actual.", MessageType.Info);
         if (GUILayout.Button("Asignar frames a UIManager"))
         {
             AssignFrames();
         }
     }
+    /// <summary>
+    /// Asigna los sprites del caballero al array caballeroFrames.
+    /// IMPORTANTE: Este script NO modifica los pivots de los sprites.
+    /// Los pivots son CONSTANTES y solo pueden ser modificados por el usuario en el Sprite Editor de Unity.
+    /// </summary>
     void AssignFrames()
     {
         UIManager ui = UnityEngine.Object.FindFirstObjectByType<UIManager>();
@@ -32,7 +37,17 @@ public class AssignCaballeroFramesFromSprite : EditorWindow
         var spriteAsset = AssetDatabase.LoadAssetAtPath<Sprite>(path);
         if (spriteAsset == null)
         {
-            Debug.LogError("❌ CABALLERO.png no encontrado en " + path);
+            string[] guids = AssetDatabase.FindAssets("CABALLERO t:Sprite");
+            if (guids.Length > 0)
+            {
+                path = AssetDatabase.GUIDToAssetPath(guids[0]);
+                spriteAsset = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                Debug.Log("✓ CABALLERO.png encontrado en: " + path);
+            }
+        }
+        if (spriteAsset == null)
+        {
+            Debug.LogError("❌ CABALLERO.png no encontrado");
             return;
         }
         Debug.Log("✓ CABALLERO.png encontrado");
@@ -43,8 +58,8 @@ public class AssignCaballeroFramesFromSprite : EditorWindow
         
         if (sprites.Length != 32)
         {
-            Debug.LogError("❌ Se esperan 32 frames, pero se encontraron " + sprites.Length);
-            Debug.LogError("Verificá que CABALLERO.png esté cortado en Sprite Editor con Grid 8x4 (ancho divisible por 8, alto divisible por 4)");
+            Debug.LogError("❌ Se esperan 32 frames (0..31), pero se encontraron " + sprites.Length);
+            Debug.LogError("Verificá que CABALLERO.png tenga 32 slices y que estén completos.");
             return;
         }
         // Ordenar por índice numérico extraído del nombre
@@ -56,6 +71,12 @@ public class AssignCaballeroFramesFromSprite : EditorWindow
         Debug.Log("Frame 16 (primer ataque): " + sorted[16].name);
         Debug.Log("Último frame: " + sorted[31].name);
         var so = new SerializedObject(ui);
+        var sheetProp = so.FindProperty("caballeroSheet");
+        if (sheetProp != null)
+        {
+            sheetProp.objectReferenceValue = spriteAsset;
+            Debug.Log("✓ caballeroSheet asignado automáticamente");
+        }
         var prop = so.FindProperty("caballeroFrames");
         
         if (prop == null || !prop.isArray)
@@ -63,25 +84,12 @@ public class AssignCaballeroFramesFromSprite : EditorWindow
             Debug.LogError("❌ caballeroFrames no existe en UIManager. Asegurate de tener: [SerializeField] private Sprite[] caballeroFrames;");
             return;
         }
-        // Limpiar array completamente
-        prop.ClearArray();
-        prop.arraySize = 32;
-        // Asignar uno por uno con validación
-        for (int i = 0; i < sorted.Length; i++)
+        if (prop.arraySize == 32)
         {
-            if (sorted[i] == null)
-            {
-                Debug.LogError("❌ Frame " + i + " es nulo");
-                continue;
-            }
-            prop.GetArrayElementAtIndex(i).objectReferenceValue = sorted[i];
+            Debug.Log("✅ caballeroFrames ya tiene 32 sprites. No se modifica el orden actual.");
+            return;
         }
-        so.ApplyModifiedProperties();
-        EditorUtility.SetDirty(ui);
-        AssetDatabase.SaveAssets();
-        
-        Debug.Log("✅ caballeroFrames asignados correctamente con 32 frames.");
-        Debug.Log("Revisá el Inspector de UIManager para confirmar que todos los slots están llenos.");
+        Debug.LogError("❌ caballeroFrames no tiene tamaño 32. Ajustalo manualmente en el Inspector sin reordenar.");
     }
     int GetFrameIndex(string spriteName)
     {
