@@ -2404,18 +2404,23 @@ public class UIManager : MonoBehaviour
         
         imagen.sprite = sprite;
         imagen.color = Color.white;
-        imagen.preserveAspect = false; // ✅ Desactivar preserveAspect para controlar el tamaño manualmente
         
         Vector2 tamañoDespuesSprite = imagen.rectTransform.sizeDelta;
         
-        // ✅ Aplicar el tamaño fijo DESPUÉS de asignar el sprite para sobrescribir el ajuste automático de Unity
+        // ✅ MANTENER PROPORCIONES: Usar preserveAspect para evitar distorsión
+        // Todos los sprites ocuparán el mismo espacio (tamañoFijo) pero mantendrán sus proporciones
         if (usarTamañoFijo)
         {
-            imagen.rectTransform.sizeDelta = tamañoFijo;
-            Debug.Log($"[UIManager] Sprite '{sprite.name}': rect={spriteRect.width}x{spriteRect.height}, tamaño antes={tamañoAntes}, después sprite={tamañoDespuesSprite}, tamaño fijo aplicado={tamañoFijo}");
+            // Establecer el tamaño del contenedor al máximo
+            // preserveAspect hará que el sprite se escale manteniendo sus proporciones dentro de ese espacio
+            imagen.preserveAspect = true; // ✅ Activar preserveAspect para mantener proporciones sin distorsión
+            imagen.rectTransform.sizeDelta = tamañoFijo; // Contenedor del tamaño máximo
+            
+            Debug.Log($"[UIManager] Sprite '{sprite.name}': rect={spriteRect.width}x{spriteRect.height}, contenedor={tamañoFijo} (preserveAspect=true, sin distorsión)");
         }
         else
         {
+            imagen.preserveAspect = true;
             Debug.Log($"[UIManager] Sprite '{sprite.name}': rect={spriteRect.width}x{spriteRect.height}, tamaño={imagen.rectTransform.sizeDelta} (sin tamaño fijo)");
         }
         

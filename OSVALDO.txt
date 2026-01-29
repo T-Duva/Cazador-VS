@@ -647,6 +647,27 @@ CURSOR (IA de codigo)
 MERLIN (IA de ayuda)
 ========================
 [2026-01-28 - noche]
+- Explicacion: usuario reportó que hay muchos sprites que estiran la imagen haciendo al caballero gordo
+- Usuario quiere mostrar un video para demostrar el problema
+- Problema: al forzar todos los sprites al mismo tamaño (127x140), los sprites con proporciones diferentes se distorsionan
+- Ejemplo: sprite de 57x127 estirado a 127x140 se ve "gordo" porque se estira mucho más horizontalmente (2.23x) que verticalmente (1.10x)
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - noche]
+- Codigo modificado:
+  - Assets/Scripts/UIManager.cs: cambiado a preserveAspect=true para mantener proporciones sin distorsión
+    - Cambiado preserveAspect de false a true para mantener las proporciones de cada sprite
+    - Todos los sprites ahora ocupan el mismo espacio (tamaño máximo 127x140) pero mantienen sus proporciones
+    - Esto evita que los sprites se distorsionen (se vean "gordos" o "flacos")
+    - El sprite se escala automáticamente dentro del contenedor manteniendo su relación de aspecto
+    - Los sprites más anchos se escalarán para ajustarse al ancho máximo, los más altos al alto máximo
+
+========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - noche]
 - Explicacion: usuario reportó que el personaje se corrió y está donde no debe estar
 - Probable causa: la compensación de pivots que agregué estaba moviendo el personaje incorrectamente
 
