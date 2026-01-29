@@ -849,6 +849,25 @@ CURSOR (IA de codigo)
 MERLIN (IA de ayuda)
 ========================
 [2026-01-28 - noche]
+- Explicacion: usuario pidió dejar el código usando píxeles (valores absolutos) en lugar de normalizados
+- Usuario prefiere trabajar con valores absolutos
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - noche]
+- Codigo modificado:
+  - Assets/Scripts/UIManager.cs: revertido a usar pivots absolutos (píxeles)
+    - Vuelve a usar sprite.pivot directamente (valores absolutos en píxeles)
+    - Compara diferenciaPivot en píxeles: diferenciaPivot = pivotSprite - caballeroPivotReferencia
+    - Compensación: compensacionVisualY = diferenciaPivot.y * escala
+    - Solo compensa si hay diferencia significativa (>0.1 píxeles)
+    - Logs muestran diferencia de pivot Y en píxeles
+
+========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - noche]
 - Explicacion: usuario reportó que el personaje se corrió y está donde no debe estar
 - Probable causa: la compensación de pivots que agregué estaba moviendo el personaje incorrectamente
 
