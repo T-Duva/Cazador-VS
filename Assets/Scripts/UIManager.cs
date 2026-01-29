@@ -2577,6 +2577,12 @@ public class UIManager : MonoBehaviour
         float maxH = 0f;
         int spritesProcesados = 0;
         
+        // ✅ Calcular el tamaño del contenedor para que todos los sprites se vean del mismo tamaño visual
+        // Con preserveAspect, Unity escala el sprite para que quepa dentro del contenedor usando la escala menor
+        // Para que todos los sprites se vean del mismo tamaño visual, necesitamos calcular el tamaño del contenedor
+        // que haga que todos los sprites se escalen al mismo tamaño visual máximo
+        float maxTamañoVisual = 0f;
+        
         for (int i = 0; i < caballeroFrames.Length; i++)
         {
             Sprite sprite = caballeroFrames[i];
@@ -2586,14 +2592,30 @@ public class UIManager : MonoBehaviour
             Rect rect = sprite.rect;
             if (rect.width > maxW) maxW = rect.width;
             if (rect.height > maxH) maxH = rect.height;
+            
+            // ✅ Calcular el tamaño visual máximo que este sprite ocuparía
+            // El tamaño visual es el mayor entre width y height (la dimensión más grande del sprite)
+            float tamañoVisual = Mathf.Max(rect.width, rect.height);
+            if (tamañoVisual > maxTamañoVisual) maxTamañoVisual = tamañoVisual;
+            
             spritesProcesados++;
         }
+        
+        // ✅ Ajustar el tamaño del contenedor para que todos los sprites se vean del mismo tamaño visual
+        // Usamos un contenedor cuadrado del tamaño del máximo visual
+        // Con preserveAspect, cada sprite se escalará para que su dimensión más grande sea igual al tamaño del contenedor
+        // Esto asegura que todos los sprites se vean del mismo tamaño visual (su dimensión más grande será igual)
+        // PERO: si los sprites tienen proporciones muy diferentes, algunos pueden verse más pequeños
+        // Para solucionar esto, usamos el máximo entre maxW, maxH y maxTamañoVisual
+        float tamañoContenedor = Mathf.Max(maxW, maxH, maxTamañoVisual);
+        maxW = tamañoContenedor;
+        maxH = tamañoContenedor;
         
         if (maxW > 0f && maxH > 0f)
         {
             caballeroMaxFrameSize = new Vector2(maxW, maxH);
             caballeroMaxFrameSizeReady = true;
-            Debug.Log($"[UIManager] Tamaño máximo calculado: {maxW}x{maxH} (de {spritesProcesados} sprites de {caballeroFrames.Length} totales)");
+            Debug.Log($"[UIManager] Tamaño máximo calculado: {maxW}x{maxH} (tamaño visual máximo: {maxTamañoVisual}, de {spritesProcesados} sprites de {caballeroFrames.Length} totales)");
         }
         else
         {

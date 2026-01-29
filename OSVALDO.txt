@@ -893,6 +893,27 @@ CURSOR (IA de codigo)
 MERLIN (IA de ayuda)
 ========================
 [2026-01-28 - noche]
+- Explicacion: usuario reportó que hay cambios en tamaños - algunos sprites son ligeramente más grandes en ataque y en idle
+- Problema: con preserveAspect, sprites con diferentes proporciones se escalan de manera diferente dentro del mismo contenedor
+- Algunos sprites se ven más grandes que otros durante la animación
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - noche]
+- Codigo modificado:
+  - Assets/Scripts/UIManager.cs: ajustado cálculo de tamaño máximo para que todos los sprites se vean del mismo tamaño visual
+    - Modificado ApplyCaballeroSizeFromFrames() para calcular el tamaño visual máximo de cada sprite
+    - El tamaño visual es el mayor entre width y height de cada sprite (la dimensión más grande)
+    - Ajustado el contenedor para que sea cuadrado del tamaño del máximo visual máximo
+    - Con preserveAspect, cada sprite se escalará para que su dimensión más grande sea igual al tamaño del contenedor
+    - Esto asegura que todos los sprites se vean del mismo tamaño visual (su dimensión más grande será igual)
+    - Usa Mathf.Max(maxW, maxH, maxTamañoVisual) para asegurar que el contenedor sea lo suficientemente grande
+
+========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - noche]
 - Explicacion: usuario reportó que el personaje se corrió y está donde no debe estar
 - Probable causa: la compensación de pivots que agregué estaba moviendo el personaje incorrectamente
 
