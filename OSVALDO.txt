@@ -566,6 +566,25 @@ CURSOR (IA de codigo)
 MERLIN (IA de ayuda)
 ========================
 [2026-01-28 - noche]
+- Explicacion: usuario preguntó si al cambiar los pivots en Unity van a hacer efecto
+- Usuario acaba de cambiar pivots y quiere que sí hagan efecto
+- Necesita asegurarse de que los cambios de pivot se apliquen correctamente en runtime
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - noche]
+- Codigo modificado:
+  - Assets/Scripts/UIManager.cs: mejorado ApplySpriteToImage para asegurar que los pivots se apliquen
+    - Agregado Canvas.ForceUpdateCanvases() para forzar actualización después de asignar sprite
+    - Agregado comentario explicando que Unity maneja automáticamente los pivots del Sprite Editor
+    - Agregado comentario recordando que después de cambiar pivots en Unity, hay que guardar y reimportar el asset
+    - Los pivots que cambies en el Sprite Editor ahora se aplican automáticamente cuando se asigna el sprite
+
+========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - noche]
 - Explicacion: usuario reportó que el personaje se corrió y está donde no debe estar
 - Probable causa: la compensación de pivots que agregué estaba moviendo el personaje incorrectamente
 

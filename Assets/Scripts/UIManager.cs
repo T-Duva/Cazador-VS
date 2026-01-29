@@ -2377,10 +2377,15 @@ public class UIManager : MonoBehaviour
     {
         if (imagen == null || sprite == null) return;
         
-        // Aplicar el nuevo sprite - Unity maneja automáticamente los pivots del Sprite Editor
+        // ✅ Aplicar el nuevo sprite - Unity maneja automáticamente los pivots del Sprite Editor
+        // Los pivots que cambies en el Sprite Editor se aplican automáticamente cuando asignas el sprite
+        // IMPORTANTE: Después de cambiar pivots en Unity, asegurate de guardar y reimportar el asset
         imagen.sprite = sprite;
         imagen.color = Color.white;
         imagen.preserveAspect = true;
+        
+        // ✅ Forzar actualización para que los cambios de pivot se reflejen inmediatamente
+        Canvas.ForceUpdateCanvases();
     }
 
     private bool HasCaballeroFramesReady()
