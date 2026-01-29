@@ -1,55 +1,453 @@
-#if UNITY_EDITOR
 using UnityEngine;
+using UnityEditor;
 using System.Collections.Generic;
+using System.Linq;
 
-public static class AutoPivotCalculator
+public class AutoPivotCalculator : EditorWindow
 {
-    /// <summary>
-    /// Calcula el pivot en la base de los pies del sprite.
-    /// </summary>
-    public static Vector2 CalculateFootPivot(Texture2D texture, Rect spriteRect)
+    private Texture2D spriteSheet;
+    private string referenceSpriteName = "";
+    
+    [MenuItem("Tools/Auto Pivot Calculator")]
+    public static void ShowWindow()
+    {
+        GetWindow<AutoPivotCalculator>("Auto Pivot Calculator");
+    }
+    
+    void OnGUI()
+    {
+        GUILayout.Label("Calculador Automático de Pivotes", EditorStyles.boldLabel);
+        
+        spriteSheet = (Texture2D)EditorGUILayout.ObjectField(
+            "Sprite Sheet:", 
+            spriteSheet, 
+            typeof(Texture2D), 
+            false
+        );
+
+        EditorGUILayout.Space();
+        GUILayout.Label("Modo 1: Copiar desde sprite de referencia", EditorStyles.boldLabel);
+        EditorGUILayout.HelpBox(
+            "1. En el Sprite Editor, poné el pivot PERFECTO en un sprite (pecho).\n" +
+            "2. Anotá el nombre de ese sprite.\n" +
+            "3. Ese pivot se copia al resto, con un pequeño ajuste local.", 
+            MessageType.Info
+        );
+        
+        referenceSpriteName = EditorGUILayout.TextField("Nombre sprite referencia:", referenceSpriteName);
+        
+        if (GUILayout.Button("Copiar pivots desde referencia", GUILayout.Height(40)))
+        {
+            if (spriteSheet != null && !string.IsNullOrEmpty(referenceSpriteName))
+            {
+                CopyPivotsFromReference();
+            }
+            else
+            {
+                EditorUtility.DisplayDialog("Error", "Selecciona una sprite sheet y escribe el nombre de referencia.", "OK");
+            }
+        }
+
+        EditorGUILayout.Space();
+        GUILayout.Label("Modo 2: Calcular pecho automáticamente (sin referencia)", EditorStyles.boldLabel);
+        if (GUILayout.Button("Calcular y Aplicar Pivotes Automáticamente", GUILayout.Height(40)))
+        {
+            if (spriteSheet != null)
+            {
+                CalculateAndApplyPivots();
+            }
+            else
+            {
+                EditorUtility.DisplayDialog("Error", "Selecciona una Sprite Sheet primero", "OK");
+            }
+        }
+        
+        if (GUILayout.Button("Preview Pivots (Vista Previa)"))
+        {
+            if (spriteSheet != null)
+            {
+                PivotPreview.OpenPreview(spriteSheet);
+            }
+            else
+            {
+                EditorUtility.DisplayDialog("Error", "Selecciona una Sprite Sheet primero", "OK");
+            }
+        }
+
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+        EditorGUILayout.Space();
+        
+        GUILayout.Label("Ajustar zona de búsqueda", EditorStyles.boldLabel);
+        EditorGUILayout.HelpBox("Ajusta dónde buscar el pecho. Los cambios se ven en Preview.", MessageType.Info);
+
+        EditorGUILayout.LabelField("Zona vertical (altura del sprite)", EditorStyles.boldLabel);
+        PivotCalculatorHelper.CHEST_TOP_PERCENT = EditorGUILayout.Slider("Arriba %:", PivotCalculatorHelper.CHEST_TOP_PERCENT, 0f, 0.5f);
+        PivotCalculatorHelper.CHEST_BOTTOM_PERCENT = EditorGUILayout.Slider("Abajo %:", PivotCalculatorHelper.CHEST_BOTTOM_PERCENT, 0.5f, 1f);
+
+        EditorGUILayout.LabelField("Zona horizontal (ancho del sprite)", EditorStyles.boldLabel);
+        PivotCalculatorHelper.CHEST_LEFT_PERCENT = EditorGUILayout.Slider("Izquierda %:", PivotCalculatorHelper.CHEST_LEFT_PERCENT, 0f, 0.5f);
+        PivotCalculatorHelper.CHEST_RIGHT_PERCENT = EditorGUILayout.Slider("Derecha %:", PivotCalculatorHelper.CHEST_RIGHT_PERCENT, 0.5f, 1f);
+
+        EditorGUILayout.LabelField("Sensibilidad", EditorStyles.boldLabel);
+        PivotCalculatorHelper.ALPHA_THRESHOLD = EditorGUILayout.Slider("Opacidad mínima:", PivotCalculatorHelper.ALPHA_THRESHOLD, 0f, 1f);
+        
+        EditorGUILayout.Space();
+        
+        if (GUILayout.Button("Reset a valores por defecto"))
+        {
+            PivotCalculatorHelper.ResetToDefaults();
+        }
+        
+        EditorGUILayout.Space();
+        EditorGUILayout.HelpBox(
+            $"Zona de búsqueda:\n" +
+            $"Vertical: {PivotCalculatorHelper.CHEST_TOP_PERCENT:F2} a {PivotCalculatorHelper.CHEST_BOTTOM_PERCENT:F2}\n" +
+            $"Horizontal: {PivotCalculatorHelper.CHEST_LEFT_PERCENT:F2} a {PivotCalculatorHelper.CHEST_RIGHT_PERCENT:F2}\n" +
+            $"Opacidad: {PivotCalculatorHelper.ALPHA_THRESHOLD:F2}",
+            MessageType.None
+        );
+    }
+    
+    void CopyPivotsFromReference()
+    {
+        string path = AssetDatabase.GetAssetPath(spriteSheet);
+        TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+        
+        if (importer == null)
+        {
+            Debug.LogError("No se pudo obtener el TextureImporter");
+            return;
+        }
+        
+        var metas = importer.spritesheet;
+        if (metas == null || metas.Length == 0)
+        {
+            EditorUtility.DisplayDialog("Error", "Esta textura no tiene sprites múltiples configurados.", "OK");
+            return;
+        }
+
+        SpriteMetaData? refMetaNullable = null;
+        foreach (var m in metas)
+        {
+            if (m.name == referenceSpriteName)
+            {
+                refMetaNullable = m;
+                break;
+            }
+        }
+        
+        if (!refMetaNullable.HasValue)
+        {
+            EditorUtility.DisplayDialog("Error", $"No se encontró un sprite con nombre '{referenceSpriteName}'.\n\nSprites disponibles:\n{string.Join("\n", metas.Select(m => m.name).Take(10))}", "OK");
+            return;
+        }
+
+        SpriteMetaData refMeta = refMetaNullable.Value;
+        Vector2 refPivot = refMeta.pivot;
+        Rect refRect = refMeta.rect;
+
+        Vector2 refLocalPivot = new Vector2(
+            (refPivot.x - refRect.x) / refRect.width,
+            (refPivot.y - refRect.y) / refRect.height
+        );
+
+        Debug.Log($"✅ Referencia '{refMeta.name}': pivot local = ({refLocalPivot.x:F3}, {refLocalPivot.y:F3})");
+
+        if (!spriteSheet.isReadable)
+        {
+            importer.isReadable = true;
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+        }
+
+        List<SpriteMetaData> newMeta = new List<SpriteMetaData>();
+
+        foreach (var meta in metas)
+        {
+            Rect r = meta.rect;
+
+            Vector2 localPivot = refLocalPivot;
+
+            Vector2 autoLocal = PivotCalculatorHelper.CalculateChestPivotLocal(spriteSheet, r);
+            Vector2 blended = Vector2.Lerp(localPivot, autoLocal, 0.3f);
+
+            Vector2 finalPivot = new Vector2(
+                r.x + blended.x * r.width,
+                r.y + blended.y * r.height
+            );
+
+            SpriteMetaData newM = meta;
+            newM.alignment = (int)SpriteAlignment.Custom;
+            newM.pivot = finalPivot;
+            newMeta.Add(newM);
+
+            Debug.Log($"{meta.name}: ref={refLocalPivot:F3} auto={autoLocal:F3} final={blended:F3}");
+        }
+
+        importer.spritesheet = newMeta.ToArray();
+        EditorUtility.SetDirty(importer);
+        AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+
+        EditorUtility.DisplayDialog("Listo", $"✅ Pivots copiados desde '{refMeta.name}' (con ajuste suave 30%).\n\nSe procesaron {newMeta.Count} sprites.", "OK");
+    }
+
+    void CalculateAndApplyPivots()
+    {
+        string path = AssetDatabase.GetAssetPath(spriteSheet);
+        TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+        
+        if (importer == null)
+        {
+            Debug.LogError("No se pudo obtener el TextureImporter");
+            return;
+        }
+        
+        if (!spriteSheet.isReadable)
+        {
+            importer.isReadable = true;
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+        }
+        
+        Object[] sprites = AssetDatabase.LoadAllAssetsAtPath(path);
+        List<SpriteMetaData> newMetaData = new List<SpriteMetaData>();
+        
+        int processedCount = 0;
+        
+        foreach (Object obj in sprites)
+        {
+            if (obj is Sprite sprite)
+            {
+                Rect rect = sprite.rect;
+                Vector2 localPivot = PivotCalculatorHelper.CalculateChestPivotLocal(spriteSheet, rect);
+                
+                Vector2 texPivot = new Vector2(
+                    rect.x + localPivot.x * rect.width,
+                    rect.y + localPivot.y * rect.height
+                );
+
+                SpriteMetaData metaData = new SpriteMetaData
+                {
+                    name = sprite.name,
+                    rect = rect,
+                    alignment = (int)SpriteAlignment.Custom,
+                    pivot = texPivot,
+                    border = Vector4.zero
+                };
+                
+                newMetaData.Add(metaData);
+                
+                Debug.Log($"{sprite.name}: LocalPivot = ({localPivot.x:F3}, {localPivot.y:F3})");
+                processedCount++;
+            }
+        }
+        
+        importer.spritesheet = newMetaData.ToArray();
+        EditorUtility.SetDirty(importer);
+        AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+        
+        EditorUtility.DisplayDialog(
+            "Completado", 
+            $"Se procesaron {processedCount} sprites.", 
+            "OK"
+        );
+    }
+}
+
+public class PivotPreview : EditorWindow
+{
+    private Texture2D spriteSheet;
+    private Vector2 scrollPos;
+    private List<SpritePreviewData> previews = new List<SpritePreviewData>();
+    
+    private class SpritePreviewData
+    {
+        public string name;
+        public Rect rect;
+        public Vector2 localPivot;
+        public Texture2D preview;
+    }
+    
+    public static void OpenPreview(Texture2D texture)
+    {
+        PivotPreview window = GetWindow<PivotPreview>("Pivot Preview");
+        window.spriteSheet = texture;
+        window.GeneratePreviews();
+    }
+    
+    void GeneratePreviews()
+    {
+        previews.Clear();
+        
+        string path = AssetDatabase.GetAssetPath(spriteSheet);
+        TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+        
+        if (!spriteSheet.isReadable)
+        {
+            importer.isReadable = true;
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+        }
+        
+        Object[] sprites = AssetDatabase.LoadAllAssetsAtPath(path);
+        
+        foreach (Object obj in sprites)
+        {
+            if (obj is Sprite sprite)
+            {
+                Rect rect = sprite.rect;
+                Vector2 localPivot = PivotCalculatorHelper.CalculateChestPivotLocal(spriteSheet, rect);
+                
+                Texture2D preview = CreatePreviewWithDot(spriteSheet, rect, localPivot);
+                
+                previews.Add(new SpritePreviewData
+                {
+                    name = sprite.name,
+                    rect = rect,
+                    localPivot = localPivot,
+                    preview = preview
+                });
+            }
+        }
+    }
+    
+    Texture2D CreatePreviewWithDot(Texture2D source, Rect rect, Vector2 localPivot)
+    {
+        int w = (int)rect.width;
+        int h = (int)rect.height;
+        
+        Texture2D preview = new Texture2D(w, h);
+        
+        for (int y = 0; y < h; y++)
+        {
+            for (int x = 0; x < w; x++)
+            {
+                Color pixel = source.GetPixel((int)rect.x + x, (int)rect.y + y);
+                preview.SetPixel(x, y, pixel);
+            }
+        }
+        
+        int pivotX = Mathf.RoundToInt(localPivot.x * w);
+        int pivotY = Mathf.RoundToInt(localPivot.y * h);
+        
+        for (int dy = -3; dy <= 3; dy++)
+        {
+            for (int dx = -3; dx <= 3; dx++)
+            {
+                if (dx*dx + dy*dy <= 9)
+                {
+                    int px = pivotX + dx;
+                    int py = pivotY + dy;
+                    if (px >= 0 && px < w && py >= 0 && py < h)
+                    {
+                        preview.SetPixel(px, py, Color.red);
+                    }
+                }
+            }
+        }
+        
+        preview.Apply();
+        return preview;
+    }
+    
+    void OnGUI()
+    {
+        GUILayout.Label("Vista Previa de Pivotes (modo auto)", EditorStyles.boldLabel);
+        EditorGUILayout.HelpBox("El punto rojo muestra el pivot calculado localmente (pecho).", MessageType.Info);
+        
+        scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
+        
+        foreach (var data in previews)
+        {
+            EditorGUILayout.BeginVertical("box");
+            
+            GUILayout.Label($"{data.name} - LocalPivot: ({data.localPivot.x:F3}, {data.localPivot.y:F3})");
+            
+            if (data.preview != null)
+            {
+                GUILayout.Label(data.preview, GUILayout.Width(data.rect.width), GUILayout.Height(data.rect.height));
+            }
+            
+            EditorGUILayout.EndVertical();
+            EditorGUILayout.Space();
+        }
+        
+        EditorGUILayout.EndScrollView();
+    }
+}
+
+public static class PivotCalculatorHelper
+{
+    // Parámetros ajustables
+    public static float CHEST_TOP_PERCENT = 0.35f;
+    public static float CHEST_BOTTOM_PERCENT = 0.65f;
+    public static float CHEST_LEFT_PERCENT = 0.4f;
+    public static float CHEST_RIGHT_PERCENT = 0.6f;
+    public static float ALPHA_THRESHOLD = 0.5f;
+    
+    // Valores por defecto
+    private static float DEFAULT_TOP = 0.35f;
+    private static float DEFAULT_BOTTOM = 0.65f;
+    private static float DEFAULT_LEFT = 0.4f;
+    private static float DEFAULT_RIGHT = 0.6f;
+    private static float DEFAULT_ALPHA = 0.5f;
+    
+    public static void ResetToDefaults()
+    {
+        CHEST_TOP_PERCENT = DEFAULT_TOP;
+        CHEST_BOTTOM_PERCENT = DEFAULT_BOTTOM;
+        CHEST_LEFT_PERCENT = DEFAULT_LEFT;
+        CHEST_RIGHT_PERCENT = DEFAULT_RIGHT;
+        ALPHA_THRESHOLD = DEFAULT_ALPHA;
+    }
+    
+    public static Vector2 CalculateChestPivotLocal(Texture2D texture, Rect spriteRect)
     {
         int startX = (int)spriteRect.x;
         int startY = (int)spriteRect.y;
-        int width = (int)spriteRect.width;
+        int width  = (int)spriteRect.width;
         int height = (int)spriteRect.height;
-        
-        List<int> footXPositions = new List<int>();
-        
-        // Buscar en la ÚLTIMA FILA (donde están los pies)
-        int bottomY = startY + height - 1;
-        
-        for (int x = 0; x < width; x++)
+
+        int topY    = (int)(height * CHEST_TOP_PERCENT);
+        int bottomY = (int)(height * CHEST_BOTTOM_PERCENT);
+
+        int maxPixels = 0;
+        int bestRow   = topY;
+
+        for (int y = topY; y <= bottomY; y++)
         {
-            Color pixel = texture.GetPixel(startX + x, bottomY);
-            
-            if (pixel.a > 0.5f)
+            int pixelCount = 0;
+            for (int x = 0; x < width; x++)
             {
-                footXPositions.Add(x);
+                Color pixel = texture.GetPixel(startX + x, startY + y);
+                if (pixel.a > ALPHA_THRESHOLD)
+                    pixelCount++;
+            }
+
+            if (pixelCount > maxPixels)
+            {
+                maxPixels = pixelCount;
+                bestRow   = y;
             }
         }
-        
-        float pivotX;
-        
-        if (footXPositions.Count > 0)
+
+        int leftX  = (int)(width * CHEST_LEFT_PERCENT);
+        int rightX = (int)(width * CHEST_RIGHT_PERCENT);
+
+        float sumX = 0;
+        int totalPixels = 0;
+
+        for (int x = leftX; x < rightX; x++)
         {
-            // Promedio de las posiciones X en esa fila
-            float sum = 0;
-            foreach (int x in footXPositions)
+            Color pixel = texture.GetPixel(startX + x, startY + bestRow);
+            if (pixel.a > ALPHA_THRESHOLD)
             {
-                sum += x;
+                sumX += x;
+                totalPixels++;
             }
-            float centerX = sum / footXPositions.Count;
-            pivotX = centerX / width;
         }
-        else
-        {
-            pivotX = 0.5f;
-        }
-        
-        float pivotY = 0.0f;
-        
-        return new Vector2(pivotX, pivotY);
+
+        float localX = totalPixels > 0 ? (sumX / totalPixels) / width : 0.5f;
+        float localY = (bestRow) / (float)height;
+
+        return new Vector2(localX, localY);
     }
 }
-#endif

@@ -500,6 +500,28 @@ CURSOR (IA de codigo)
 MERLIN (IA de ayuda)
 ========================
 [2026-01-28 - noche]
+- Explicacion: usuario pidió completar y arreglar AutoPivotCalculator.cs que estaba incompleto
+- El método OnGUI() de PivotPreview estaba incompleto y había que terminarlo
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - noche]
+- Codigo modificado:
+  - Assets/Editor/AutoPivotCalculator.cs: completado el archivo completo
+    - Completado el método OnGUI() de PivotPreview que estaba incompleto
+    - El método ahora muestra correctamente la lista de sprites con sus pivots calculados
+    - Verificado que no hay errores de compilación
+    - El script está completo y funcional con:
+      - Modo 1: Copiar pivots desde sprite de referencia (con ajuste 30% automático)
+      - Modo 2: Calcular pivots automáticamente
+      - Preview de pivots
+      - Controles ajustables para zona de búsqueda (vertical, horizontal, opacidad)
+
+========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - noche]
 - Explicacion: usuario reportó que el personaje se corrió y está donde no debe estar
 - Probable causa: la compensación de pivots que agregué estaba moviendo el personaje incorrectamente
 
