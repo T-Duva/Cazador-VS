@@ -96,15 +96,13 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Vector2 offsetBotonAtaque = new Vector2(-120f, 0f);
     [SerializeField] private Vector2 offsetBotonDefensa = new Vector2(120f, 0f);
     
-    [SerializeField] private float guerreroRunFrameTime = 0.1f;
-    [SerializeField] private float guerreroAttackFrameTime = 0.11f;
-    private bool guerreroAtaqueEnCurso = false;
-    
     [Header("Caballero SpriteSheet (Idle + Ataque)")]
     [SerializeField] private Sprite caballeroSheet;
     [SerializeField] private float caballeroIdleFrameTime = 0.12f;
+    [SerializeField] private float caballeroRunFrameTime = 0.1f; // Velocidad de frames cuando el CABALLERO corre
     [SerializeField] private float caballeroAttackFrameTime = 0.1f;
     [SerializeField] private int caballeroIdleFrameCount = 18;
+    private bool caballeroAtaqueEnCurso = false;
     [SerializeField] private int caballeroAttackFrameCount = 7;
     [SerializeField] private int[] caballeroIdleFrames;
     [SerializeField] private int[] caballeroAttackFrames;
@@ -1867,14 +1865,14 @@ public class UIManager : MonoBehaviour
         
         if (tipo == "Guerrero" && esJugador && caballeroSheet != null)
         {
-            if (guerreroAtaqueEnCurso) return;
-            guerreroAtaqueEnCurso = true;
+            if (caballeroAtaqueEnCurso) return;
+            caballeroAtaqueEnCurso = true;
             DetenerAnimacionesIdle();
             if (corrutinaAnimacion != null)
             {
                 StopCoroutine(corrutinaAnimacion);
             }
-            corrutinaAnimacion = StartCoroutine(ReproducirAtaqueGuerreroCompleto(daño));
+            corrutinaAnimacion = StartCoroutine(ReproducirAtaqueCaballeroCompleto(daño));
         }
     }
 
@@ -2106,7 +2104,7 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    private IEnumerator ReproducirAtaqueGuerreroCompleto(int daño)
+    private IEnumerator ReproducirAtaqueCaballeroCompleto(int daño)
     {
         if (imgJugador == null) yield break;
         if (!imgJugador.gameObject.activeInHierarchy)
@@ -2131,22 +2129,22 @@ public class UIManager : MonoBehaviour
             
             if (inicioCarreraFrames.Length == 0)
             {
-                guerreroAtaqueEnCurso = false;
+                caballeroAtaqueEnCurso = false;
                 yield break;
             }
             if (runRightFrames.Length == 0)
             {
-                guerreroAtaqueEnCurso = false;
+                caballeroAtaqueEnCurso = false;
                 yield break;
             }
             if (caballeroAttackFramesLocal.Length == 0)
             {
-                guerreroAtaqueEnCurso = false;
+                caballeroAtaqueEnCurso = false;
                 yield break;
             }
             if (runLeftFrames.Length == 0)
             {
-                guerreroAtaqueEnCurso = false;
+                caballeroAtaqueEnCurso = false;
                 yield break;
             }
             
@@ -2186,7 +2184,7 @@ public class UIManager : MonoBehaviour
                 }
             }
             Sprite[] idaFrames = idaFramesRepetidos.ToArray();
-            float runFrameTime = caballeroIdleFrameTime;
+            float runFrameTime = caballeroRunFrameTime;
             yield return StartCoroutine(MoverConFrames(imgJugador, caballeroInicio, caballeroObjetivo, idaFrames, runFrameTime));
             caballeroRect.anchoredPosition = caballeroObjetivo;
             
@@ -2240,7 +2238,7 @@ public class UIManager : MonoBehaviour
             {
                 returnFrames = lastAttackFrame != null ? new Sprite[] { lastAttackFrame } : Array.Empty<Sprite>();
             }
-            float returnFrameTime = caballeroIdleFrameTime;
+            float returnFrameTime = caballeroRunFrameTime;
             yield return StartCoroutine(MoverConFrames(imgJugador, caballeroObjetivo, caballeroInicio, returnFrames, returnFrameTime));
             
             // Asegurar que el personaje esté en la posición inicial antes de iniciar idle
@@ -2248,7 +2246,7 @@ public class UIManager : MonoBehaviour
             
             // Iniciar idle después de que termine completamente la vuelta
             IniciarAnimacionIdle("Guerrero", true);
-            guerreroAtaqueEnCurso = false;
+            caballeroAtaqueEnCurso = false;
             yield break;
         }
         
@@ -2282,7 +2280,7 @@ public class UIManager : MonoBehaviour
         Sprite[] attackFrames = ObtenerSpritesCaballeroAtaque();
         if (attackFrames.Length == 0)
         {
-            guerreroAtaqueEnCurso = false;
+            caballeroAtaqueEnCurso = false;
             yield break;
         }
         
@@ -2298,70 +2296,7 @@ public class UIManager : MonoBehaviour
         
         jugadorRect.anchoredPosition = inicio;
         IniciarAnimacionIdle("Guerrero", true);
-        guerreroAtaqueEnCurso = false;
-    }
-    
-    private IEnumerator ReproducirAtaquePersonaje(string tipo, bool esJugador)
-    {
-        Image atacante = esJugador ? imgJugador : imgEnemigo;
-        Image objetivoImg = esJugador ? imgEnemigo : imgJugador;
-        if (atacante == null) yield break;
-        
-        if (!atacante.gameObject.activeInHierarchy)
-        {
-            atacante.gameObject.SetActive(true);
-        }
-        atacante.color = Color.white;
-        atacante.preserveAspect = true;
-        
-        RectTransform atacanteRect = atacante.rectTransform;
-        Vector2 inicio = atacanteRect.anchoredPosition;
-        Vector2 objetivo = inicio + (esJugador ? new Vector2(260f, 0f) : new Vector2(-260f, 0f));
-        if (objetivoImg != null)
-        {
-            Vector2 targetPos = objetivoImg.rectTransform.anchoredPosition;
-            objetivo = esJugador ? new Vector2(targetPos.x - 150f, inicio.y) : new Vector2(targetPos.x + 150f, inicio.y);
-        }
-        
-        Sprite[] runOut = ObtenerSpritesRun(tipo, esJugador ? true : false);
-        Sprite[] attack = ObtenerSpritesAttack(tipo);
-        Sprite[] runBack = ObtenerSpritesRun(tipo, esJugador ? false : true);
-        
-        int runOutCount = Mathf.Max(1, runOut.Length);
-        for (int i = 0; i < runOutCount; i++)
-        {
-            float t = runOutCount == 1 ? 1f : (float)i / (runOutCount - 1);
-            atacanteRect.anchoredPosition = Vector2.Lerp(inicio, objetivo, t);
-            if (i < runOut.Length && runOut[i] != null)
-            {
-                ApplySpriteToImage(atacante, runOut[i]);
-            }
-            yield return new WaitForSeconds(guerreroRunFrameTime);
-        }
-        
-        for (int i = 0; i < attack.Length; i++)
-        {
-            if (attack[i] != null)
-            {
-                ApplySpriteToImage(atacante, attack[i]);
-            }
-            yield return new WaitForSeconds(guerreroAttackFrameTime);
-        }
-        
-        int runBackCount = Mathf.Max(1, runBack.Length);
-        for (int i = 0; i < runBackCount; i++)
-        {
-            float t = runBackCount == 1 ? 1f : (float)i / (runBackCount - 1);
-            atacanteRect.anchoredPosition = Vector2.Lerp(objetivo, inicio, t);
-            if (i < runBack.Length && runBack[i] != null)
-            {
-                ApplySpriteToImage(atacante, runBack[i]);
-            }
-            yield return new WaitForSeconds(guerreroRunFrameTime);
-        }
-        
-        atacanteRect.anchoredPosition = inicio;
-        IniciarAnimacionIdle(tipo, esJugador);
+        caballeroAtaqueEnCurso = false;
     }
     
     /// <summary>
@@ -2428,6 +2363,24 @@ public class UIManager : MonoBehaviour
             // preserveAspect hará que el sprite se escale manteniendo sus proporciones dentro de ese espacio
             imagen.preserveAspect = true; // ✅ Activar preserveAspect para mantener proporciones sin distorsión
             imagen.rectTransform.sizeDelta = tamañoFijo; // Contenedor del tamaño máximo
+            
+            Vector2 tamañoDespuesAplicar = imagen.rectTransform.sizeDelta;
+            
+            // ✅ LOGS DETALLADOS: Mostrar información sobre tamaño del sprite
+            Debug.Log($"[UIManager] Sprite '{sprite.name}': rect={spriteRect.width:F0}x{spriteRect.height:F0}, " +
+                      $"contenedor={tamañoFijo.x:F2}x{tamañoFijo.y:F2}, " +
+                      $"tamaño después={tamañoDespuesAplicar.x:F2}x{tamañoDespuesAplicar.y:F2}, " +
+                      $"preserveAspect={imagen.preserveAspect}, " +
+                      $"pivot={pivotSprite}");
+            
+            // Verificar si el tamaño cambió
+            if (Mathf.Abs(tamañoDespuesAplicar.x - tamañoFijo.x) > 0.01f || 
+                Mathf.Abs(tamañoDespuesAplicar.y - tamañoFijo.y) > 0.01f)
+            {
+                Debug.LogWarning($"[UIManager] ⚠️ Sprite '{sprite.name}': TAMAÑO CAMBIÓ - " +
+                                 $"esperado={tamañoFijo.x:F2}x{tamañoFijo.y:F2}, " +
+                                 $"obtenido={tamañoDespuesAplicar.x:F2}x{tamañoDespuesAplicar.y:F2}");
+            }
             
             // ✅ MANTENER POSICIÓN Y CONSTANTE: Simplemente restaurar la posición Y de referencia
             // Si todos los sprites tienen el mismo pivot normalizado, Unity los posicionará igual
@@ -2616,6 +2569,20 @@ public class UIManager : MonoBehaviour
             caballeroMaxFrameSize = new Vector2(maxW, maxH);
             caballeroMaxFrameSizeReady = true;
             Debug.Log($"[UIManager] Tamaño máximo calculado: {maxW}x{maxH} (tamaño visual máximo: {maxTamañoVisual}, de {spritesProcesados} sprites de {caballeroFrames.Length} totales)");
+            
+            // ✅ Log detallado de cada sprite con tamaño diferente al máximo
+            for (int i = 0; i < caballeroFrames.Length; i++)
+            {
+                Sprite sprite = caballeroFrames[i];
+                if (sprite == null) continue;
+                
+                Rect rect = sprite.rect;
+                float tamañoVisual = Mathf.Max(rect.width, rect.height);
+                if (Mathf.Abs(tamañoVisual - maxTamañoVisual) > 0.1f)
+                {
+                    Debug.Log($"[UIManager] Sprite '{sprite.name}': rect={rect.width:F0}x{rect.height:F0}, tamaño visual={tamañoVisual:F0} (diferente al máximo {maxTamañoVisual:F0}, diferencia={Mathf.Abs(tamañoVisual - maxTamañoVisual):F0})");
+                }
+            }
         }
         else
         {

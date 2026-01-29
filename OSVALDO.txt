@@ -914,6 +914,38 @@ CURSOR (IA de codigo)
 MERLIN (IA de ayuda)
 ========================
 [2026-01-28 - noche]
+- Explicacion: usuario pidió:
+  1. Devolver los logs detallados sobre tamaño de sprites
+  2. Eliminar el método antiguo ReproducirAtaquePersonaje
+  3. Cambiar todos los nombres de "guerrero" a "caballero" para evitar confusiones
+  4. El personaje ahora siempre se llama "caballero"
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - noche]
+- Codigo modificado:
+  - Assets/Scripts/UIManager.cs: renombrado todo de "guerrero" a "caballero"
+    - Eliminado guerreroRunFrameTime, guerreroAttackFrameTime, guerreroAtaqueEnCurso
+    - Agregado caballeroRunFrameTime (velocidad de frames cuando el CABALLERO corre)
+    - Renombrado guerreroAtaqueEnCurso -> caballeroAtaqueEnCurso
+    - Renombrado ReproducirAtaqueGuerreroCompleto -> ReproducirAtaqueCaballeroCompleto
+    - Actualizado uso de caballeroRunFrameTime en lugar de caballeroIdleFrameTime para carreras
+    - ELIMINADO método ReproducirAtaquePersonaje completo (método antiguo)
+  - Assets/Scripts/UIManager.cs: restaurados logs detallados sobre tamaño de sprites
+    - Agregado log detallado en ApplySpriteToImage mostrando:
+      - rect del sprite, tamaño del contenedor, tamaño después de aplicar, preserveAspect, pivot
+      - Warning si el tamaño cambió después de aplicar
+    - Agregado log detallado en ApplyCaballeroSizeFromFrames mostrando:
+      - Cada sprite con tamaño diferente al máximo (con diferencia calculada)
+  - Assets/Scripts/UIManager.cs: mejorados logs para identificar sprites que cambian de tamaño
+    - Logs muestran cuando un sprite tiene un tamaño visual diferente al máximo
+    - Logs muestran cuando el tamaño del contenedor cambia después de aplicar
+
+========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - noche]
 - Explicacion: usuario reportó warnings de compilación:
   - GameManager.puntosSkillDisponibles: campo asignado pero nunca usado
   - TextureImporter.spritesheet obsoleto en AutoPivotCalculator.cs y RebuildSpriteSheet.cs
