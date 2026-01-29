@@ -868,6 +868,31 @@ CURSOR (IA de codigo)
 MERLIN (IA de ayuda)
 ========================
 [2026-01-28 - noche]
+- Explicacion: usuario reportó saltos grandes:
+  - CABALLERO_7: salta a Y=-1.09 (compensación=1.09)
+  - CABALLERO_9: salta a Y=68.91 (compensación=-68.91, pivot Y=0.00 vs referencia 63.00)
+  - CABALLERO_10: salta de Y=68.91 a 0.00
+- Problema: la compensación basada en pivots absolutos causa saltos enormes cuando hay diferencias grandes
+- CABALLERO_9 tiene pivot Y=0.00 (parte inferior) mientras referencia tiene Y=63.00, causando compensación de -68.91
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - noche]
+- Codigo modificado:
+  - Assets/Scripts/UIManager.cs: simplificado eliminando compensación basada en pivots
+    - ELIMINADA toda la lógica de compensación basada en diferencia de pivots absolutos
+    - Ahora simplemente mantiene la posición Y constante para todos los sprites
+    - Si Unity desplaza el sprite, lo restaura a la posición Y de referencia
+    - Eliminada variable caballeroPivotReferencia (ya no se usa)
+    - Si todos los sprites tienen el mismo pivot normalizado, Unity los posicionará igual sin necesidad de compensar
+    - Interpola suavemente si hay diferencia significativa entre posición actual y objetivo
+    - Logs simplificados: solo muestran sprite, Y actual->objetivo, pivot (sin compensación)
+
+========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - noche]
 - Explicacion: usuario reportó que el personaje se corrió y está donde no debe estar
 - Probable causa: la compensación de pivots que agregué estaba moviendo el personaje incorrectamente
 

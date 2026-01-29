@@ -114,7 +114,6 @@ public class UIManager : MonoBehaviour
     private bool caballeroMaxFrameSizeReady = false;
     private Sprite[] caballeroFramesOrdered;
     private bool caballeroFramesOrderedReady = false;
-    private Vector2? caballeroPivotReferencia = null; // Pivot de referencia para compensar desplazamientos
     private float? caballeroPosicionYReferencia = null; // Posición Y de referencia fija para todos los sprites
     private Coroutine corrutinaSuavizarY = null; // Coroutine para suavizar cambios de posición Y
     
@@ -2416,47 +2415,31 @@ public class UIManager : MonoBehaviour
         {
             // Guardar la posición antes de cambiar el tamaño
             Vector2 posicionAntes = imagen.rectTransform.anchoredPosition;
-            Vector2 pivotSprite = sprite.pivot; // Valores absolutos en píxeles
+            Vector2 pivotSprite = sprite.pivot; // Valores absolutos en píxeles (solo para logs)
             
-            // ✅ Establecer pivot y posición Y de referencia (usar el primer sprite como referencia)
-            if (!caballeroPivotReferencia.HasValue)
+            // ✅ Establecer posición Y de referencia (usar el primer sprite como referencia)
+            if (!caballeroPosicionYReferencia.HasValue)
             {
-                caballeroPivotReferencia = pivotSprite;
                 caballeroPosicionYReferencia = posicionAntes.y; // Guardar posición Y inicial como referencia fija
-                Debug.Log($"[UIManager] Pivot de referencia establecido: {pivotSprite} (sprite: {sprite.name})");
-                Debug.Log($"[UIManager] Posición Y de referencia establecida: {caballeroPosicionYReferencia.Value:F2}");
+                Debug.Log($"[UIManager] Posición Y de referencia establecida: {caballeroPosicionYReferencia.Value:F2} (sprite: {sprite.name}, pivot={pivotSprite})");
             }
-            
-            // Calcular diferencia de pivots (valores absolutos en píxeles)
-            Vector2 diferenciaPivot = pivotSprite - caballeroPivotReferencia.Value;
             
             // Establecer el tamaño del contenedor al máximo
             // preserveAspect hará que el sprite se escale manteniendo sus proporciones dentro de ese espacio
             imagen.preserveAspect = true; // ✅ Activar preserveAspect para mantener proporciones sin distorsión
             imagen.rectTransform.sizeDelta = tamañoFijo; // Contenedor del tamaño máximo
             
+            // ✅ MANTENER POSICIÓN Y CONSTANTE: Simplemente restaurar la posición Y de referencia
+            // Si todos los sprites tienen el mismo pivot normalizado, Unity los posicionará igual
+            // No necesitamos compensar basándonos en pivots absolutos
             Vector2 posicionDespues = imagen.rectTransform.anchoredPosition;
             float posicionYActual = posicionDespues.y;
             float posicionYObjetivo = caballeroPosicionYReferencia.Value;
-            float compensacionVisualY = 0f;
             
-            // ✅ COMPENSAR DESPLAZAMIENTO VISUAL solo si hay diferencia significativa en pivots (píxeles)
-            if (Mathf.Abs(diferenciaPivot.y) > 0.1f)
-            {
-                // Calcular el factor de escala (cuánto se escaló el sprite)
-                float escalaX = tamañoFijo.x / spriteRect.width;
-                float escalaY = tamañoFijo.y / spriteRect.height;
-                float escala = Mathf.Min(escalaX, escalaY); // preserveAspect usa la escala menor
-                
-                // Compensar el desplazamiento visual causado por la diferencia de pivots (en píxeles)
-                compensacionVisualY = diferenciaPivot.y * escala;
-                posicionYObjetivo = caballeroPosicionYReferencia.Value - compensacionVisualY;
-            }
-            
-            // Aplicar la posición Y compensada
+            // Aplicar la posición Y de referencia directamente (sin compensación de pivots)
             imagen.rectTransform.anchoredPosition = new Vector2(posicionDespues.x, posicionYObjetivo);
             
-            // Si hay una diferencia significativa entre la posición actual y la objetivo, interpolar suavemente
+            // Si hay una diferencia significativa, interpolar suavemente
             float diferenciaY = Mathf.Abs(posicionYActual - posicionYObjetivo);
             if (diferenciaY > 0.5f)
             {
@@ -2468,14 +2451,13 @@ public class UIManager : MonoBehaviour
                 // Iniciar interpolación suave
                 corrutinaSuavizarY = StartCoroutine(SuavizarPosicionY(imagen.rectTransform, posicionYActual, posicionYObjetivo, 0.1f));
                 
-                // ✅ LOG DETALLADO: Mostrar cuando hay desplazamiento significativo
-                Debug.LogWarning($"[UIManager] ⚠️ Sprite '{sprite.name}': SALTO DETECTADO - Y actual={posicionYActual:F2}, objetivo={posicionYObjetivo:F2}, diferencia={diferenciaY:F2}, compensación visual={compensacionVisualY:F2} (pivot diff Y={diferenciaPivot.y:F2} píxeles)");
+                Debug.LogWarning($"[UIManager] ⚠️ Sprite '{sprite.name}': SALTO DETECTADO - Y actual={posicionYActual:F2}, objetivo={posicionYObjetivo:F2}, diferencia={diferenciaY:F2} (pivot={pivotSprite})");
             }
             
-            // Log informativo para todos los sprites (solo si hay diferencia de pivot o desplazamiento)
-            if (Mathf.Abs(diferenciaPivot.y) > 0.1f || diferenciaY > 0.01f)
+            // Log informativo para todos los sprites (solo si hay desplazamiento)
+            if (diferenciaY > 0.01f)
             {
-                Debug.Log($"[UIManager] Sprite '{sprite.name}': Y={posicionYActual:F2}->{posicionYObjetivo:F2}, pivot={pivotSprite}, diff pivot Y={diferenciaPivot.y:F2} píxeles, compensación={compensacionVisualY:F2}");
+                Debug.Log($"[UIManager] Sprite '{sprite.name}': Y={posicionYActual:F2}->{posicionYObjetivo:F2}, pivot={pivotSprite}");
             }
         }
         else
