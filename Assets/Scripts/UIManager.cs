@@ -2399,14 +2399,24 @@ public class UIManager : MonoBehaviour
         // ✅ Aplicar el nuevo sprite - Unity maneja automáticamente los pivots del Sprite Editor
         // Los pivots que cambies en el Sprite Editor se aplican automáticamente cuando asignas el sprite
         // IMPORTANTE: Después de cambiar pivots en Unity, asegurate de guardar y reimportar el asset
+        Vector2 tamañoAntes = imagen.rectTransform.sizeDelta;
+        Rect spriteRect = sprite.rect;
+        
         imagen.sprite = sprite;
         imagen.color = Color.white;
         imagen.preserveAspect = false; // ✅ Desactivar preserveAspect para controlar el tamaño manualmente
+        
+        Vector2 tamañoDespuesSprite = imagen.rectTransform.sizeDelta;
         
         // ✅ Aplicar el tamaño fijo DESPUÉS de asignar el sprite para sobrescribir el ajuste automático de Unity
         if (usarTamañoFijo)
         {
             imagen.rectTransform.sizeDelta = tamañoFijo;
+            Debug.Log($"[UIManager] Sprite '{sprite.name}': rect={spriteRect.width}x{spriteRect.height}, tamaño antes={tamañoAntes}, después sprite={tamañoDespuesSprite}, tamaño fijo aplicado={tamañoFijo}");
+        }
+        else
+        {
+            Debug.Log($"[UIManager] Sprite '{sprite.name}': rect={spriteRect.width}x{spriteRect.height}, tamaño={imagen.rectTransform.sizeDelta} (sin tamaño fijo)");
         }
         
         // ✅ Forzar actualización para que los cambios se reflejen inmediatamente
@@ -2424,8 +2434,11 @@ public class UIManager : MonoBehaviour
         yield return null; // Esperar un frame para que Unity procese el layout
         if (rectTransform != null)
         {
+            Vector2 tamañoAntes = rectTransform.sizeDelta;
             rectTransform.sizeDelta = tamaño;
             Canvas.ForceUpdateCanvases();
+            Vector2 tamañoDespues = rectTransform.sizeDelta;
+            Debug.Log($"[UIManager] ForzarTamañoFijo: tamaño antes={tamañoAntes}, objetivo={tamaño}, después={tamañoDespues}");
         }
     }
 
@@ -2439,27 +2452,41 @@ public class UIManager : MonoBehaviour
     {
         if (imgJugador == null) return;
         if (!HasCaballeroFramesReady()) return;
-        if (!caballeroMaxFrameSizeReady)
+        
+        // ✅ Recalcular siempre para asegurar que tenemos el tamaño correcto
+        // No usar el flag caballeroMaxFrameSizeReady para permitir recálculo si es necesario
+        float maxW = 0f;
+        float maxH = 0f;
+        int spritesProcesados = 0;
+        
+        for (int i = 0; i < caballeroFrames.Length; i++)
         {
-            float maxW = 0f;
-            float maxH = 0f;
-            for (int i = 0; i < caballeroFrames.Length; i++)
-            {
-                Sprite sprite = caballeroFrames[i];
-                if (sprite == null) continue;
-                Rect rect = sprite.rect;
-                if (rect.width > maxW) maxW = rect.width;
-                if (rect.height > maxH) maxH = rect.height;
-            }
-            if (maxW > 0f && maxH > 0f)
-            {
-                caballeroMaxFrameSize = new Vector2(maxW, maxH);
-                caballeroMaxFrameSizeReady = true;
-            }
+            Sprite sprite = caballeroFrames[i];
+            if (sprite == null) continue;
+            
+            // ✅ Usar el tamaño del rect del sprite (recorte)
+            Rect rect = sprite.rect;
+            if (rect.width > maxW) maxW = rect.width;
+            if (rect.height > maxH) maxH = rect.height;
+            spritesProcesados++;
         }
+        
+        if (maxW > 0f && maxH > 0f)
+        {
+            caballeroMaxFrameSize = new Vector2(maxW, maxH);
+            caballeroMaxFrameSizeReady = true;
+            Debug.Log($"[UIManager] Tamaño máximo calculado: {maxW}x{maxH} (de {spritesProcesados} sprites)");
+        }
+        else
+        {
+            Debug.LogWarning($"[UIManager] No se pudo calcular el tamaño máximo. Sprites procesados: {spritesProcesados}");
+        }
+        
+        // ✅ Aplicar el tamaño calculado
         if (caballeroMaxFrameSizeReady)
         {
             imgJugador.rectTransform.sizeDelta = caballeroMaxFrameSize;
+            Debug.Log($"[UIManager] Tamaño aplicado a imgJugador: {caballeroMaxFrameSize}");
         }
     }
 

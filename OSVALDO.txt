@@ -626,6 +626,27 @@ CURSOR (IA de codigo)
 MERLIN (IA de ayuda)
 ========================
 [2026-01-28 - noche]
+- Explicacion: usuario pregunta si el problema es por las constantes que no dejan hacer nada
+- Usuario quiere verificar si hay constantes que estén bloqueando el cambio de tamaño
+- Necesita depuración para ver qué está pasando con el tamaño
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - noche]
+- Codigo modificado:
+  - Assets/Scripts/UIManager.cs: agregados logs de depuración y mejorado cálculo de tamaño
+    - Modificado ApplyCaballeroSizeFromFrames para recalcular siempre (no usar flag para bloquear recálculo)
+    - Agregados logs detallados en ApplyCaballeroSizeFromFrames para ver el tamaño calculado
+    - Agregados logs detallados en ApplySpriteToImage para ver el tamaño antes/después de asignar sprite
+    - Agregados logs en ForzarTamañoFijo para ver si el tamaño se aplica correctamente en el siguiente frame
+    - Los logs muestran: rect del sprite, tamaño antes/después, tamaño fijo aplicado
+    - Esto permitirá depurar exactamente qué está pasando con el tamaño y por qué no se mantiene constante
+
+========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - noche]
 - Explicacion: usuario reportó que el personaje se corrió y está donde no debe estar
 - Probable causa: la compensación de pivots que agregué estaba moviendo el personaje incorrectamente
 
