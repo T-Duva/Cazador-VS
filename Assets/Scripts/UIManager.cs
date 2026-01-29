@@ -2417,46 +2417,30 @@ public class UIManager : MonoBehaviour
             Vector2 posicionAntes = imagen.rectTransform.anchoredPosition;
             Vector2 pivotSprite = sprite.pivot;
             
-            // ✅ Establecer pivot y posición Y de referencia (usar el primer sprite como referencia)
-            if (!caballeroPivotReferencia.HasValue)
+            // ✅ Establecer posición Y de referencia (usar el primer sprite como referencia)
+            if (!caballeroPosicionYReferencia.HasValue)
             {
-                caballeroPivotReferencia = pivotSprite;
                 caballeroPosicionYReferencia = posicionAntes.y; // Guardar posición Y inicial como referencia fija
-                Debug.Log($"[UIManager] Pivot de referencia establecido: {pivotSprite} (sprite: {sprite.name})");
-                Debug.Log($"[UIManager] Posición Y de referencia establecida: {caballeroPosicionYReferencia.Value:F2}");
+                Debug.Log($"[UIManager] Posición Y de referencia establecida: {caballeroPosicionYReferencia.Value:F2} (sprite: {sprite.name})");
             }
-            
-            // Calcular diferencia de pivots para compensar desplazamiento
-            Vector2 diferenciaPivot = pivotSprite - caballeroPivotReferencia.Value;
             
             // Establecer el tamaño del contenedor al máximo
             // preserveAspect hará que el sprite se escale manteniendo sus proporciones dentro de ese espacio
             imagen.preserveAspect = true; // ✅ Activar preserveAspect para mantener proporciones sin distorsión
             imagen.rectTransform.sizeDelta = tamañoFijo; // Contenedor del tamaño máximo
             
-            // ✅ Compensar desplazamiento basado en la diferencia de pivots
-            // Cuando el pivot Y es diferente, Unity desplaza el sprite verticalmente
-            // Necesitamos compensar ese desplazamiento usando la posición Y de referencia fija
+            // ✅ MANTENER POSICIÓN Y CONSTANTE: Simplemente restaurar la posición Y de referencia
+            // Unity maneja los pivots automáticamente, solo necesitamos mantener la posición Y constante
             Vector2 posicionDespues = imagen.rectTransform.anchoredPosition;
+            imagen.rectTransform.anchoredPosition = new Vector2(posicionDespues.x, caballeroPosicionYReferencia.Value);
             
-            // Calcular el factor de escala (cuánto se escaló el sprite)
-            float escalaX = tamañoFijo.x / spriteRect.width;
-            float escalaY = tamañoFijo.y / spriteRect.height;
-            float escala = Mathf.Min(escalaX, escalaY); // preserveAspect usa la escala menor
-            
-            // Compensar el desplazamiento vertical causado por la diferencia de pivots
-            // Usar la posición Y de referencia fija, no la posición anterior del sprite
-            float compensacionY = diferenciaPivot.y * escala;
-            float nuevaPosicionY = caballeroPosicionYReferencia.Value - compensacionY;
-            
-            imagen.rectTransform.anchoredPosition = new Vector2(posicionDespues.x, nuevaPosicionY);
-            
-            if (Mathf.Abs(diferenciaPivot.y) > 0.1f)
+            float desplazamientoY = posicionDespues.y - caballeroPosicionYReferencia.Value;
+            if (Mathf.Abs(desplazamientoY) > 0.01f)
             {
-                Debug.Log($"[UIManager] Sprite '{sprite.name}': diferencia pivot Y={diferenciaPivot.y:F2}, compensación={compensacionY:F2}, posición Y ajustada a {nuevaPosicionY:F2} (referencia={caballeroPosicionYReferencia.Value:F2})");
+                Debug.Log($"[UIManager] Sprite '{sprite.name}': Unity desplazó Y={desplazamientoY:F2}, restaurado a {caballeroPosicionYReferencia.Value:F2}");
             }
             
-            Debug.Log($"[UIManager] Sprite '{sprite.name}': rect={spriteRect.width}x{spriteRect.height}, pivot={pivotSprite}, diferencia={diferenciaPivot}, contenedor={tamañoFijo} (preserveAspect=true)");
+            Debug.Log($"[UIManager] Sprite '{sprite.name}': rect={spriteRect.width}x{spriteRect.height}, pivot={pivotSprite}, contenedor={tamañoFijo}, posición Y={caballeroPosicionYReferencia.Value:F2} (preserveAspect=true)");
         }
         else
         {
@@ -2516,6 +2500,27 @@ public class UIManager : MonoBehaviour
         if (imgJugador == null) return;
         if (!HasCaballeroFramesReady()) return;
         
+        // ✅ VERIFICAR SPrites FALTANTES
+        int spritesNullos = 0;
+        List<int> indicesFaltantes = new List<int>();
+        for (int i = 0; i < caballeroFrames.Length; i++)
+        {
+            if (caballeroFrames[i] == null)
+            {
+                spritesNullos++;
+                indicesFaltantes.Add(i);
+            }
+        }
+        
+        if (spritesNullos > 0)
+        {
+            Debug.LogError($"[UIManager] ⚠️ FALTAN {spritesNullos} SPRITES en caballeroFrames! Índices faltantes: {string.Join(", ", indicesFaltantes.Take(10))}");
+            if (indicesFaltantes.Count > 10)
+            {
+                Debug.LogError($"[UIManager] ... y {indicesFaltantes.Count - 10} más.");
+            }
+        }
+        
         // ✅ Recalcular siempre para asegurar que tenemos el tamaño correcto
         // No usar el flag caballeroMaxFrameSizeReady para permitir recálculo si es necesario
         float maxW = 0f;
@@ -2538,11 +2543,11 @@ public class UIManager : MonoBehaviour
         {
             caballeroMaxFrameSize = new Vector2(maxW, maxH);
             caballeroMaxFrameSizeReady = true;
-            Debug.Log($"[UIManager] Tamaño máximo calculado: {maxW}x{maxH} (de {spritesProcesados} sprites)");
+            Debug.Log($"[UIManager] Tamaño máximo calculado: {maxW}x{maxH} (de {spritesProcesados} sprites de {caballeroFrames.Length} totales)");
         }
         else
         {
-            Debug.LogWarning($"[UIManager] No se pudo calcular el tamaño máximo. Sprites procesados: {spritesProcesados}");
+            Debug.LogWarning($"[UIManager] No se pudo calcular el tamaño máximo. Sprites procesados: {spritesProcesados} de {caballeroFrames.Length} totales");
         }
         
         // ✅ Aplicar el tamaño calculado

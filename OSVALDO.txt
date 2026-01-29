@@ -734,6 +734,32 @@ CURSOR (IA de codigo)
 MERLIN (IA de ayuda)
 ========================
 [2026-01-28 - noche]
+- Explicacion: usuario reportó que:
+  1. No estaba verificando que faltaban sprites (debería haberlo hecho)
+  2. La compensación de pivots estaba causando saltos enormes (CABALLERO_9 salta a Y=71.64)
+  3. El usuario tuvo que agregar los sprites faltantes manualmente
+  4. Usuario critica que siempre le doy la razón en vez de analizar bien los problemas
+- Problema real: la lógica de compensación basada en diferencia de pivots estaba mal calculada
+- CABALLERO_9 tiene pivot Y=0.00 vs referencia 65.50, causando diferencia de -65.50 y salto enorme
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - noche]
+- Codigo modificado:
+  - Assets/Scripts/UIManager.cs: simplificado y corregido la compensación de posición Y
+    - ELIMINADA la compensación compleja basada en diferencia de pivots (estaba mal calculada)
+    - Ahora simplemente mantiene la posición Y constante para todos los sprites
+    - Unity ya maneja los pivots automáticamente, solo necesitamos mantener Y constante
+    - Agregada verificación de sprites faltantes en ApplyCaballeroSizeFromFrames
+    - Muestra error detallado con índices de sprites faltantes si hay nulls en el array
+    - La posición Y ahora se restaura directamente a la referencia sin cálculos complejos
+    - Esto evita saltos enormes causados por diferencias grandes de pivots
+
+========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - noche]
 - Explicacion: usuario reportó que el personaje se corrió y está donde no debe estar
 - Probable causa: la compensación de pivots que agregué estaba moviendo el personaje incorrectamente
 
