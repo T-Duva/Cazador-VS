@@ -2170,7 +2170,20 @@ public class UIManager : MonoBehaviour
             }
             
             // Fase 2: Corrida derecha (20..23) - CON MOVIMIENTO
-            Sprite[] idaFrames = runRightFrames;
+            // Repetir los frames varias veces para que el movimiento dure más y se vea natural
+            int ciclosCorrida = 3; // Repetir 3 veces el ciclo completo de 4 frames (20-23)
+            List<Sprite> idaFramesRepetidos = new List<Sprite>();
+            for (int ciclo = 0; ciclo < ciclosCorrida; ciclo++)
+            {
+                for (int i = 0; i < runRightFrames.Length; i++)
+                {
+                    if (runRightFrames[i] != null)
+                    {
+                        idaFramesRepetidos.Add(runRightFrames[i]);
+                    }
+                }
+            }
+            Sprite[] idaFrames = idaFramesRepetidos.ToArray();
             float runFrameTime = caballeroIdleFrameTime;
             yield return StartCoroutine(MoverConFrames(imgJugador, caballeroInicio, caballeroObjetivo, idaFrames, runFrameTime));
             caballeroRect.anchoredPosition = caballeroObjetivo;
@@ -2207,13 +2220,25 @@ public class UIManager : MonoBehaviour
             yield return new WaitForSeconds(caballeroAttackFrameTime);
             
             // Fase 4: Volver usando frames de correr a la izquierda (28..31) - CON MOVIMIENTO
-            Sprite[] returnFrames = runLeftFrames;
+            // Repetir los frames varias veces para que el movimiento dure más y se vea natural
+            int ciclosVuelta = 3; // Repetir 3 veces el ciclo completo de 4 frames (28-31)
+            List<Sprite> vueltaFramesRepetidos = new List<Sprite>();
+            for (int ciclo = 0; ciclo < ciclosVuelta; ciclo++)
+            {
+                for (int i = 0; i < baseLeftFrames.Length; i++)
+                {
+                    if (baseLeftFrames[i] != null)
+                    {
+                        vueltaFramesRepetidos.Add(baseLeftFrames[i]);
+                    }
+                }
+            }
+            Sprite[] returnFrames = vueltaFramesRepetidos.ToArray();
             if (returnFrames.Length == 0)
             {
                 returnFrames = lastAttackFrame != null ? new Sprite[] { lastAttackFrame } : Array.Empty<Sprite>();
             }
-            float returnTime = returnFrames.Length > 0 ? returnFrames.Length * caballeroIdleFrameTime : caballeroAttackFramesLocal.Length * caballeroAttackFrameTime;
-            float returnFrameTime = returnFrames.Length > 0 ? (returnTime / returnFrames.Length) : caballeroIdleFrameTime;
+            float returnFrameTime = caballeroIdleFrameTime;
             yield return StartCoroutine(MoverConFrames(imgJugador, caballeroObjetivo, caballeroInicio, returnFrames, returnFrameTime));
             
             caballeroRect.anchoredPosition = caballeroInicio;

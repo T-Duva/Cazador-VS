@@ -435,6 +435,32 @@ CURSOR (IA de codigo)
   - El idle ya usa 0..15 correctamente a través de caballeroIdleFrames.
 
 ========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - noche]
+- Explicacion: usuario reportó dos problemas:
+  1. Sprites 7, 8 y 9 tienen pivot mal puesto (la imagen se mueve diferente a otros sprites)
+  2. Al correr a la derecha parece que solo usa el sprite 23 saltándose los otros, movimiento muy rápido
+- Intencion: arreglar la corrida para que se vea natural y dar instrucciones para el pivot
+- Pasos en Unity para arreglar pivot (sprites 7, 8, 9):
+  1. Seleccioná CABALLERO.png en el Project
+  2. En el Inspector, click en "Sprite Editor"
+  3. Seleccioná los sprites 7, 8 y 9 (CABALLERO_7, CABALLERO_8, CABALLERO_9)
+  4. En la parte inferior del Sprite Editor, cambiá "Pivot" a "Center" (o "Bottom" si querés que esté en los pies)
+  5. Asegurate de que TODOS los sprites tengan el mismo pivot (recomendado: "Center" para todos)
+  6. Click en "Apply" y cerrá el Sprite Editor
+- Nota: El pivot debe estar en el mismo lugar para TODOS los sprites, normalmente "Center" (0.5, 0.5) o "Bottom" (0.5, 0) en la base de los pies.
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - noche]
+- Codigo modificado:
+  - Assets/Scripts/UIManager.cs: corrida derecha (20..23) ahora repite los frames 3 veces durante el movimiento para que dure más y se vea natural
+  - Assets/Scripts/UIManager.cs: corrida izquierda (28..31) ahora repite los frames 3 veces durante el movimiento para que dure más y se vea natural
+  - NO se modificó idle (0..15) ni golpe (24..27) como solicitó el usuario
+
+========================
 CURSOR (IA de codigo)
 ========================
 [2026-01-28 - tarde]
