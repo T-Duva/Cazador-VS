@@ -2364,13 +2364,14 @@ public class UIManager : MonoBehaviour
     
     /// <summary>
     /// Aplica un sprite a una imagen, respetando los pivots configurados en el Sprite Editor.
-    /// IMPORTANTE: Los pivots de los sprites son CONSTANTES y solo se LEEN, NUNCA se modifican.
-    /// Solo el usuario puede cambiar los pivots a través del Sprite Editor de Unity.
+    /// IMPORTANTE: Los pivots de los sprites son CONSTANTES y solo se LEEN, NUNCA se modifican desde este código.
+    /// Solo el usuario o el script AutoPivotCalculator pueden cambiar los pivots a través del Sprite Editor de Unity.
     /// Unity maneja automáticamente los pivots cuando se asigna el sprite.
     /// 
     /// NOTA: Los sprites 7, 8 y 9 (CABALLERO_7, CABALLERO_8, CABALLERO_9) pueden tener
     /// pivots diferentes a los demás, causando que se muevan cuando aparecen en la animación.
     /// Verificar en el Sprite Editor que estos 3 sprites tengan el mismo pivot que los demás.
+    /// El script AutoPivotCalculator tiene permiso para modificar los pivots de los sprites.
     /// </summary>
     private void ApplySpriteToImage(Image imagen, Sprite sprite)
     {
@@ -2605,24 +2606,59 @@ public class UIManager : MonoBehaviour
             Debug.LogError($"[UIManager] caballeroFrames no está ordenado o le faltan sprites para {label}.");
             return Array.Empty<Sprite>();
         }
-        Sprite[] result = new Sprite[indices.Length];
+        List<Sprite> result = new List<Sprite>();
         for (int i = 0; i < indices.Length; i++)
         {
             int index = indices[i];
             if (index < 0 || index >= caballeroFramesOrdered.Length)
             {
-                Debug.LogError($"[UIManager] Índice fuera de rango en {label}: {index}.");
-                return Array.Empty<Sprite>();
+                Debug.LogWarning($"[UIManager] Índice fuera de rango en {label}: índice {index}. Se usará el sprite anterior disponible.");
+                // Usar el último sprite disponible si hay uno
+                if (result.Count > 0)
+                {
+                    result.Add(result[result.Count - 1]);
+                    continue;
+                }
+                // Si no hay sprites anteriores, buscar el sprite más cercano disponible
+                for (int j = index - 1; j >= 0; j--)
+                {
+                    if (j < caballeroFramesOrdered.Length && caballeroFramesOrdered[j] != null)
+                    {
+                        result.Add(caballeroFramesOrdered[j]);
+                        break;
+                    }
+                }
+                continue;
             }
             Sprite sprite = caballeroFramesOrdered[index];
             if (sprite == null)
             {
-                Debug.LogError($"[UIManager] Sprite faltante en {label}: índice {index}. No se salteará.");
-                return Array.Empty<Sprite>();
+                Debug.LogWarning($"[UIManager] Sprite faltante en {label}: índice {index}. Se usará el sprite anterior disponible.");
+                // Usar el último sprite disponible si hay uno
+                if (result.Count > 0)
+                {
+                    result.Add(result[result.Count - 1]);
+                    continue;
+                }
+                // Si no hay sprites anteriores, buscar el sprite más cercano disponible
+                for (int j = index - 1; j >= 0; j--)
+                {
+                    if (j < caballeroFramesOrdered.Length && caballeroFramesOrdered[j] != null)
+                    {
+                        result.Add(caballeroFramesOrdered[j]);
+                        break;
+                    }
+                }
+                continue;
             }
-            result[i] = sprite;
+            result.Add(sprite);
         }
-        return result;
+        if (result.Count == 0)
+        {
+            Debug.LogError($"[UIManager] No se pudo obtener ningún sprite para {label}.");
+            return Array.Empty<Sprite>();
+        }
+        return result.ToArray();
     }
 
     private bool EnsureCaballeroFramesOrdered()

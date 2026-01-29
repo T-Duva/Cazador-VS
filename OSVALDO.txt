@@ -522,6 +522,27 @@ CURSOR (IA de codigo)
 MERLIN (IA de ayuda)
 ========================
 [2026-01-28 - noche]
+- Explicacion: usuario reportó que "no hay ataque" después de completar AutoPivotCalculator.cs
+- Error en consola: "[UIManager] Sprite faltante en inicio carrera 16..19: índice 19. No se salteará."
+- Causa: falta el sprite 19 en el array caballeroFrames, lo que hace que GetCaballeroFramesExact devuelva un array vacío y cancele el ataque
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - noche]
+- Codigo modificado:
+  - Assets/Scripts/UIManager.cs: modificado GetCaballeroFramesExact para ser más tolerante con sprites faltantes
+    - Cambiado de devolver Array.Empty<Sprite>() cuando falta un sprite a usar el sprite anterior disponible
+    - Si falta un sprite, se usa el último sprite disponible en su lugar
+    - Si no hay sprites anteriores, busca el sprite más cercano disponible hacia atrás
+    - Cambiado Debug.LogError a Debug.LogWarning para sprites faltantes (no cancela el ataque)
+    - Esto permite que el ataque continúe incluso si falta el sprite 19
+    - NO se modificó la lógica del ataque, solo se hizo más robusto ante sprites faltantes
+
+========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - noche]
 - Explicacion: usuario reportó que el personaje se corrió y está donde no debe estar
 - Probable causa: la compensación de pivots que agregué estaba moviendo el personaje incorrectamente
 
