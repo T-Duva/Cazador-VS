@@ -2411,12 +2411,31 @@ public class UIManager : MonoBehaviour
         // Todos los sprites ocuparán el mismo espacio (tamañoFijo) pero mantendrán sus proporciones
         if (usarTamañoFijo)
         {
+            // Guardar la posición antes de cambiar el tamaño para detectar desplazamientos
+            Vector2 posicionAntes = imagen.rectTransform.anchoredPosition;
+            Vector2 pivotSprite = sprite.pivot;
+            Vector2 pivotLocal = new Vector2(
+                (pivotSprite.x - spriteRect.x) / spriteRect.width,
+                (pivotSprite.y - spriteRect.y) / spriteRect.height
+            );
+            
             // Establecer el tamaño del contenedor al máximo
             // preserveAspect hará que el sprite se escale manteniendo sus proporciones dentro de ese espacio
             imagen.preserveAspect = true; // ✅ Activar preserveAspect para mantener proporciones sin distorsión
             imagen.rectTransform.sizeDelta = tamañoFijo; // Contenedor del tamaño máximo
             
-            Debug.Log($"[UIManager] Sprite '{sprite.name}': rect={spriteRect.width}x{spriteRect.height}, contenedor={tamañoFijo} (preserveAspect=true, sin distorsión)");
+            // Verificar si hubo desplazamiento en Y
+            Vector2 posicionDespues = imagen.rectTransform.anchoredPosition;
+            float desplazamientoY = posicionDespues.y - posicionAntes.y;
+            
+            if (Mathf.Abs(desplazamientoY) > 0.01f)
+            {
+                Debug.LogWarning($"[UIManager] ⚠️ Sprite '{sprite.name}' se desplazó en Y: {desplazamientoY:F2} (pivot local: {pivotLocal.x:F3}, {pivotLocal.y:F3})");
+                // Compensar el desplazamiento
+                imagen.rectTransform.anchoredPosition = new Vector2(posicionDespues.x, posicionAntes.y);
+            }
+            
+            Debug.Log($"[UIManager] Sprite '{sprite.name}': rect={spriteRect.width}x{spriteRect.height}, pivot local=({pivotLocal.x:F3}, {pivotLocal.y:F3}), contenedor={tamañoFijo} (preserveAspect=true)");
         }
         else
         {
@@ -2430,20 +2449,38 @@ public class UIManager : MonoBehaviour
         // ✅ Forzar el tamaño una vez más después de que Unity procese el layout
         if (usarTamañoFijo)
         {
-            StartCoroutine(ForzarTamañoFijo(imagen.rectTransform, tamañoFijo));
+            // Guardar la posición Y original para mantenerla constante
+            float posicionYOriginal = imagen.rectTransform.anchoredPosition.y;
+            StartCoroutine(ForzarTamañoFijo(imagen.rectTransform, tamañoFijo, posicionYOriginal));
         }
     }
     
-    private IEnumerator ForzarTamañoFijo(RectTransform rectTransform, Vector2 tamaño)
+    private IEnumerator ForzarTamañoFijo(RectTransform rectTransform, Vector2 tamaño, float posicionYOriginal)
     {
         yield return null; // Esperar un frame para que Unity procese el layout
         if (rectTransform != null)
         {
             Vector2 tamañoAntes = rectTransform.sizeDelta;
+            Vector2 posicionAntes = rectTransform.anchoredPosition;
+            
             rectTransform.sizeDelta = tamaño;
+            
+            // ✅ Mantener la posición Y original para evitar desplazamientos verticales
+            rectTransform.anchoredPosition = new Vector2(posicionAntes.x, posicionYOriginal);
+            
             Canvas.ForceUpdateCanvases();
+            
             Vector2 tamañoDespues = rectTransform.sizeDelta;
-            Debug.Log($"[UIManager] ForzarTamañoFijo: tamaño antes={tamañoAntes}, objetivo={tamaño}, después={tamañoDespues}");
+            Vector2 posicionDespues = rectTransform.anchoredPosition;
+            
+            float desplazamientoY = posicionDespues.y - posicionYOriginal;
+            if (Mathf.Abs(desplazamientoY) > 0.01f)
+            {
+                Debug.LogWarning($"[UIManager] ⚠️ ForzarTamañoFijo: desplazamiento Y detectado: {desplazamientoY:F2}, corrigiendo...");
+                rectTransform.anchoredPosition = new Vector2(posicionDespues.x, posicionYOriginal);
+            }
+            
+            Debug.Log($"[UIManager] ForzarTamañoFijo: tamaño={tamañoDespues}, posición Y={posicionDespues.y:F2} (original={posicionYOriginal:F2})");
         }
     }
 
