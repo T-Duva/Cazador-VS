@@ -34,7 +34,6 @@ public class GameManager : MonoBehaviour
     private int vidaInicialEnemigo = 0;
     private int nivelEnemigoActual = 1;
     private bool revanchaUsada = false;
-    private int puntosSkillDisponibles = 0;
     private int vidaMaximaJugador1 = 100;
     private int vidaMaximaEnemigo = 100;
     private int escudoMaximoEnemigo = 100;
@@ -861,7 +860,6 @@ public class GameManager : MonoBehaviour
         vidaInicialEnemigo = 0;
         vidaInicialCPU = 0;
         revanchaUsada = false;
-        puntosSkillDisponibles = 0;
         tipoEnemigo = "";
         vidaMaximaJugador1 = 100;
         vidaMaximaEnemigo = 100;

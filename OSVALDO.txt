@@ -914,6 +914,30 @@ CURSOR (IA de codigo)
 MERLIN (IA de ayuda)
 ========================
 [2026-01-28 - noche]
+- Explicacion: usuario reportó warnings de compilación:
+  - GameManager.puntosSkillDisponibles: campo asignado pero nunca usado
+  - TextureImporter.spritesheet obsoleto en AutoPivotCalculator.cs y RebuildSpriteSheet.cs
+- Nota: estos warnings no fueron causados por cambios recientes, ya existían
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - noche]
+- Codigo modificado:
+  - Assets/Scripts/GameManager.cs: eliminado campo puntosSkillDisponibles que no se usaba
+    - Eliminada declaración en línea 37
+    - Eliminada asignación en línea 864
+  - Assets/Editor/AutoPivotCalculator.cs: agregado #pragma warning disable CS0618
+    - Suprime warnings sobre TextureImporter.spritesheet obsoleto
+    - La API obsoleta sigue funcionando, solo se suprime el warning
+  - Assets/Editor/RebuildSpriteSheet.cs: agregado #pragma warning disable CS0618
+    - Suprime warnings sobre TextureImporter.spritesheet obsoleto
+    - La API obsoleta sigue funcionando, solo se suprime el warning
+
+========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - noche]
 - Explicacion: usuario reportó que el personaje se corrió y está donde no debe estar
 - Probable causa: la compensación de pivots que agregué estaba moviendo el personaje incorrectamente
 

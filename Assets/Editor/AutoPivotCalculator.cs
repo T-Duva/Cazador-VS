@@ -1,3 +1,4 @@
+#pragma warning disable CS0618 // TextureImporter.spritesheet está obsoleto pero sigue funcionando
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
