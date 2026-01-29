@@ -585,6 +585,26 @@ CURSOR (IA de codigo)
 MERLIN (IA de ayuda)
 ========================
 [2026-01-28 - noche]
+- Explicacion: usuario reportó que algunas sprites hacen al personaje más gordo y otras más grande
+- Usuario quiere que todas las sprites respeten el mismo tamaño
+- Problema: los sprites tienen diferentes tamaños de rect (recortes diferentes) y cuando se aplican, el personaje cambia de tamaño
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - noche]
+- Codigo modificado:
+  - Assets/Scripts/UIManager.cs: mejorado ApplySpriteToImage para mantener tamaño fijo
+    - Agregada lógica para mantener el tamaño fijo del personaje cuando se aplican sprites del caballero
+    - Si el sprite es del caballero (imgJugador), se calcula el tamaño máximo de todos los frames
+    - Se aplica el tamaño máximo calculado (caballeroMaxFrameSize) a todos los sprites
+    - Esto evita que el personaje cambie de tamaño cuando se aplican sprites con diferentes rects
+    - El tamaño se mantiene constante basado en el frame más grande, respetando las proporciones
+
+========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - noche]
 - Explicacion: usuario reportó que el personaje se corrió y está donde no debe estar
 - Probable causa: la compensación de pivots que agregué estaba moviendo el personaje incorrectamente
 

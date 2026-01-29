@@ -2384,6 +2384,22 @@ public class UIManager : MonoBehaviour
         imagen.color = Color.white;
         imagen.preserveAspect = true;
         
+        // ✅ MANTENER TAMAÑO FIJO: Si es un sprite del caballero, mantener el tamaño máximo calculado
+        // Esto evita que el personaje cambie de tamaño cuando se aplican sprites con diferentes rects
+        if (imagen == imgJugador && HasCaballeroFramesReady())
+        {
+            // Asegurar que el tamaño máximo esté calculado
+            if (!caballeroMaxFrameSizeReady)
+            {
+                ApplyCaballeroSizeFromFrames();
+            }
+            // Aplicar el tamaño fijo basado en el frame más grande
+            if (caballeroMaxFrameSizeReady)
+            {
+                imagen.rectTransform.sizeDelta = caballeroMaxFrameSize;
+            }
+        }
+        
         // ✅ Forzar actualización para que los cambios de pivot se reflejen inmediatamente
         Canvas.ForceUpdateCanvases();
     }
