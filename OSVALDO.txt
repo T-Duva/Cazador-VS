@@ -318,6 +318,14 @@ CURSOR (IA de codigo)
 ========================
 [2026-01-28 - tarde]
 - Codigo modificado:
+  - Assets/Editor/AssignCaballeroFramesFromSprite.cs: ahora solo valida 32 sprites (0..31) y NO reordena ni sobrescribe.
+  - Assets/Scripts/UIManager.cs: usa 0..23 (corrida derecha), 24..29 (golpe), 30..31 (corrida izquierda) y exige 32 sprites.
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - tarde]
+- Codigo modificado:
   - Assets/Scripts/UIManager.cs: la vuelta usa frames 30..31 repetidos y un frameTime ajustado para que se mueva todo el camino.
 
 ========================
