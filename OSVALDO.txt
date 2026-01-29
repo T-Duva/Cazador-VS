@@ -802,6 +802,30 @@ CURSOR (IA de codigo)
 MERLIN (IA de ayuda)
 ========================
 [2026-01-28 - noche]
+- Explicacion: usuario identificó que hay un salto entre CABALLERO_15 y CABALLERO_0
+- Aunque ambos tienen Y=0.00 en el RectTransform, hay desplazamiento visual
+- Problema: Unity desplaza el sprite visualmente basándose en el pivot, aunque el RectTransform tenga la misma Y
+- CABALLERO_15 tiene pivot (31.50, 62.00) y CABALLERO_0 tiene pivot (43.00, 65.50)
+- La diferencia de pivot Y (3.50) causa desplazamiento visual aunque la posición Y del RectTransform sea igual
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - noche]
+- Codigo modificado:
+  - Assets/Scripts/UIManager.cs: agregada compensación de desplazamiento visual basada en diferencia de pivots
+    - Establece pivot de referencia del primer sprite (además de posición Y)
+    - Calcula diferencia de pivots entre sprite actual y referencia
+    - Calcula factor de escala (preserveAspect usa la escala menor)
+    - Compensa desplazamiento visual: compensacionVisualY = diferenciaPivot.y * escala
+    - Ajusta posición Y objetivo: posicionYObjetivo = referencia - compensacionVisualY
+    - Esto compensa el desplazamiento visual causado por diferencias de pivots
+    - Logs mejorados muestran diferencia de pivot Y y compensación aplicada
+
+========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - noche]
 - Explicacion: usuario reportó que el personaje se corrió y está donde no debe estar
 - Probable causa: la compensación de pivots que agregué estaba moviendo el personaje incorrectamente
 

@@ -2418,27 +2418,43 @@ public class UIManager : MonoBehaviour
             Vector2 posicionAntes = imagen.rectTransform.anchoredPosition;
             Vector2 pivotSprite = sprite.pivot;
             
-            // ✅ Establecer posición Y de referencia (usar el primer sprite como referencia)
-            if (!caballeroPosicionYReferencia.HasValue)
+            // ✅ Establecer pivot y posición Y de referencia (usar el primer sprite como referencia)
+            if (!caballeroPivotReferencia.HasValue)
             {
+                caballeroPivotReferencia = pivotSprite;
                 caballeroPosicionYReferencia = posicionAntes.y; // Guardar posición Y inicial como referencia fija
-                Debug.Log($"[UIManager] Posición Y de referencia establecida: {caballeroPosicionYReferencia.Value:F2} (sprite: {sprite.name})");
+                Debug.Log($"[UIManager] Pivot de referencia establecido: {pivotSprite} (sprite: {sprite.name})");
+                Debug.Log($"[UIManager] Posición Y de referencia establecida: {caballeroPosicionYReferencia.Value:F2}");
             }
+            
+            // Calcular diferencia de pivots para compensar desplazamiento visual
+            Vector2 diferenciaPivot = pivotSprite - caballeroPivotReferencia.Value;
             
             // Establecer el tamaño del contenedor al máximo
             // preserveAspect hará que el sprite se escale manteniendo sus proporciones dentro de ese espacio
             imagen.preserveAspect = true; // ✅ Activar preserveAspect para mantener proporciones sin distorsión
             imagen.rectTransform.sizeDelta = tamañoFijo; // Contenedor del tamaño máximo
             
-            // ✅ MANTENER POSICIÓN Y CONSTANTE: Interpolar suavemente hacia la posición Y de referencia
-            // Unity maneja los pivots automáticamente, pero puede desplazar Y, así que lo suavizamos
+            // Calcular el factor de escala (cuánto se escaló el sprite)
+            float escalaX = tamañoFijo.x / spriteRect.width;
+            float escalaY = tamañoFijo.y / spriteRect.height;
+            float escala = Mathf.Min(escalaX, escalaY); // preserveAspect usa la escala menor
+            
+            // ✅ COMPENSAR DESPLAZAMIENTO VISUAL: Ajustar posición Y basándose en diferencia de pivots escalada
+            // Cuando el pivot Y es diferente, Unity desplaza el sprite visualmente aunque el RectTransform tenga la misma Y
             Vector2 posicionDespues = imagen.rectTransform.anchoredPosition;
             float posicionYActual = posicionDespues.y;
-            float posicionYObjetivo = caballeroPosicionYReferencia.Value;
             
-            // Si hay una diferencia, interpolar suavemente en lugar de cambiar instantáneamente
+            // Compensar el desplazamiento visual causado por la diferencia de pivots
+            float compensacionVisualY = diferenciaPivot.y * escala;
+            float posicionYObjetivo = caballeroPosicionYReferencia.Value - compensacionVisualY;
+            
+            // Aplicar la posición Y compensada
+            imagen.rectTransform.anchoredPosition = new Vector2(posicionDespues.x, posicionYObjetivo);
+            
+            // Si hay una diferencia significativa entre la posición actual y la objetivo, interpolar suavemente
             float diferenciaY = Mathf.Abs(posicionYActual - posicionYObjetivo);
-            if (diferenciaY > 0.01f)
+            if (diferenciaY > 0.5f)
             {
                 // Detener cualquier interpolación anterior
                 if (corrutinaSuavizarY != null)
@@ -2448,17 +2464,15 @@ public class UIManager : MonoBehaviour
                 // Iniciar interpolación suave
                 corrutinaSuavizarY = StartCoroutine(SuavizarPosicionY(imagen.rectTransform, posicionYActual, posicionYObjetivo, 0.1f));
                 
-                // ✅ LOG DETALLADO: Mostrar siempre cuando hay desplazamiento para identificar sprites problemáticos
-                Debug.LogWarning($"[UIManager] ⚠️ Sprite '{sprite.name}': SALTO DETECTADO - Y actual={posicionYActual:F2}, objetivo={posicionYObjetivo:F2}, diferencia={diferenciaY:F2} (pivot={pivotSprite})");
-            }
-            else
-            {
-                // Si la diferencia es muy pequeña, aplicar directamente
-                imagen.rectTransform.anchoredPosition = new Vector2(posicionDespues.x, posicionYObjetivo);
+                // ✅ LOG DETALLADO: Mostrar cuando hay desplazamiento significativo
+                Debug.LogWarning($"[UIManager] ⚠️ Sprite '{sprite.name}': SALTO DETECTADO - Y actual={posicionYActual:F2}, objetivo={posicionYObjetivo:F2}, diferencia={diferenciaY:F2}, compensación visual={compensacionVisualY:F2} (pivot diff Y={diferenciaPivot.y:F2})");
             }
             
-            // Log informativo para todos los sprites (menos verboso)
-            Debug.Log($"[UIManager] Sprite '{sprite.name}': Y={posicionYActual:F2}->{posicionYObjetivo:F2}, pivot={pivotSprite}");
+            // Log informativo para todos los sprites
+            if (Mathf.Abs(diferenciaPivot.y) > 0.1f || diferenciaY > 0.01f)
+            {
+                Debug.Log($"[UIManager] Sprite '{sprite.name}': Y={posicionYActual:F2}->{posicionYObjetivo:F2}, pivot={pivotSprite}, diff pivot Y={diferenciaPivot.y:F2}, compensación={compensacionVisualY:F2}");
+            }
         }
         else
         {
