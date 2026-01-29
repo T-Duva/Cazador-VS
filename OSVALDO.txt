@@ -326,6 +326,14 @@ CURSOR (IA de codigo)
 ========================
 [2026-01-28 - tarde]
 - Codigo modificado:
+  - Assets/Scripts/UIManager.cs: ahora ordena caballeroFrames por nombre CABALLERO_0..CABALLERO_31 en runtime sin modificar el Inspector.
+  - Si falta algún sprite, se loguea error y no continúa.
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - tarde]
+- Codigo modificado:
   - Assets/Scripts/UIManager.cs: la vuelta usa frames 30..31 repetidos y un frameTime ajustado para que se mueva todo el camino.
 
 ========================
