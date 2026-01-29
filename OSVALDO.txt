@@ -543,6 +543,29 @@ CURSOR (IA de codigo)
 MERLIN (IA de ayuda)
 ========================
 [2026-01-28 - noche]
+- Explicacion: usuario reportó que el sprite 19 se había cambiado de nombre (se transformó en 35)
+- Usuario ya lo cambió de vuelta a 19 manualmente
+- Usuario reportó que el sprite 32 lo había borrado y lo implementó de nuevo, pero ahora lo borró de nuevo
+- Usuario pidió que se mantenga el ordenamiento como está ahora y que no se cambien los nombres
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - noche]
+- Codigo modificado:
+  - Assets/Editor/AutoPivotCalculator.cs: agregadas validaciones para preservar nombres y ordenamiento
+    - En CalculateAndApplyPivots(): agregada validación explícita para preservar el nombre original de cada sprite
+    - En CopyPivotsFromReference(): agregada validación explícita para preservar el nombre original de cada sprite
+    - Agregado Debug.LogError si el nombre cambia accidentalmente (y se corrige automáticamente)
+    - Agregados comentarios explícitos: "✅ IMPORTANTE: Mantener el ORDEN ORIGINAL de los sprites - NO reordenar"
+    - Los scripts ahora preservan TODA la información original (nombre, rect, border, etc.) y solo modifican pivot y alignment
+    - El ordenamiento se mantiene exactamente como está en el spritesheet original
+    - NINGÚN script puede cambiar los nombres de los sprites ahora
+
+========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - noche]
 - Explicacion: usuario reportó que el personaje se corrió y está donde no debe estar
 - Probable causa: la compensación de pivots que agregué estaba moviendo el personaje incorrectamente
 

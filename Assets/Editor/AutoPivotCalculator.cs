@@ -160,10 +160,14 @@ public class AutoPivotCalculator : EditorWindow
             AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
         }
 
+        // ✅ IMPORTANTE: Mantener el ORDEN ORIGINAL de los sprites - NO reordenar
         List<SpriteMetaData> newMeta = new List<SpriteMetaData>();
 
+        // ✅ Iterar en el mismo orden que metas para preservar el ordenamiento
         foreach (var meta in metas)
         {
+            // ✅ PRESERVAR TODA LA INFORMACIÓN ORIGINAL (nombre, rect, border, etc.)
+            string originalName = meta.name;
             Rect r = meta.rect;
 
             Vector2 localPivot = refLocalPivot;
@@ -176,12 +180,24 @@ public class AutoPivotCalculator : EditorWindow
                 r.y + blended.y * r.height
             );
 
+            // ✅ Copiar toda la metadata original
             SpriteMetaData newM = meta;
+            // ✅ Solo actualizar pivot y alignment, preservar TODO lo demás
             newM.alignment = (int)SpriteAlignment.Custom;
             newM.pivot = finalPivot;
+            // ✅ Asegurar que el nombre se mantiene igual
+            newM.name = originalName;
+            
+            // ✅ Verificar que el nombre no cambió
+            if (newM.name != originalName)
+            {
+                Debug.LogError($"⚠️ ERROR: El nombre del sprite cambió de '{originalName}' a '{newM.name}'. Corrigiendo...");
+                newM.name = originalName;
+            }
+            
             newMeta.Add(newM);
 
-            Debug.Log($"{meta.name}: ref={refLocalPivot:F3} auto={autoLocal:F3} final={blended:F3}");
+            Debug.Log($"{originalName}: ref={refLocalPivot:F3} auto={autoLocal:F3} final={blended:F3}");
         }
 
         importer.spritesheet = newMeta.ToArray();
@@ -202,43 +218,80 @@ public class AutoPivotCalculator : EditorWindow
             return;
         }
         
+        // ✅ CORRECCIÓN: Preservar todos los sprites originales del spritesheet
+        var originalMetas = importer.spritesheet;
+        if (originalMetas == null || originalMetas.Length == 0)
+        {
+            EditorUtility.DisplayDialog("Error", "Esta textura no tiene sprites múltiples configurados.", "OK");
+            return;
+        }
+        
         if (!spriteSheet.isReadable)
         {
             importer.isReadable = true;
             AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
         }
         
+        // Crear un diccionario de sprites cargados para búsqueda rápida
         Object[] sprites = AssetDatabase.LoadAllAssetsAtPath(path);
-        List<SpriteMetaData> newMetaData = new List<SpriteMetaData>();
-        
-        int processedCount = 0;
-        
+        Dictionary<string, Sprite> spriteDict = new Dictionary<string, Sprite>();
         foreach (Object obj in sprites)
         {
             if (obj is Sprite sprite)
             {
-                Rect rect = sprite.rect;
-                Vector2 localPivot = PivotCalculatorHelper.CalculateChestPivotLocal(spriteSheet, rect);
+                spriteDict[sprite.name] = sprite;
+            }
+        }
+        
+        // ✅ CORRECCIÓN: Preservar TODOS los sprites originales, solo actualizar pivots
+        // ✅ IMPORTANTE: Mantener el ORDEN ORIGINAL de los sprites - NO reordenar
+        List<SpriteMetaData> newMetaData = new List<SpriteMetaData>();
+        int processedCount = 0;
+        int preservedCount = 0;
+        
+        // ✅ Iterar en el mismo orden que originalMetas para preservar el ordenamiento
+        foreach (var originalMeta in originalMetas)
+        {
+            // ✅ PRESERVAR TODA LA INFORMACIÓN ORIGINAL (nombre, rect, border, etc.)
+            SpriteMetaData newMeta = originalMeta;
+            
+            // ✅ NUNCA cambiar el nombre del sprite - preservar el original
+            string originalName = originalMeta.name;
+            
+            // Si encontramos el sprite cargado, calcular el nuevo pivot
+            if (spriteDict.TryGetValue(originalName, out Sprite sprite))
+            {
+                Vector2 localPivot = PivotCalculatorHelper.CalculateChestPivotLocal(spriteSheet, originalMeta.rect);
                 
                 Vector2 texPivot = new Vector2(
-                    rect.x + localPivot.x * rect.width,
-                    rect.y + localPivot.y * rect.height
+                    originalMeta.rect.x + localPivot.x * originalMeta.rect.width,
+                    originalMeta.rect.y + localPivot.y * originalMeta.rect.height
                 );
-
-                SpriteMetaData metaData = new SpriteMetaData
-                {
-                    name = sprite.name,
-                    rect = rect,
-                    alignment = (int)SpriteAlignment.Custom,
-                    pivot = texPivot,
-                    border = Vector4.zero
-                };
                 
-                newMetaData.Add(metaData);
+                // ✅ Solo actualizar pivot y alignment, preservar TODO lo demás
+                newMeta.alignment = (int)SpriteAlignment.Custom;
+                newMeta.pivot = texPivot;
+                // ✅ Asegurar que el nombre se mantiene igual
+                newMeta.name = originalName;
                 
-                Debug.Log($"{sprite.name}: LocalPivot = ({localPivot.x:F3}, {localPivot.y:F3})");
+                Debug.Log($"{originalName}: LocalPivot = ({localPivot.x:F3}, {localPivot.y:F3})");
                 processedCount++;
             }
+            else
+            {
+                // Si no encontramos el sprite, preservar el original COMPLETO sin cambios
+                Debug.LogWarning($"Sprite '{originalName}' no encontrado en assets, preservando configuración original.");
+                preservedCount++;
+            }
+            
+            // ✅ Verificar que el nombre no cambió
+            if (newMeta.name != originalName)
+            {
+                Debug.LogError($"⚠️ ERROR: El nombre del sprite cambió de '{originalName}' a '{newMeta.name}'. Corrigiendo...");
+                newMeta.name = originalName;
+            }
+            
+            newMetaData.Add(newMeta);
         }
         
         importer.spritesheet = newMetaData.ToArray();
@@ -247,7 +300,7 @@ public class AutoPivotCalculator : EditorWindow
         
         EditorUtility.DisplayDialog(
             "Completado", 
-            $"Se procesaron {processedCount} sprites.", 
+            $"Se procesaron {processedCount} sprites (pivots calculados).\nSe preservaron {preservedCount} sprites (sin cambios).\nTotal: {newMetaData.Count} sprites.", 
             "OK"
         );
     }
