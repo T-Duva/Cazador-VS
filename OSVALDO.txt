@@ -497,6 +497,25 @@ CURSOR (IA de codigo)
   - Verificado que ningún script modifica los pivots de los sprites del caballero
 
 ========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - noche]
+- Explicacion: usuario reportó errores de compilación en AutoPivotCalculator.cs
+- El archivo tenía una función suelta sin clase que la contuviera
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - noche]
+- Codigo modificado:
+  - Assets/Editor/AutoPivotCalculator.cs: arreglado estructura del archivo
+    - Envuelto la función CalculateFootPivot en una clase estática AutoPivotCalculator
+    - Agregados using statements necesarios (UnityEngine, System.Collections.Generic)
+    - Agregado #if UNITY_EDITOR para que solo compile en el editor
+    - La funcionalidad de la calculadora de foot pivot se mantiene intacta
+    - Ahora es un método estático público que puede ser usado desde otros scripts del editor
+
+========================
 CURSOR (IA de codigo)
 ========================
 [2026-01-28 - tarde]
