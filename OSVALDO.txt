@@ -946,6 +946,30 @@ CURSOR (IA de codigo)
 MERLIN (IA de ayuda)
 ========================
 [2026-01-28 - noche]
+- Explicacion: usuario pidió suavizar más las transiciones de frames y analizar los valores que se deberían poner en cada frame para que quede más natural el movimiento
+- Objetivo: hacer las animaciones más fluidas y naturales con tiempos variables según la fase de la animación
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - noche]
+- Codigo modificado:
+  - Assets/Scripts/UIManager.cs: suavizado de transiciones y tiempos de frame ajustados
+    - Agregado caballeroInicioCarreraFrameTime (0.12f) para transición suave desde idle
+    - Agregado caballeroAttackImpactFrameTime (0.15f) para énfasis en el momento del impacto
+    - Ajustado caballeroIdleFrameTime a 0.18f (más lento y relajado, natural para idle)
+    - Ajustado caballeroRunFrameTime a 0.08f (rápido pero controlado para carrera)
+    - Ajustado caballeroAttackFrameTime a 0.12f (más lento para mostrar impacto)
+    - ReproducirIdleCaballero: agregada variación sutil (±10%) en tiempos para hacer animación más orgánica
+    - Inicio de carrera: aceleración gradual desde caballeroInicioCarreraFrameTime hasta caballeroRunFrameTime
+    - Ataque: tiempos variables - inicio rápido (0.8x), impacto lento (caballeroAttackImpactFrameTime), medio normal
+    - MoverConFrames: mejorado suavizado con curva ease-in-out (aceleración y desaceleración)
+    - MoverConFrames: mejorada transición entre frames con seguimiento de progreso dentro del frame
+
+========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - noche]
 - Explicacion: usuario reportó warnings de compilación:
   - GameManager.puntosSkillDisponibles: campo asignado pero nunca usado
   - TextureImporter.spritesheet obsoleto en AutoPivotCalculator.cs y RebuildSpriteSheet.cs

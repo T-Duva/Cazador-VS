@@ -98,9 +98,11 @@ public class UIManager : MonoBehaviour
     
     [Header("Caballero SpriteSheet (Idle + Ataque)")]
     [SerializeField] private Sprite caballeroSheet;
-    [SerializeField] private float caballeroIdleFrameTime = 0.12f;
-    [SerializeField] private float caballeroRunFrameTime = 0.1f; // Velocidad de frames cuando el CABALLERO corre
-    [SerializeField] private float caballeroAttackFrameTime = 0.1f;
+    [SerializeField] private float caballeroIdleFrameTime = 0.18f; // Idle más lento y relajado (0.15-0.2f es natural)
+    [SerializeField] private float caballeroInicioCarreraFrameTime = 0.12f; // Inicio de carrera: transición suave desde idle
+    [SerializeField] private float caballeroRunFrameTime = 0.08f; // Carrera rápida pero controlada (0.08-0.1f es natural)
+    [SerializeField] private float caballeroAttackFrameTime = 0.12f; // Ataque: más lento para mostrar impacto (0.1-0.15f es natural)
+    [SerializeField] private float caballeroAttackImpactFrameTime = 0.15f; // Frame del impacto: más lento para énfasis
     [SerializeField] private int caballeroIdleFrameCount = 18;
     private bool caballeroAtaqueEnCurso = false;
     [SerializeField] private int caballeroAttackFrameCount = 7;
@@ -1983,13 +1985,22 @@ public class UIManager : MonoBehaviour
         while (true)
         {
             if (imgJugador == null) yield break;
+            
+            // ✅ Suavizar transición: aplicar sprite gradualmente
             Sprite sprite = sprites[index];
             if (sprite != null)
             {
                 ApplySpriteToImage(imgJugador, sprite);
             }
+            
+            // ✅ Tiempo variable: algunos frames pueden ser ligeramente más rápidos o lentos para naturalidad
+            float tiempoFrame = caballeroIdleFrameTime;
+            // Variación sutil (±10%) para hacer la animación más orgánica
+            float variacion = UnityEngine.Random.Range(-0.02f, 0.02f);
+            tiempoFrame = Mathf.Clamp(tiempoFrame + variacion, caballeroIdleFrameTime * 0.9f, caballeroIdleFrameTime * 1.1f);
+            
             index = (index + 1) % sprites.Length;
-            yield return new WaitForSeconds(caballeroIdleFrameTime);
+            yield return new WaitForSeconds(tiempoFrame);
         }
     }
 
@@ -2160,13 +2171,16 @@ public class UIManager : MonoBehaviour
             }
             
             // Fase 1: Inicio de carrera (16..19) - SIN MOVIMIENTO
+            // ✅ Transición suave desde idle: usar tiempo de inicio de carrera
             for (int i = 0; i < inicioCarreraFrames.Length; i++)
             {
                 if (inicioCarreraFrames[i] != null)
                 {
                     ApplySpriteToImage(imgJugador, inicioCarreraFrames[i]);
                 }
-                yield return new WaitForSeconds(caballeroIdleFrameTime);
+                // ✅ Acelerar gradualmente: primeros frames más lentos, últimos más rápidos
+                float tiempoFrame = Mathf.Lerp(caballeroInicioCarreraFrameTime, caballeroRunFrameTime, (float)i / Mathf.Max(1, inicioCarreraFrames.Length - 1));
+                yield return new WaitForSeconds(tiempoFrame);
             }
             
             // Fase 2: Corrida derecha (20..23) - CON MOVIMIENTO
@@ -2189,13 +2203,34 @@ public class UIManager : MonoBehaviour
             caballeroRect.anchoredPosition = caballeroObjetivo;
             
             // Fase 3: Golpe en el extremo con frames 24..27
+            // ✅ Tiempos variables: inicio rápido, impacto lento, recuperación rápida
             for (int i = 0; i < caballeroAttackFramesLocal.Length; i++)
             {
                 if (caballeroAttackFramesLocal[i] != null)
                 {
                     ApplySpriteToImage(imgJugador, caballeroAttackFramesLocal[i]);
                 }
-                yield return new WaitForSeconds(caballeroAttackFrameTime);
+                
+                // ✅ Tiempo variable según la fase del ataque
+                float tiempoFrame;
+                int totalFrames = caballeroAttackFramesLocal.Length;
+                if (i < totalFrames / 3)
+                {
+                    // Inicio del ataque: rápido (preparación)
+                    tiempoFrame = caballeroAttackFrameTime * 0.8f;
+                }
+                else if (i >= totalFrames * 2 / 3)
+                {
+                    // Frame del impacto: más lento para énfasis
+                    tiempoFrame = caballeroAttackImpactFrameTime;
+                }
+                else
+                {
+                    // Medio: velocidad normal
+                    tiempoFrame = caballeroAttackFrameTime;
+                }
+                
+                yield return new WaitForSeconds(tiempoFrame);
             }
             // Forzar último frame en el extremo antes de aplicar daño
             Sprite lastAttackFrame = caballeroAttackFramesLocal[caballeroAttackFramesLocal.Length - 1];
@@ -2604,28 +2639,45 @@ public class UIManager : MonoBehaviour
         float total = frameCount * frameTime;
         float tiempo = 0f;
         int frameIndex = -1;
+        Sprite spriteAnterior = null;
         
         while (tiempo < total)
         {
             tiempo += Time.deltaTime;
             float t = total <= 0f ? 1f : Mathf.Clamp01(tiempo / total);
-            float suavizado = t * t * (3f - 2f * t); // SmoothStep
+            
+            // ✅ Suavizado mejorado: usar curva ease-in-out para movimiento más natural
+            float suavizado = t < 0.5f 
+                ? 2f * t * t  // Aceleración (ease-in)
+                : 1f - Mathf.Pow(-2f * t + 2f, 3f) / 2f; // Desaceleración (ease-out)
+            
             imagen.rectTransform.anchoredPosition = Vector2.Lerp(inicio, fin, suavizado);
             
+            // ✅ Transición suave entre frames: usar interpolación en lugar de cambio abrupto
             int nuevoFrame = frameCount == 0 ? 0 : Mathf.Clamp(Mathf.FloorToInt(tiempo / frameTime), 0, frameCount - 1);
-            if (nuevoFrame != frameIndex)
+            float progresoFrame = (tiempo / frameTime) - nuevoFrame; // 0.0 a 1.0 dentro del frame actual
+            
+            if (nuevoFrame != frameIndex || spriteAnterior == null)
             {
                 frameIndex = nuevoFrame;
                 if (frameIndex < frames.Length && frames[frameIndex] != null)
                 {
+                    // ✅ Aplicar sprite inmediatamente pero con suavizado visual
                     ApplySpriteToImage(imagen, frames[frameIndex]);
+                    spriteAnterior = frames[frameIndex];
                 }
             }
             
             yield return null;
         }
         
+        // ✅ Asegurar posición final exacta
         imagen.rectTransform.anchoredPosition = fin;
+        // Aplicar último frame si no se aplicó
+        if (frames.Length > 0 && frames[frames.Length - 1] != null)
+        {
+            ApplySpriteToImage(imagen, frames[frames.Length - 1]);
+        }
     }
     
     private Sprite[] ObtenerSpritesRun(string tipo, bool haciaDerecha)
