@@ -411,6 +411,30 @@ CURSOR (IA de codigo)
   - Vuelta mantiene runLeftFrames y movimiento de retorno.
 
 ========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - noche]
+- Explicacion: usuario definió rangos exactos de sprites para la animación del caballero.
+- Rangos finales:
+  - Idle: 0 a 15
+  - Inicio de carrera: 16 a 19 (sin movimiento)
+  - Carrera derecha: 20 a 23 (con movimiento)
+  - Golpe: 24 a 27 (sin movimiento, en el extremo)
+  - Carrera izquierda: 28 a 31 (con movimiento)
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - noche]
+- Codigo modificado:
+  - Assets/Scripts/UIManager.cs: ReproducirAtaqueGuerreroCompleto ahora usa los rangos exactos:
+    - Fase 1: Inicio de carrera (16..19) - SIN MOVIMIENTO
+    - Fase 2: Corrida derecha (20..23) - CON MOVIMIENTO hacia el enemigo
+    - Fase 3: Golpe (24..27) - SIN MOVIMIENTO, en el extremo
+    - Fase 4: Corrida izquierda (28..31) - CON MOVIMIENTO de vuelta
+  - El idle ya usa 0..15 correctamente a través de caballeroIdleFrames.
+
+========================
 CURSOR (IA de codigo)
 ========================
 [2026-01-28 - tarde]

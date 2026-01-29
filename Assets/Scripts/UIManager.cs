@@ -102,15 +102,18 @@ public class UIManager : MonoBehaviour
     
     [Header("Caballero SpriteSheet (Idle + Ataque)")]
     [SerializeField] private Sprite caballeroSheet;
-    [SerializeField] private Vector2 caballeroTargetSize = new Vector2(240f, 360f);
     [SerializeField] private float caballeroIdleFrameTime = 0.12f;
     [SerializeField] private float caballeroAttackFrameTime = 0.1f;
-    [SerializeField] private int caballeroIdleFrameCount = 16;
-    [SerializeField] private int caballeroAttackFrameCount = 16;
+    [SerializeField] private int caballeroIdleFrameCount = 18;
+    [SerializeField] private int caballeroAttackFrameCount = 7;
     [SerializeField] private int[] caballeroIdleFrames;
     [SerializeField] private int[] caballeroAttackFrames;
     [SerializeField] private Sprite[] caballeroFrames;
     // caballeroFrames contendrá los 32 sprites del caballero: idle (0..15) y ataque (16..31)
+    private Vector2 caballeroMaxFrameSize;
+    private bool caballeroMaxFrameSizeReady = false;
+    private Sprite[] caballeroFramesOrdered;
+    private bool caballeroFramesOrderedReady = false;
     
     private RectTransform panelStatsJugadorRect;
     private bool _offsetAplicado = false;
@@ -1933,7 +1936,7 @@ public class UIManager : MonoBehaviour
     
     public void MostrarAnimacionIdleCaballero()
     {
-        if (caballeroSheet == null) return;
+        if (caballeroSheet == null && !HasCaballeroFramesReady()) return;
         if (imgJugador == null) return;
         if (imgCaballero != null)
         {
@@ -1948,7 +1951,7 @@ public class UIManager : MonoBehaviour
         imgJugador.gameObject.SetActive(true);
         imgJugador.color = Color.white;
         imgJugador.preserveAspect = true;
-        ApplyCaballeroSize(imgJugador);
+        ApplyCaballeroSizeFromFrames();
         corrutinaIdleCaballero = StartCoroutine(ReproducirIdleCaballero());
     }
 
@@ -1993,7 +1996,7 @@ public class UIManager : MonoBehaviour
     private IEnumerator IniciarIdleCaballeroDespuesDeInit()
     {
         yield return null;
-        if (caballeroSheet != null && imgJugador != null)
+        if ((caballeroSheet != null || HasCaballeroFramesReady()) && imgJugador != null)
         {
             MostrarAnimacionIdleCaballero();
         }
@@ -2110,6 +2113,114 @@ public class UIManager : MonoBehaviour
         }
         imgJugador.color = Color.white;
         imgJugador.preserveAspect = true;
+        
+        if (HasCaballeroFramesReady())
+        {
+            // Inicio de carrera: sprites 16..19 (sin movimiento)
+            Sprite[] inicioCarreraFrames = caballeroFrames != null ? GetCaballeroFramesExact(Enumerable.Range(16, 4).ToArray(), "inicio carrera 16..19") : Array.Empty<Sprite>();
+            // Corrida derecha: sprites 20..23 (con movimiento)
+            Sprite[] runRightFrames = caballeroFrames != null ? GetCaballeroFramesExact(Enumerable.Range(20, 4).ToArray(), "corrida derecha 20..23") : Array.Empty<Sprite>();
+            // Golpe: sprites 24..27 (sin movimiento, en el extremo)
+            Sprite[] caballeroAttackFramesLocal = caballeroFrames != null ? GetCaballeroFramesExact(Enumerable.Range(24, 4).ToArray(), "golpe 24..27") : Array.Empty<Sprite>();
+            // Corrida izquierda: sprites 28..31 (con movimiento)
+            Sprite[] baseLeftFrames = caballeroFrames != null ? GetCaballeroFramesExact(Enumerable.Range(28, 4).ToArray(), "corrida izquierda 28..31") : Array.Empty<Sprite>();
+            int targetRunCount = runRightFrames.Length > 0 ? runRightFrames.Length : 4;
+            Sprite[] runLeftFrames = RepeatFrames(baseLeftFrames, targetRunCount);
+            
+            if (inicioCarreraFrames.Length == 0)
+            {
+                guerreroAtaqueEnCurso = false;
+                yield break;
+            }
+            if (runRightFrames.Length == 0)
+            {
+                guerreroAtaqueEnCurso = false;
+                yield break;
+            }
+            if (caballeroAttackFramesLocal.Length == 0)
+            {
+                guerreroAtaqueEnCurso = false;
+                yield break;
+            }
+            if (runLeftFrames.Length == 0)
+            {
+                guerreroAtaqueEnCurso = false;
+                yield break;
+            }
+            
+            RectTransform caballeroRect = imgJugador.rectTransform;
+            Vector2 caballeroInicio = caballeroRect.anchoredPosition;
+            Vector2 caballeroObjetivo = caballeroInicio + new Vector2(400f, 0f);
+            if (imgEnemigo != null)
+            {
+                RectTransform enemigoRect = imgEnemigo.rectTransform;
+                float worldDelta = enemigoRect.position.x - caballeroRect.position.x;
+                float moveRight = Mathf.Max(200f, Mathf.Abs(worldDelta) - 150f);
+                caballeroObjetivo = caballeroInicio + new Vector2(moveRight, 0f);
+            }
+            
+            // Fase 1: Inicio de carrera (16..19) - SIN MOVIMIENTO
+            for (int i = 0; i < inicioCarreraFrames.Length; i++)
+            {
+                if (inicioCarreraFrames[i] != null)
+                {
+                    ApplySpriteToImage(imgJugador, inicioCarreraFrames[i]);
+                }
+                yield return new WaitForSeconds(caballeroIdleFrameTime);
+            }
+            
+            // Fase 2: Corrida derecha (20..23) - CON MOVIMIENTO
+            Sprite[] idaFrames = runRightFrames;
+            float runFrameTime = caballeroIdleFrameTime;
+            yield return StartCoroutine(MoverConFrames(imgJugador, caballeroInicio, caballeroObjetivo, idaFrames, runFrameTime));
+            caballeroRect.anchoredPosition = caballeroObjetivo;
+            
+            // Fase 3: Golpe en el extremo con frames 24..27
+            for (int i = 0; i < caballeroAttackFramesLocal.Length; i++)
+            {
+                if (caballeroAttackFramesLocal[i] != null)
+                {
+                    ApplySpriteToImage(imgJugador, caballeroAttackFramesLocal[i]);
+                }
+                yield return new WaitForSeconds(caballeroAttackFrameTime);
+            }
+            // Forzar último frame en el extremo antes de aplicar daño
+            Sprite lastAttackFrame = caballeroAttackFramesLocal[caballeroAttackFramesLocal.Length - 1];
+            if (lastAttackFrame != null)
+            {
+                ApplySpriteToImage(imgJugador, lastAttackFrame);
+            }
+            caballeroRect.anchoredPosition = caballeroObjetivo;
+            yield return new WaitForSeconds(caballeroAttackFrameTime);
+            
+            if (gameManager != null)
+            {
+                gameManager.IniciarDañoEnemigoDesdeUI(daño);
+            }
+            
+            // Forzar al último frame en el extremo antes de volver
+            if (lastAttackFrame != null)
+            {
+                ApplySpriteToImage(imgJugador, lastAttackFrame);
+            }
+            caballeroRect.anchoredPosition = caballeroObjetivo;
+            yield return new WaitForSeconds(caballeroAttackFrameTime);
+            
+            // Fase 4: Volver usando frames de correr a la izquierda (28..31) - CON MOVIMIENTO
+            Sprite[] returnFrames = runLeftFrames;
+            if (returnFrames.Length == 0)
+            {
+                returnFrames = lastAttackFrame != null ? new Sprite[] { lastAttackFrame } : Array.Empty<Sprite>();
+            }
+            float returnTime = returnFrames.Length > 0 ? returnFrames.Length * caballeroIdleFrameTime : caballeroAttackFramesLocal.Length * caballeroAttackFrameTime;
+            float returnFrameTime = returnFrames.Length > 0 ? (returnTime / returnFrames.Length) : caballeroIdleFrameTime;
+            yield return StartCoroutine(MoverConFrames(imgJugador, caballeroObjetivo, caballeroInicio, returnFrames, returnFrameTime));
+            
+            caballeroRect.anchoredPosition = caballeroInicio;
+            IniciarAnimacionIdle("Guerrero", true);
+            guerreroAtaqueEnCurso = false;
+            yield break;
+        }
         
         RectTransform jugadorRect = imgJugador.rectTransform;
         Canvas canvas = jugadorRect.GetComponentInParent<Canvas>();
@@ -2229,29 +2340,40 @@ public class UIManager : MonoBehaviour
         imagen.sprite = sprite;
         imagen.color = Color.white;
         imagen.preserveAspect = true;
-        if (imagen == imgJugador && ShouldForceCaballeroSize())
-        {
-            ApplyCaballeroSize(imagen);
-        }
-    }
-
-    private bool ShouldForceCaballeroSize()
-    {
-        if (gameManager == null) return false;
-        if (caballeroTargetSize.x <= 0f || caballeroTargetSize.y <= 0f) return false;
-        return gameManager.GetTipoJugador() == "Guerrero";
-    }
-
-    private void ApplyCaballeroSize(Image imagen)
-    {
-        if (imagen == null) return;
-        RectTransform rect = imagen.rectTransform;
-        rect.sizeDelta = caballeroTargetSize;
     }
 
     private bool HasCaballeroFramesReady()
     {
-        return caballeroFrames != null && caballeroFrames.Length >= 32 && caballeroFrames[0] != null;
+        return EnsureCaballeroFramesOrdered();
+    }
+
+
+    private void ApplyCaballeroSizeFromFrames()
+    {
+        if (imgJugador == null) return;
+        if (!HasCaballeroFramesReady()) return;
+        if (!caballeroMaxFrameSizeReady)
+        {
+            float maxW = 0f;
+            float maxH = 0f;
+            for (int i = 0; i < caballeroFrames.Length; i++)
+            {
+                Sprite sprite = caballeroFrames[i];
+                if (sprite == null) continue;
+                Rect rect = sprite.rect;
+                if (rect.width > maxW) maxW = rect.width;
+                if (rect.height > maxH) maxH = rect.height;
+            }
+            if (maxW > 0f && maxH > 0f)
+            {
+                caballeroMaxFrameSize = new Vector2(maxW, maxH);
+                caballeroMaxFrameSizeReady = true;
+            }
+        }
+        if (caballeroMaxFrameSizeReady)
+        {
+            imgJugador.rectTransform.sizeDelta = caballeroMaxFrameSize;
+        }
     }
 
     private IEnumerator MoverConFrames(Image imagen, Vector2 inicio, Vector2 fin, Sprite[] frames, float frameTime)
@@ -2351,9 +2473,10 @@ public class UIManager : MonoBehaviour
         
         if (!TryGetCaballeroSheet(out Texture2D sheet, out float cellW, out float cellH)) return Array.Empty<Sprite>();
         
+        int idleCount = Mathf.Clamp(caballeroIdleFrameCount, 1, 18);
         int[] frames = caballeroIdleFrames != null && caballeroIdleFrames.Length > 0
             ? caballeroIdleFrames
-            : Enumerable.Range(0, Mathf.Clamp(caballeroIdleFrameCount, 1, 16)).ToArray();
+            : Enumerable.Range(0, idleCount).ToArray();
         List<Sprite> result = new List<Sprite>(frames.Length);
         float pixelsPerUnit = caballeroSheet.pixelsPerUnit;
         for (int i = 0; i < frames.Length; i++)
@@ -2376,9 +2499,12 @@ public class UIManager : MonoBehaviour
         
         if (!TryGetCaballeroSheet(out Texture2D sheet, out float cellW, out float cellH)) return Array.Empty<Sprite>();
         
+        int attackStart = 23;
+        int maxAttack = Mathf.Max(1, 30 - attackStart); // 23..29
+        int attackCount = Mathf.Clamp(caballeroAttackFrameCount, 1, maxAttack);
         int[] frames = caballeroAttackFrames != null && caballeroAttackFrames.Length > 0
             ? caballeroAttackFrames
-            : Enumerable.Range(16, Mathf.Clamp(caballeroAttackFrameCount, 1, 16)).ToArray();
+            : Enumerable.Range(attackStart, attackCount).ToArray();
         List<Sprite> result = new List<Sprite>(frames.Length);
         float pixelsPerUnit = caballeroSheet.pixelsPerUnit;
         for (int i = 0; i < frames.Length; i++)
@@ -2400,18 +2526,27 @@ public class UIManager : MonoBehaviour
             return false;
         }
         
+        int idleCount = Mathf.Clamp(caballeroIdleFrameCount, 1, 18);
+        int attackCount = Mathf.Clamp(caballeroAttackFrameCount, 1, 7);
         int[] frames = ataque
             ? (caballeroAttackFrames != null && caballeroAttackFrames.Length > 0
                 ? caballeroAttackFrames
-                : Enumerable.Range(16, Mathf.Clamp(caballeroAttackFrameCount, 1, 16)).ToArray())
+                : Enumerable.Range(23, attackCount).ToArray())
             : (caballeroIdleFrames != null && caballeroIdleFrames.Length > 0
                 ? caballeroIdleFrames
-                : Enumerable.Range(0, Mathf.Clamp(caballeroIdleFrameCount, 1, 16)).ToArray());
+                : Enumerable.Range(0, idleCount).ToArray());
         
-        List<Sprite> list = new List<Sprite>(frames.Length);
-        for (int i = 0; i < frames.Length; i++)
+        result = PickCaballeroFrames(frames);
+        return result.Length > 0;
+    }
+
+    private Sprite[] PickCaballeroFrames(int[] indices)
+    {
+        if (indices == null || indices.Length == 0) return Array.Empty<Sprite>();
+        List<Sprite> list = new List<Sprite>(indices.Length);
+        for (int i = 0; i < indices.Length; i++)
         {
-            int index = frames[i];
+            int index = indices[i];
             if (index < 0 || index >= caballeroFrames.Length) continue;
             Sprite sprite = caballeroFrames[index];
             if (sprite != null)
@@ -2419,10 +2554,82 @@ public class UIManager : MonoBehaviour
                 list.Add(sprite);
             }
         }
-        
-        if (list.Count == 0) return false;
-        result = list.ToArray();
+        return list.ToArray();
+    }
+
+    private Sprite[] GetCaballeroFramesExact(int[] indices, string label)
+    {
+        if (indices == null || indices.Length == 0) return Array.Empty<Sprite>();
+        if (!EnsureCaballeroFramesOrdered())
+        {
+            Debug.LogError($"[UIManager] caballeroFrames no está ordenado o le faltan sprites para {label}.");
+            return Array.Empty<Sprite>();
+        }
+        Sprite[] result = new Sprite[indices.Length];
+        for (int i = 0; i < indices.Length; i++)
+        {
+            int index = indices[i];
+            if (index < 0 || index >= caballeroFramesOrdered.Length)
+            {
+                Debug.LogError($"[UIManager] Índice fuera de rango en {label}: {index}.");
+                return Array.Empty<Sprite>();
+            }
+            Sprite sprite = caballeroFramesOrdered[index];
+            if (sprite == null)
+            {
+                Debug.LogError($"[UIManager] Sprite faltante en {label}: índice {index}. No se salteará.");
+                return Array.Empty<Sprite>();
+            }
+            result[i] = sprite;
+        }
+        return result;
+    }
+
+    private bool EnsureCaballeroFramesOrdered()
+    {
+        if (caballeroFramesOrderedReady && caballeroFramesOrdered != null && caballeroFramesOrdered.Length == 32)
+        {
+            return true;
+        }
+        if (caballeroFrames == null || caballeroFrames.Length < 32)
+        {
+            Debug.LogError("[UIManager] caballeroFrames debe tener 32 sprites (CABALLERO_0..CABALLERO_31).");
+            return false;
+        }
+        Sprite[] ordered = new Sprite[32];
+        for (int i = 0; i < caballeroFrames.Length; i++)
+        {
+            Sprite sprite = caballeroFrames[i];
+            if (sprite == null) continue;
+            int index = ExtractCaballeroIndex(sprite.name);
+            if (index < 0 || index >= ordered.Length) continue;
+            ordered[index] = sprite;
+        }
+        caballeroFramesOrdered = ordered;
+        caballeroFramesOrderedReady = true;
         return true;
+    }
+
+    private int ExtractCaballeroIndex(string spriteName)
+    {
+        if (string.IsNullOrEmpty(spriteName)) return -1;
+        string digits = new string(spriteName.Where(char.IsDigit).ToArray());
+        if (int.TryParse(digits, out int index)) return index;
+        return -1;
+    }
+
+    private Sprite[] RepeatFrames(Sprite[] baseFrames, int targetLength)
+    {
+        if (baseFrames == null || baseFrames.Length == 0 || targetLength <= 0) return Array.Empty<Sprite>();
+        if (baseFrames.Length >= targetLength) return baseFrames;
+        List<Sprite> repeated = new List<Sprite>(targetLength);
+        int idx = 0;
+        while (repeated.Count < targetLength)
+        {
+            repeated.Add(baseFrames[idx % baseFrames.Length]);
+            idx++;
+        }
+        return repeated.ToArray();
     }
     
     private bool TryGetCaballeroSheet(out Texture2D sheet, out float cellW, out float cellH)
