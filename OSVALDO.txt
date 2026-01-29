@@ -366,6 +366,13 @@ CURSOR (IA de codigo)
 ========================
 [2026-01-28 - tarde]
 - Codigo modificado:
+  - Assets/Scripts/UIManager.cs: fija defaults de caballeroIdleFrames (0..15) y caballeroAttackFrames (16..31) en Initialize.
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - tarde]
+- Codigo modificado:
   - Assets/Scripts/UIManager.cs: la vuelta usa frames 30..31 repetidos y un frameTime ajustado para que se mueva todo el camino.
 
 ========================
