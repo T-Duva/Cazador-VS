@@ -605,6 +605,27 @@ CURSOR (IA de codigo)
 MERLIN (IA de ayuda)
 ========================
 [2026-01-28 - noche]
+- Explicacion: usuario reportó que no cambió nada después de la modificación anterior
+- Usuario pregunta si es porque están en constantes y se calcula
+- Problema: Unity ajusta automáticamente el tamaño del RectTransform cuando se asigna un sprite, sobrescribiendo el tamaño fijo
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - noche]
+- Codigo modificado:
+  - Assets/Scripts/UIManager.cs: mejorado ApplySpriteToImage para forzar tamaño fijo correctamente
+    - Cambiado el orden: calcular tamaño máximo ANTES de asignar el sprite
+    - Desactivado preserveAspect para controlar el tamaño manualmente
+    - Aplicar el tamaño fijo DESPUÉS de asignar el sprite para sobrescribir el ajuste automático de Unity
+    - Agregado coroutine ForzarTamañoFijo que fuerza el tamaño en el siguiente frame
+    - Esto asegura que el tamaño fijo se mantenga incluso después de que Unity procese el layout
+    - El tamaño ahora se fuerza dos veces: inmediatamente y en el siguiente frame
+
+========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - noche]
 - Explicacion: usuario reportó que el personaje se corrió y está donde no debe estar
 - Probable causa: la compensación de pivots que agregué estaba moviendo el personaje incorrectamente
 

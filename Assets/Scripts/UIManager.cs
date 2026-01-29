@@ -2377,15 +2377,10 @@ public class UIManager : MonoBehaviour
     {
         if (imagen == null || sprite == null) return;
         
-        // ✅ Aplicar el nuevo sprite - Unity maneja automáticamente los pivots del Sprite Editor
-        // Los pivots que cambies en el Sprite Editor se aplican automáticamente cuando asignas el sprite
-        // IMPORTANTE: Después de cambiar pivots en Unity, asegurate de guardar y reimportar el asset
-        imagen.sprite = sprite;
-        imagen.color = Color.white;
-        imagen.preserveAspect = true;
-        
-        // ✅ MANTENER TAMAÑO FIJO: Si es un sprite del caballero, mantener el tamaño máximo calculado
+        // ✅ MANTENER TAMAÑO FIJO: Calcular tamaño máximo ANTES de asignar el sprite
         // Esto evita que el personaje cambie de tamaño cuando se aplican sprites con diferentes rects
+        Vector2 tamañoFijo = Vector2.zero;
+        bool usarTamañoFijo = false;
         if (imagen == imgJugador && HasCaballeroFramesReady())
         {
             // Asegurar que el tamaño máximo esté calculado
@@ -2393,15 +2388,45 @@ public class UIManager : MonoBehaviour
             {
                 ApplyCaballeroSizeFromFrames();
             }
-            // Aplicar el tamaño fijo basado en el frame más grande
+            // Guardar el tamaño fijo para aplicarlo después
             if (caballeroMaxFrameSizeReady)
             {
-                imagen.rectTransform.sizeDelta = caballeroMaxFrameSize;
+                tamañoFijo = caballeroMaxFrameSize;
+                usarTamañoFijo = true;
             }
         }
         
-        // ✅ Forzar actualización para que los cambios de pivot se reflejen inmediatamente
+        // ✅ Aplicar el nuevo sprite - Unity maneja automáticamente los pivots del Sprite Editor
+        // Los pivots que cambies en el Sprite Editor se aplican automáticamente cuando asignas el sprite
+        // IMPORTANTE: Después de cambiar pivots en Unity, asegurate de guardar y reimportar el asset
+        imagen.sprite = sprite;
+        imagen.color = Color.white;
+        imagen.preserveAspect = false; // ✅ Desactivar preserveAspect para controlar el tamaño manualmente
+        
+        // ✅ Aplicar el tamaño fijo DESPUÉS de asignar el sprite para sobrescribir el ajuste automático de Unity
+        if (usarTamañoFijo)
+        {
+            imagen.rectTransform.sizeDelta = tamañoFijo;
+        }
+        
+        // ✅ Forzar actualización para que los cambios se reflejen inmediatamente
         Canvas.ForceUpdateCanvases();
+        
+        // ✅ Forzar el tamaño una vez más después de que Unity procese el layout
+        if (usarTamañoFijo)
+        {
+            StartCoroutine(ForzarTamañoFijo(imagen.rectTransform, tamañoFijo));
+        }
+    }
+    
+    private IEnumerator ForzarTamañoFijo(RectTransform rectTransform, Vector2 tamaño)
+    {
+        yield return null; // Esperar un frame para que Unity procese el layout
+        if (rectTransform != null)
+        {
+            rectTransform.sizeDelta = tamaño;
+            Canvas.ForceUpdateCanvases();
+        }
     }
 
     private bool HasCaballeroFramesReady()
