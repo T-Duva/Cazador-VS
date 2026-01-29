@@ -2363,65 +2363,16 @@ public class UIManager : MonoBehaviour
     /// Aplica un sprite a una imagen, respetando los pivots configurados en el Sprite Editor.
     /// IMPORTANTE: Los pivots de los sprites son CONSTANTES y solo se LEEN, NUNCA se modifican.
     /// Solo el usuario puede cambiar los pivots a través del Sprite Editor de Unity.
-    /// Este método solo compensa las diferencias de pivot ajustando la posición del RectTransform.
+    /// Unity maneja automáticamente los pivots cuando se asigna el sprite.
     /// </summary>
     private void ApplySpriteToImage(Image imagen, Sprite sprite)
     {
         if (imagen == null || sprite == null) return;
         
-        RectTransform rectTransform = imagen.rectTransform;
-        Sprite spriteAnterior = imagen.sprite;
-        
-        // Guardar la posición y tamaño actuales antes de cambiar el sprite
-        Vector2 posicionAnterior = rectTransform.anchoredPosition;
-        Vector2 sizeAnterior = rectTransform.sizeDelta;
-        
-        // LEER el pivot del sprite anterior (NO MODIFICAR - solo lectura)
-        // Los pivots son CONSTANTES configurados en el Sprite Editor de Unity
-        Vector2 pivotAnteriorNorm = new Vector2(0.5f, 0.5f); // Default center
-        if (spriteAnterior != null)
-        {
-            Rect rectAnterior = spriteAnterior.rect;
-            if (rectAnterior.width > 0 && rectAnterior.height > 0)
-            {
-                // SOLO LECTURA: spriteAnterior.pivot es constante, definido en Sprite Editor
-                pivotAnteriorNorm = new Vector2(
-                    spriteAnterior.pivot.x / rectAnterior.width,
-                    spriteAnterior.pivot.y / rectAnterior.height
-                );
-            }
-        }
-        
-        // LEER el pivot del nuevo sprite (NO MODIFICAR - solo lectura)
-        // Los pivots son CONSTANTES configurados en el Sprite Editor de Unity
-        Rect rectNuevo = sprite.rect;
-        Vector2 pivotNuevoNorm = new Vector2(0.5f, 0.5f);
-        if (rectNuevo.width > 0 && rectNuevo.height > 0)
-        {
-            // SOLO LECTURA: sprite.pivot es constante, definido en Sprite Editor
-            pivotNuevoNorm = new Vector2(
-                sprite.pivot.x / rectNuevo.width,
-                sprite.pivot.y / rectNuevo.height
-            );
-        }
-        
-        // Aplicar el nuevo sprite (sin modificar su pivot)
+        // Aplicar el nuevo sprite - Unity maneja automáticamente los pivots del Sprite Editor
         imagen.sprite = sprite;
         imagen.color = Color.white;
         imagen.preserveAspect = true;
-        
-        // Usar el tamaño anterior o el del sprite si no hay tamaño definido
-        Vector2 sizeActual = sizeAnterior;
-        if (sizeActual.x <= 0 || sizeActual.y <= 0)
-        {
-            sizeActual = rectNuevo.size;
-        }
-        
-        // Compensar la diferencia de pivot ajustando SOLO la posición del RectTransform
-        // NUNCA se modifica el pivot del sprite (sprite.pivot es de solo lectura)
-        // La diferencia se calcula en unidades del RectTransform
-        Vector2 diferenciaPivot = (pivotAnteriorNorm - pivotNuevoNorm) * sizeActual;
-        rectTransform.anchoredPosition = posicionAnterior + diferenciaPivot;
     }
 
     private bool HasCaballeroFramesReady()
