@@ -343,6 +343,13 @@ CURSOR (IA de codigo)
   - Assets/Scripts/UIManager.cs: corrida derecha ahora usa sprites 19..23; golpe 24..29; corrida izquierda 30..31.
 
 ========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - tarde]
+- Usuario confirmó que ahora corre bien y reordenó sprites manualmente.
+- Mantener el orden fijo por nombre CABALLERO_0..CABALLERO_31 como default.
+
+========================
 CURSOR (IA de codigo)
 ========================
 [2026-01-28 - tarde]
