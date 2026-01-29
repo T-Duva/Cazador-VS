@@ -690,6 +690,28 @@ CURSOR (IA de codigo)
 MERLIN (IA de ayuda)
 ========================
 [2026-01-28 - noche]
+- Explicacion: usuario reportó que hay desfase en los sprites
+- Logs muestran pivots locales con valores negativos muy grandes (ej: -6.744, -6.972)
+- Problema: los pivots están mal configurados (fuera del rect del sprite) causando desplazamientos
+- Los sprites con pivots diferentes se desplazan verticalmente cuando se cambia el tamaño
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - noche]
+- Codigo modificado:
+  - Assets/Scripts/UIManager.cs: compensación de desplazamiento basada en diferencia de pivots
+    - Agregada variable caballeroPivotReferencia para guardar el pivot del primer sprite como referencia
+    - Calcula la diferencia entre el pivot del sprite actual y el pivot de referencia
+    - Compensa el desplazamiento vertical multiplicando la diferencia de pivots por el factor de escala
+    - Esto asegura que todos los sprites mantengan la misma posición Y independientemente de su pivot
+    - Agregados logs detallados mostrando diferencia de pivots y compensación aplicada
+    - La compensación se calcula considerando el factor de escala del sprite (preserveAspect)
+
+========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - noche]
 - Explicacion: usuario reportó que el personaje se corrió y está donde no debe estar
 - Probable causa: la compensación de pivots que agregué estaba moviendo el personaje incorrectamente
 

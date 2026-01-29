@@ -114,6 +114,7 @@ public class UIManager : MonoBehaviour
     private bool caballeroMaxFrameSizeReady = false;
     private Sprite[] caballeroFramesOrdered;
     private bool caballeroFramesOrderedReady = false;
+    private Vector2? caballeroPivotReferencia = null; // Pivot de referencia para compensar desplazamientos
     
     private RectTransform panelStatsJugadorRect;
     private bool _offsetAplicado = false;
@@ -2414,28 +2415,45 @@ public class UIManager : MonoBehaviour
             // Guardar la posición antes de cambiar el tamaño para detectar desplazamientos
             Vector2 posicionAntes = imagen.rectTransform.anchoredPosition;
             Vector2 pivotSprite = sprite.pivot;
-            Vector2 pivotLocal = new Vector2(
-                (pivotSprite.x - spriteRect.x) / spriteRect.width,
-                (pivotSprite.y - spriteRect.y) / spriteRect.height
-            );
+            
+            // ✅ Establecer pivot de referencia (usar el primer sprite como referencia)
+            if (!caballeroPivotReferencia.HasValue)
+            {
+                caballeroPivotReferencia = pivotSprite;
+                Debug.Log($"[UIManager] Pivot de referencia establecido: {pivotSprite} (sprite: {sprite.name})");
+            }
+            
+            // Calcular diferencia de pivots para compensar desplazamiento
+            Vector2 diferenciaPivot = pivotSprite - caballeroPivotReferencia.Value;
             
             // Establecer el tamaño del contenedor al máximo
             // preserveAspect hará que el sprite se escale manteniendo sus proporciones dentro de ese espacio
             imagen.preserveAspect = true; // ✅ Activar preserveAspect para mantener proporciones sin distorsión
             imagen.rectTransform.sizeDelta = tamañoFijo; // Contenedor del tamaño máximo
             
-            // Verificar si hubo desplazamiento en Y
+            // ✅ Compensar desplazamiento basado en la diferencia de pivots
+            // Cuando el pivot Y es diferente, Unity desplaza el sprite verticalmente
+            // Necesitamos compensar ese desplazamiento
             Vector2 posicionDespues = imagen.rectTransform.anchoredPosition;
-            float desplazamientoY = posicionDespues.y - posicionAntes.y;
             
-            if (Mathf.Abs(desplazamientoY) > 0.01f)
+            // Calcular el factor de escala (cuánto se escaló el sprite)
+            float escalaX = tamañoFijo.x / spriteRect.width;
+            float escalaY = tamañoFijo.y / spriteRect.height;
+            float escala = Mathf.Min(escalaX, escalaY); // preserveAspect usa la escala menor
+            
+            // Compensar el desplazamiento vertical causado por la diferencia de pivots
+            float compensacionY = diferenciaPivot.y * escala;
+            float nuevaPosicionY = posicionAntes.y - compensacionY;
+            
+            imagen.rectTransform.anchoredPosition = new Vector2(posicionDespues.x, nuevaPosicionY);
+            
+            float desplazamientoY = posicionDespues.y - posicionAntes.y;
+            if (Mathf.Abs(diferenciaPivot.y) > 0.1f)
             {
-                Debug.LogWarning($"[UIManager] ⚠️ Sprite '{sprite.name}' se desplazó en Y: {desplazamientoY:F2} (pivot local: {pivotLocal.x:F3}, {pivotLocal.y:F3})");
-                // Compensar el desplazamiento
-                imagen.rectTransform.anchoredPosition = new Vector2(posicionDespues.x, posicionAntes.y);
+                Debug.Log($"[UIManager] Sprite '{sprite.name}': diferencia pivot Y={diferenciaPivot.y:F2}, compensación={compensacionY:F2}, posición Y ajustada a {nuevaPosicionY:F2}");
             }
             
-            Debug.Log($"[UIManager] Sprite '{sprite.name}': rect={spriteRect.width}x{spriteRect.height}, pivot local=({pivotLocal.x:F3}, {pivotLocal.y:F3}), contenedor={tamañoFijo} (preserveAspect=true)");
+            Debug.Log($"[UIManager] Sprite '{sprite.name}': rect={spriteRect.width}x{spriteRect.height}, pivot={pivotSprite}, diferencia={diferenciaPivot}, contenedor={tamañoFijo} (preserveAspect=true)");
         }
         else
         {
