@@ -760,6 +760,29 @@ CURSOR (IA de codigo)
 MERLIN (IA de ayuda)
 ========================
 [2026-01-28 - noche]
+- Explicacion: usuario reportó que los sprites están saltando al cambiar de frame
+- Usuario quiere que los movimientos sean más suaves
+- Usuario tiene la velocidad a 3-4 segundos a propósito para ver las transiciones, pero quiere cambios de frame más suaves
+- Problema: cuando Unity cambia el sprite, puede desplazar la posición Y instantáneamente, causando saltos visibles
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - noche]
+- Codigo modificado:
+  - Assets/Scripts/UIManager.cs: agregada interpolación suave de posición Y para evitar saltos
+    - Agregada coroutine SuavizarPosicionY que interpola suavemente la posición Y cuando cambia el sprite
+    - Usa una curva de suavizado (ease-out) para transiciones más naturales
+    - Duración de interpolación: 0.1 segundos (ajustable)
+    - Detiene cualquier interpolación anterior antes de iniciar una nueva
+    - Reducidos logs verbosos: solo muestra logs si hay desplazamientos significativos (>0.5)
+    - Esto hace que los cambios de frame sean más suaves y menos bruscos
+    - La velocidad de cambio de frame (caballeroIdleFrameTime) se mantiene igual, solo se suavizan las transiciones
+
+========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - noche]
 - Explicacion: usuario reportó que el personaje se corrió y está donde no debe estar
 - Probable causa: la compensación de pivots que agregué estaba moviendo el personaje incorrectamente
 

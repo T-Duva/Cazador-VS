@@ -116,6 +116,7 @@ public class UIManager : MonoBehaviour
     private bool caballeroFramesOrderedReady = false;
     private Vector2? caballeroPivotReferencia = null; // Pivot de referencia para compensar desplazamientos
     private float? caballeroPosicionYReferencia = null; // Posición Y de referencia fija para todos los sprites
+    private Coroutine corrutinaSuavizarY = null; // Coroutine para suavizar cambios de posición Y
     
     private RectTransform panelStatsJugadorRect;
     private bool _offsetAplicado = false;
@@ -2429,18 +2430,34 @@ public class UIManager : MonoBehaviour
             imagen.preserveAspect = true; // ✅ Activar preserveAspect para mantener proporciones sin distorsión
             imagen.rectTransform.sizeDelta = tamañoFijo; // Contenedor del tamaño máximo
             
-            // ✅ MANTENER POSICIÓN Y CONSTANTE: Simplemente restaurar la posición Y de referencia
-            // Unity maneja los pivots automáticamente, solo necesitamos mantener la posición Y constante
+            // ✅ MANTENER POSICIÓN Y CONSTANTE: Interpolar suavemente hacia la posición Y de referencia
+            // Unity maneja los pivots automáticamente, pero puede desplazar Y, así que lo suavizamos
             Vector2 posicionDespues = imagen.rectTransform.anchoredPosition;
-            imagen.rectTransform.anchoredPosition = new Vector2(posicionDespues.x, caballeroPosicionYReferencia.Value);
+            float posicionYActual = posicionDespues.y;
+            float posicionYObjetivo = caballeroPosicionYReferencia.Value;
             
-            float desplazamientoY = posicionDespues.y - caballeroPosicionYReferencia.Value;
-            if (Mathf.Abs(desplazamientoY) > 0.01f)
+            // Si hay una diferencia, interpolar suavemente en lugar de cambiar instantáneamente
+            if (Mathf.Abs(posicionYActual - posicionYObjetivo) > 0.01f)
             {
-                Debug.Log($"[UIManager] Sprite '{sprite.name}': Unity desplazó Y={desplazamientoY:F2}, restaurado a {caballeroPosicionYReferencia.Value:F2}");
+                // Detener cualquier interpolación anterior
+                if (corrutinaSuavizarY != null)
+                {
+                    StopCoroutine(corrutinaSuavizarY);
+                }
+                // Iniciar interpolación suave
+                corrutinaSuavizarY = StartCoroutine(SuavizarPosicionY(imagen.rectTransform, posicionYActual, posicionYObjetivo, 0.1f));
+            }
+            else
+            {
+                // Si la diferencia es muy pequeña, aplicar directamente
+                imagen.rectTransform.anchoredPosition = new Vector2(posicionDespues.x, posicionYObjetivo);
             }
             
-            Debug.Log($"[UIManager] Sprite '{sprite.name}': rect={spriteRect.width}x{spriteRect.height}, pivot={pivotSprite}, contenedor={tamañoFijo}, posición Y={caballeroPosicionYReferencia.Value:F2} (preserveAspect=true)");
+            // Log solo si hay desplazamiento significativo
+            if (Mathf.Abs(posicionYActual - posicionYObjetivo) > 0.5f)
+            {
+                Debug.Log($"[UIManager] Sprite '{sprite.name}': suavizando Y de {posicionYActual:F2} a {posicionYObjetivo:F2}");
+            }
         }
         else
         {
@@ -2481,11 +2498,43 @@ public class UIManager : MonoBehaviour
             float desplazamientoY = posicionDespues.y - posicionYOriginal;
             if (Mathf.Abs(desplazamientoY) > 0.01f)
             {
-                Debug.LogWarning($"[UIManager] ⚠️ ForzarTamañoFijo: desplazamiento Y detectado: {desplazamientoY:F2}, corrigiendo...");
                 rectTransform.anchoredPosition = new Vector2(posicionDespues.x, posicionYOriginal);
+                // Log solo si el desplazamiento es significativo
+                if (Mathf.Abs(desplazamientoY) > 0.5f)
+                {
+                    Debug.LogWarning($"[UIManager] ⚠️ ForzarTamañoFijo: desplazamiento Y={desplazamientoY:F2}, corregido");
+                }
             }
+        }
+    }
+    
+    private IEnumerator SuavizarPosicionY(RectTransform rectTransform, float desdeY, float haciaY, float duracion)
+    {
+        if (rectTransform == null) yield break;
+        
+        float tiempoInicio = Time.time;
+        float diferencia = haciaY - desdeY;
+        
+        while (Time.time - tiempoInicio < duracion)
+        {
+            if (rectTransform == null) yield break;
             
-            Debug.Log($"[UIManager] ForzarTamañoFijo: tamaño={tamañoDespues}, posición Y={posicionDespues.y:F2} (original={posicionYOriginal:F2})");
+            float progreso = (Time.time - tiempoInicio) / duracion;
+            // Usar curva de suavizado (ease-out)
+            progreso = 1f - Mathf.Pow(1f - progreso, 3f);
+            
+            float posicionYActual = desdeY + diferencia * progreso;
+            Vector2 posicionActual = rectTransform.anchoredPosition;
+            rectTransform.anchoredPosition = new Vector2(posicionActual.x, posicionYActual);
+            
+            yield return null;
+        }
+        
+        // Asegurar que llegue exactamente al objetivo
+        if (rectTransform != null)
+        {
+            Vector2 posicionFinal = rectTransform.anchoredPosition;
+            rectTransform.anchoredPosition = new Vector2(posicionFinal.x, haciaY);
         }
     }
 
