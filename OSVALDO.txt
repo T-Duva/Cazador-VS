@@ -356,6 +356,12 @@ MERLIN (IA de ayuda)
 - Usuario eliminó CABALLERO_20. Avisado: el código requiere 0..31 sin huecos.
 
 ========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - tarde]
+- Usuario pidió duplicar CABALLERO_21 y renombrarlo a CABALLERO_20.
+
+========================
 CURSOR (IA de codigo)
 ========================
 [2026-01-28 - tarde]
