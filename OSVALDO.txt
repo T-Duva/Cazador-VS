@@ -350,6 +350,12 @@ CURSOR (IA de codigo)
   - Assets/Scripts/UIManager.cs: se quitaron fallbacks; si faltan sprites de corrida/golpe, se cancela para no usar idle.
 
 ========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - tarde]
+- Corrección: se arregló un bloque duplicado que rompía compilación en UIManager.cs.
+
+========================
 MERLIN (IA de ayuda)
 ========================
 [2026-01-28 - tarde]
