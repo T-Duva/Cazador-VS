@@ -282,12 +282,9 @@ namespace SpriteTools
                     useContentAlignment
                 );
                 
-                EditorGUILayout.Space(5);
+                EditorGUILayout.Space(3);
                 
-                // ✅ SIEMPRE VISIBLE: Advanced Alignment (no depende de useContentAlignment)
-                EditorGUILayout.LabelField("Opciones Avanzadas:", EditorStyles.boldLabel);
-                EditorGUI.indentLevel++;
-                
+                // ✅ SIEMPRE VISIBLE: Advanced Alignment (justo después del checkbox principal)
                 useAdvancedAlignment = EditorGUILayout.Toggle(
                     new GUIContent(
                         "🔬 Advanced Alignment (Más Lento pero Más Preciso)",
@@ -296,8 +293,6 @@ namespace SpriteTools
                     ),
                     useAdvancedAlignment
                 );
-                
-                EditorGUI.indentLevel--;
                 
                 EditorGUILayout.Space(5);
                 
