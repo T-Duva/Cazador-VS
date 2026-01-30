@@ -114,6 +114,9 @@ namespace SpriteTools
         private bool showAdvanced = false;
         private bool showPreview = true;
         private bool showAnimationSettings = true;
+        private bool showInterpolationPreview = true;
+        private float interpolationPreviewT = 0.5f; // Slider para preview de interpolación
+        private Texture2D interpolationPreviewTexture = null;
         
         // Curve preview
         private Texture2D curvePreviewTexture;
@@ -159,6 +162,10 @@ namespace SpriteTools
             {
                 DestroyImmediate(curvePreviewTexture);
             }
+            if (interpolationPreviewTexture != null)
+            {
+                DestroyImmediate(interpolationPreviewTexture);
+            }
         }
         
         // ====================================================================
@@ -186,6 +193,9 @@ namespace SpriteTools
             
             GUILayout.Space(6);
             DrawPreviewSection();
+            
+            GUILayout.Space(6);
+            DrawInterpolationPreviewSection();
             
             GUILayout.Space(8);
             DrawPresetButtons();
@@ -270,53 +280,51 @@ namespace SpriteTools
                     useContentAlignment
                 );
                 
-                if (useContentAlignment)
+                EditorGUI.indentLevel++;
+                EditorGUILayout.Space(3);
+                
+                alignmentAlphaThreshold = EditorGUILayout.Slider(
+                    new GUIContent(
+                        "Alpha Threshold",
+                        "Umbral mínimo de alpha para considerar un píxel como parte del contenido. " +
+                        "Valores más bajos = más sensible, valores más altos = ignora bordes suaves."
+                    ),
+                    alignmentAlphaThreshold,
+                    0.01f,
+                    0.5f
+                );
+                
+                EditorGUILayout.Space(3);
+                
+                // ✅ SIEMPRE MOSTRAR Advanced Alignment cuando Content Alignment está activado
+                useAdvancedAlignment = EditorGUILayout.Toggle(
+                    new GUIContent(
+                        "🔬 Advanced Alignment (Más Lento pero Más Preciso)",
+                        "Usa correlación cruzada para encontrar el mejor offset. " +
+                        "Más preciso pero más lento. Activar SOLO si el método normal no funciona."
+                    ),
+                    useAdvancedAlignment
+                );
+                
+                if (useAdvancedAlignment)
                 {
-                    EditorGUI.indentLevel++;
-                    EditorGUILayout.Space(3);
-                    
-                    alignmentAlphaThreshold = EditorGUILayout.Slider(
-                        new GUIContent(
-                            "Alpha Threshold",
-                            "Umbral mínimo de alpha para considerar un píxel como parte del contenido. " +
-                            "Valores más bajos = más sensible, valores más altos = ignora bordes suaves."
-                        ),
-                        alignmentAlphaThreshold,
-                        0.01f,
-                        0.5f
+                    EditorGUILayout.HelpBox(
+                        "⚠️ MODO AVANZADO ACTIVADO\n" +
+                        "Este modo es más lento pero encuentra el offset más preciso.\n" +
+                        "Úsalo solo si el método normal no funciona bien.",
+                        MessageType.Warning
                     );
-                    
-                    EditorGUILayout.Space(3);
-                    
-                    useAdvancedAlignment = EditorGUILayout.Toggle(
-                        new GUIContent(
-                            "🔬 Advanced Alignment (Más Lento pero Más Preciso)",
-                            "Usa correlación cruzada para encontrar el mejor offset. " +
-                            "Más preciso pero más lento. Activar SOLO si el método normal no funciona."
-                        ),
-                        useAdvancedAlignment
-                    );
-                    
-                    if (useAdvancedAlignment)
-                    {
-                        EditorGUILayout.HelpBox(
-                            "⚠️ MODO AVANZADO ACTIVADO\n" +
-                            "Este modo es más lento pero encuentra el offset más preciso.\n" +
-                            "Úsalo solo si el método normal no funciona bien.",
-                            MessageType.Warning
-                        );
-                    }
-                    else
-                    {
-                        EditorGUILayout.HelpBox(
-                            "Modo normal activado: rápido y eficiente.\n" +
-                            "Si los sprites siguen estirándose, activa 'Advanced Alignment'.",
-                            MessageType.Info
-                        );
-                    }
-                    
-                    EditorGUI.indentLevel--;
                 }
+                else
+                {
+                    EditorGUILayout.HelpBox(
+                        "Modo normal activado: rápido y eficiente.\n" +
+                        "Si los sprites siguen estirándose, activa 'Advanced Alignment'.",
+                        MessageType.Info
+                    );
+                }
+                
+                EditorGUI.indentLevel--;
                 else
                 {
                     EditorGUILayout.HelpBox(
@@ -659,6 +667,117 @@ namespace SpriteTools
             }
             
             EditorGUILayout.EndFoldoutHeaderGroup();
+        }
+        
+        private void DrawInterpolationPreviewSection()
+        {
+            showInterpolationPreview = EditorGUILayout.BeginFoldoutHeaderGroup(
+                showInterpolationPreview,
+                "👁️ Interpolation Preview (Live)"
+            );
+            
+            if (showInterpolationPreview)
+            {
+                EditorGUI.indentLevel++;
+                
+                // Buscar el primer par válido para el preview
+                SpritePair previewPair = spritePairs.FirstOrDefault(p => p.IsValid() && p.HasMatchingDimensions());
+                
+                if (previewPair != null)
+                {
+                    EditorGUILayout.HelpBox(
+                        "Preview en tiempo real de la interpolación. " +
+                        "Usa el slider para ver cómo se ve el frame intermedio.",
+                        MessageType.Info
+                    );
+                    
+                    EditorGUI.BeginChangeCheck();
+                    interpolationPreviewT = EditorGUILayout.Slider(
+                        "Interpolation Value (t)",
+                        interpolationPreviewT,
+                        0f,
+                        1f
+                    );
+                    
+                    if (EditorGUI.EndChangeCheck() || interpolationPreviewTexture == null)
+                    {
+                        // Regenerar preview
+                        RegenerateInterpolationPreview(previewPair);
+                    }
+                    
+                    if (interpolationPreviewTexture != null)
+                    {
+                        EditorGUILayout.BeginHorizontal();
+                        GUILayout.FlexibleSpace();
+                        
+                        Rect previewRect = GUILayoutUtility.GetRect(
+                            200,
+                            200,
+                            GUILayout.Width(200),
+                            GUILayout.Height(200)
+                        );
+                        
+                        GUI.DrawTexture(previewRect, interpolationPreviewTexture, ScaleMode.ScaleToFit);
+                        
+                        GUILayout.FlexibleSpace();
+                        EditorGUILayout.EndHorizontal();
+                        
+                        EditorGUILayout.HelpBox(
+                            $"Preview con t={interpolationPreviewT:F2}\n" +
+                            $"Content Alignment: {(useContentAlignment ? "ON" : "OFF")}\n" +
+                            $"Advanced Mode: {(useAdvancedAlignment ? "ON" : "OFF")}",
+                            MessageType.None
+                        );
+                    }
+                }
+                else
+                {
+                    EditorGUILayout.HelpBox(
+                        "Agrega un par de sprites válido para ver el preview.",
+                        MessageType.Warning
+                    );
+                }
+                
+                EditorGUI.indentLevel--;
+            }
+            
+            EditorGUILayout.EndFoldoutHeaderGroup();
+        }
+        
+        private void RegenerateInterpolationPreview(SpritePair pair)
+        {
+            if (pair == null || !pair.IsValid() || !pair.HasMatchingDimensions()) return;
+            
+            if (interpolationPreviewTexture != null)
+            {
+                DestroyImmediate(interpolationPreviewTexture);
+            }
+            
+            float easedT = ApplyEasing(interpolationPreviewT, easingType);
+            Texture2D preview = CreateInterpolatedFrame(
+                pair.startSprite.texture,
+                pair.endSprite.texture,
+                easedT
+            );
+            
+            if (preview != null)
+            {
+                // Escalar para preview (mantener aspecto)
+                int previewSize = 200;
+                RenderTexture rt = RenderTexture.GetTemporary(previewSize, previewSize);
+                Graphics.Blit(preview, rt);
+                RenderTexture previous = RenderTexture.active;
+                RenderTexture.active = rt;
+                
+                interpolationPreviewTexture = new Texture2D(previewSize, previewSize);
+                interpolationPreviewTexture.ReadPixels(new Rect(0, 0, previewSize, previewSize), 0, 0);
+                interpolationPreviewTexture.Apply();
+                
+                RenderTexture.active = previous;
+                RenderTexture.ReleaseTemporary(rt);
+                
+                DestroyImmediate(preview);
+            }
         }
         
         private void DrawPresetButtons()
