@@ -801,21 +801,21 @@ namespace SpriteTools
                 easedT
             );
             
-            // Limpiar texturas temporales
-            if (startTexture != null) DestroyImmediate(startTexture);
-            if (endTexture != null) DestroyImmediate(endTexture);
-            
             if (preview != null)
             {
-                // Escalar para preview (mantener aspecto)
-                int previewSize = 200;
-                RenderTexture rt = RenderTexture.GetTemporary(previewSize, previewSize);
+                // ✅ CORREGIDO: Escalar para preview manteniendo el aspecto correcto
+                int maxPreviewSize = 200;
+                float aspectRatio = (float)preview.width / preview.height;
+                int previewWidth = aspectRatio > 1f ? maxPreviewSize : Mathf.RoundToInt(maxPreviewSize * aspectRatio);
+                int previewHeight = aspectRatio > 1f ? Mathf.RoundToInt(maxPreviewSize / aspectRatio) : maxPreviewSize;
+                
+                RenderTexture rt = RenderTexture.GetTemporary(previewWidth, previewHeight);
                 Graphics.Blit(preview, rt);
                 RenderTexture previous = RenderTexture.active;
                 RenderTexture.active = rt;
                 
-                interpolationPreviewTexture = new Texture2D(previewSize, previewSize);
-                interpolationPreviewTexture.ReadPixels(new Rect(0, 0, previewSize, previewSize), 0, 0);
+                interpolationPreviewTexture = new Texture2D(previewWidth, previewHeight);
+                interpolationPreviewTexture.ReadPixels(new Rect(0, 0, previewWidth, previewHeight), 0, 0);
                 interpolationPreviewTexture.Apply();
                 
                 RenderTexture.active = previous;
@@ -823,6 +823,10 @@ namespace SpriteTools
                 
                 DestroyImmediate(preview);
             }
+            
+            // Limpiar texturas temporales
+            if (startTexture != null) DestroyImmediate(startTexture);
+            if (endTexture != null) DestroyImmediate(endTexture);
         }
         
         private void DrawPresetButtons()
