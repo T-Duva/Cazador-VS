@@ -629,7 +629,8 @@ namespace SpriteTools
             int pingPongExtra = pingPongLoop ? (baseFrames - 2) : 0;
             int totalFramesForPair = baseFrames + pingPongExtra;
             
-            int pixelCountPerFrame = texStart.width * texStart.height;
+            // ✅ CORREGIDO: Usar dimensiones del sprite, no de la textura completa
+            int pixelCountPerFrame = (int)(rectStart.width * rectStart.height);
             int totalPixels = pixelCountPerFrame * totalFramesForPair;
             float estimatedSeconds = totalPixels / 10000000f;
             
