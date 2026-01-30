@@ -271,6 +271,8 @@ namespace SpriteTools
                 );
                 
                 EditorGUI.indentLevel++;
+                
+                // ✅ Checkbox principal: Enable Content Alignment
                 useContentAlignment = EditorGUILayout.Toggle(
                     new GUIContent(
                         "✅ Enable Content Alignment",
@@ -280,23 +282,12 @@ namespace SpriteTools
                     useContentAlignment
                 );
                 
+                EditorGUILayout.Space(5);
+                
+                // ✅ SIEMPRE VISIBLE: Advanced Alignment (no depende de useContentAlignment)
+                EditorGUILayout.LabelField("Opciones Avanzadas:", EditorStyles.boldLabel);
                 EditorGUI.indentLevel++;
-                EditorGUILayout.Space(3);
                 
-                alignmentAlphaThreshold = EditorGUILayout.Slider(
-                    new GUIContent(
-                        "Alpha Threshold",
-                        "Umbral mínimo de alpha para considerar un píxel como parte del contenido. " +
-                        "Valores más bajos = más sensible, valores más altos = ignora bordes suaves."
-                    ),
-                    alignmentAlphaThreshold,
-                    0.01f,
-                    0.5f
-                );
-                
-                EditorGUILayout.Space(3);
-                
-                // ✅ SIEMPRE MOSTRAR Advanced Alignment cuando Content Alignment está activado
                 useAdvancedAlignment = EditorGUILayout.Toggle(
                     new GUIContent(
                         "🔬 Advanced Alignment (Más Lento pero Más Preciso)",
@@ -306,31 +297,53 @@ namespace SpriteTools
                     useAdvancedAlignment
                 );
                 
-                if (useAdvancedAlignment)
+                EditorGUI.indentLevel--;
+                
+                EditorGUILayout.Space(5);
+                
+                // ✅ Opciones que solo se muestran si Content Alignment está activado
+                if (useContentAlignment)
                 {
-                    EditorGUILayout.HelpBox(
-                        "⚠️ MODO AVANZADO ACTIVADO\n" +
-                        "Este modo es más lento pero encuentra el offset más preciso.\n" +
-                        "Úsalo solo si el método normal no funciona bien.",
-                        MessageType.Warning
+                    EditorGUILayout.LabelField("Configuración de Alineación:", EditorStyles.boldLabel);
+                    EditorGUI.indentLevel++;
+                    
+                    alignmentAlphaThreshold = EditorGUILayout.Slider(
+                        new GUIContent(
+                            "Alpha Threshold",
+                            "Umbral mínimo de alpha para considerar un píxel como parte del contenido. " +
+                            "Valores más bajos = más sensible, valores más altos = ignora bordes suaves."
+                        ),
+                        alignmentAlphaThreshold,
+                        0.01f,
+                        0.5f
                     );
+                    
+                    EditorGUI.indentLevel--;
+                    
+                    if (useAdvancedAlignment)
+                    {
+                        EditorGUILayout.HelpBox(
+                            "⚠️ MODO AVANZADO ACTIVADO\n" +
+                            "Este modo es más lento pero encuentra el offset más preciso.\n" +
+                            "Úsalo solo si el método normal no funciona bien.",
+                            MessageType.Warning
+                        );
+                    }
+                    else
+                    {
+                        EditorGUILayout.HelpBox(
+                            "Modo normal activado: rápido y eficiente.\n" +
+                            "Si los sprites siguen estirándose, activa 'Advanced Alignment' arriba.",
+                            MessageType.Info
+                        );
+                    }
                 }
                 else
                 {
                     EditorGUILayout.HelpBox(
-                        "Modo normal activado: rápido y eficiente.\n" +
-                        "Si los sprites siguen estirándose, activa 'Advanced Alignment'.",
-                        MessageType.Info
-                    );
-                }
-                
-                EditorGUI.indentLevel--;
-                
-                if (!useContentAlignment)
-                {
-                    EditorGUILayout.HelpBox(
                         "❌ Content Alignment DESACTIVADO\n" +
-                        "Los sprites pueden estirarse si el personaje se mueve dentro del rect.",
+                        "Los sprites pueden estirarse si el personaje se mueve dentro del rect.\n" +
+                        "Activa 'Enable Content Alignment' arriba para evitar estiramientos.",
                         MessageType.Warning
                     );
                 }
