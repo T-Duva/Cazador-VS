@@ -574,8 +574,9 @@ namespace SpriteTools
         {
             if (!pair.IsValid()) return;
             
-            Texture2D texStart = pair.startSprite.texture;
-            Texture2D texEnd = pair.endSprite.texture;
+            // ✅ CORREGIDO: Mostrar dimensiones del sprite, no de la textura completa
+            Rect rectStart = pair.startSprite.rect;
+            Rect rectEnd = pair.endSprite.rect;
             
             if (!pair.HasMatchingDimensions())
             {
@@ -583,16 +584,9 @@ namespace SpriteTools
                 return;
             }
             
-            // Check format compatibility
-            if (!ValidateTextureFormat(texStart, texEnd, false))
-            {
-                EditorGUILayout.HelpBox(
-                    $"⚠️ Format mismatch: {texStart.format} vs {texEnd.format}",
-                    MessageType.Warning
-                );
-            }
-            
-            string info = $"Size: {texStart.width}×{texStart.height} | Format: {texStart.format}";
+            string info = $"Sprite Size: {rectStart.width:F0}×{rectEnd.height:F0} | " +
+                         $"Texture: {pair.startSprite.texture.width}×{pair.startSprite.texture.height} | " +
+                         $"Format: {pair.startSprite.texture.format}";
             EditorGUILayout.HelpBox(info, MessageType.None);
             
             // Estimate processing time
@@ -754,11 +748,26 @@ namespace SpriteTools
             }
             
             float easedT = ApplyEasing(interpolationPreviewT, easingType);
+            
+            // ✅ CORREGIDO: Extraer solo la región del sprite, no toda la textura
+            Texture2D startTexture = ExtractSpriteTexture(pair.startSprite);
+            Texture2D endTexture = ExtractSpriteTexture(pair.endSprite);
+            
+            if (startTexture == null || endTexture == null)
+            {
+                Debug.LogError("Failed to extract sprite textures for preview");
+                return;
+            }
+            
             Texture2D preview = CreateInterpolatedFrame(
-                pair.startSprite.texture,
-                pair.endSprite.texture,
+                startTexture,
+                endTexture,
                 easedT
             );
+            
+            // Limpiar texturas temporales
+            if (startTexture != null) DestroyImmediate(startTexture);
+            if (endTexture != null) DestroyImmediate(endTexture);
             
             if (preview != null)
             {
@@ -1035,9 +1044,10 @@ namespace SpriteTools
                     int pingPongExtra = pingPongLoop ? (baseFrames - 2) : 0;
                     int totalFrames = baseFrames + pingPongExtra;
                     
-                    totalPixels += pair.startSprite.texture.width * 
-                                   pair.startSprite.texture.height * 
-                                   totalFrames;
+                    // ✅ CORREGIDO: Usar dimensiones del sprite, no de la textura completa
+                    totalPixels += (int)(pair.startSprite.rect.width * 
+                                        pair.startSprite.rect.height * 
+                                        totalFrames);
                 }
             }
             
@@ -1118,10 +1128,13 @@ namespace SpriteTools
                 {
                     if (!pair.IsValid() || !pair.HasMatchingDimensions()) continue;
                     
-                    // Validate format
-                    if (!ValidateTextureFormat(pair.startSprite.texture, pair.endSprite.texture))
+                    // ✅ CORREGIDO: Validar dimensiones de los sprites, no de las texturas completas
+                    if (pair.startSprite.rect.width != pair.endSprite.rect.width ||
+                        pair.startSprite.rect.height != pair.endSprite.rect.height)
                     {
-                        Debug.LogWarning($"Skipping pair '{pair.customPrefix}' due to format mismatch.");
+                        Debug.LogWarning($"Skipping pair '{pair.customPrefix}': sprite dimensions don't match. " +
+                                       $"Start: {pair.startSprite.rect.width}x{pair.startSprite.rect.height}, " +
+                                       $"End: {pair.endSprite.rect.width}x{pair.endSprite.rect.height}");
                         continue;
                     }
                     
@@ -1227,11 +1240,26 @@ namespace SpriteTools
                 return false;
             }
             
+            // ✅ CORREGIDO: Extraer solo la región del sprite, no toda la textura
+            Texture2D startTexture = ExtractSpriteTexture(pair.startSprite);
+            Texture2D endTexture = ExtractSpriteTexture(pair.endSprite);
+            
+            if (startTexture == null || endTexture == null)
+            {
+                Debug.LogError($"Failed to extract sprite textures for {pair.customPrefix}");
+                processedFrames++;
+                return true;
+            }
+            
             Texture2D interpolated = CreateInterpolatedFrame(
-                pair.startSprite.texture,
-                pair.endSprite.texture,
+                startTexture,
+                endTexture,
                 easedT
             );
+            
+            // Limpiar texturas temporales
+            if (startTexture != null) DestroyImmediate(startTexture);
+            if (endTexture != null) DestroyImmediate(endTexture);
             
             if (interpolated == null)
             {
@@ -1407,6 +1435,47 @@ namespace SpriteTools
             x = Mathf.Clamp(x, 0, width - 1);
             y = Mathf.Clamp(y, 0, height - 1);
             return pixels[y * width + x];
+        }
+        
+        // ====================================================================
+        // SPRITE EXTRACTION
+        // ====================================================================
+        
+        /// <summary>
+        /// Extrae la región del sprite de la textura completa usando sprite.rect
+        /// </summary>
+        private Texture2D ExtractSpriteTexture(Sprite sprite)
+        {
+            if (sprite == null) return null;
+            
+            Texture2D sourceTexture = sprite.texture;
+            Rect spriteRect = sprite.rect;
+            
+            // Convertir rect a enteros
+            int x = Mathf.FloorToInt(spriteRect.x);
+            int y = Mathf.FloorToInt(spriteRect.y);
+            int width = Mathf.FloorToInt(spriteRect.width);
+            int height = Mathf.FloorToInt(spriteRect.height);
+            
+            // Asegurar que la textura sea readable
+            string path = AssetDatabase.GetAssetPath(sourceTexture);
+            TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (importer != null && !importer.isReadable)
+            {
+                importer.isReadable = true;
+                AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+            }
+            
+            // Crear nueva textura con el tamaño del sprite
+            Texture2D extracted = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            extracted.filterMode = FilterMode.Point;
+            
+            // Extraer píxeles del sprite (Unity usa coordenadas Y invertidas)
+            Color[] pixels = sourceTexture.GetPixels(x, sourceTexture.height - y - height, width, height);
+            extracted.SetPixels(pixels);
+            extracted.Apply();
+            
+            return extracted;
         }
         
         // ====================================================================
