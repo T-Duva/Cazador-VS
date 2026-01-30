@@ -1583,100 +1583,11 @@ namespace SpriteTools
             Color[] endPixels = end.GetPixels();
             Color[] resultPixels = new Color[startPixels.Length];
             
-            // ✅ CONTENT-AWARE ALIGNMENT (MEJORADO)
-            if (useContentAlignment)
+            // ✅ INTERPOLACIÓN SIMPLE Y DIRECTA (sin complicaciones)
+            // Interpolación pixel por pixel básica
+            for (int i = 0; i < resultPixels.Length; i++)
             {
-                Vector2 offset;
-                
-                // ✅ MEJORA: Usar método avanzado si está activado
-                if (useAdvancedAlignment)
-                {
-                    // Método avanzado: correlación cruzada (más preciso pero más lento)
-                    offset = FindBestOffsetByCorrelation(start, end, alignmentAlphaThreshold);
-                    Debug.Log($"[SpriteInbetweener] Advanced Alignment: offset encontrado = ({offset.x:F2}, {offset.y:F2})");
-                }
-                else
-                {
-                    // Método normal: centro de masa mejorado (rápido)
-                    Vector2 centerStart = CalculateContentCenterOfMass(start, alignmentAlphaThreshold);
-                    Vector2 centerEnd = CalculateContentCenterOfMass(end, alignmentAlphaThreshold);
-                    offset = centerEnd - centerStart;
-                    Debug.Log($"[SpriteInbetweener] Normal Alignment: centerStart=({centerStart.x:F2}, {centerStart.y:F2}), " +
-                             $"centerEnd=({centerEnd.x:F2}, {centerEnd.y:F2}), offset=({offset.x:F2}, {offset.y:F2})");
-                }
-                
-                // ✅ MEJORA: SIEMPRE aplicar alineación si Content Alignment está activado
-                // Reducir threshold a 0.01 para detectar cualquier desplazamiento
-                bool aplicarAlineacion = offset.magnitude > 0.01f;
-                
-                if (aplicarAlineacion)
-                {
-                    Debug.Log($"[SpriteInbetweener] ✅ Aplicando alineación: offset magnitude = {offset.magnitude:F2}, offset = ({offset.x:F2}, {offset.y:F2})");
-                    
-                    // ✅ MEJORA: Suavizar el offset durante la interpolación
-                    // El offset debe reducirse gradualmente durante la interpolación
-                    // para que la alineación sea más natural
-                    Vector2 smoothedOffset = offset * (1f - t);
-                    
-                    for (int y = 0; y < height; y++)
-                    {
-                        for (int x = 0; x < width; x++)
-                        {
-                            int index = y * width + x;
-                            
-                            // Posición en start (sin offset)
-                            int startX = x;
-                            int startY = y;
-                            
-                            // ✅ MEJORA: Posición en end con offset suavizado
-                            // El offset se reduce gradualmente durante la interpolación
-                            int endX = Mathf.RoundToInt(x - smoothedOffset.x);
-                            int endY = Mathf.RoundToInt(y - smoothedOffset.y);
-                            
-                            Color startColor = GetPixelSafe(startPixels, startX, startY, width, height);
-                            Color endColor = GetPixelSafe(endPixels, endX, endY, width, height);
-                            
-                            // ✅ MEJORA: Alpha blending más inteligente
-                            // Solo interpolar donde hay contenido significativo en al menos una imagen
-                            float alphaBlend = Mathf.Max(startColor.a, endColor.a);
-                            
-                            if (alphaBlend > 0.01f)
-                            {
-                                // Interpolar color
-                                Color interpolated = Color.Lerp(startColor, endColor, t);
-                                
-                                // Preservar alpha combinado
-                                interpolated.a = Mathf.Lerp(startColor.a, endColor.a, t);
-                                
-                                resultPixels[index] = interpolated;
-                            }
-                            else
-                            {
-                                // Transparente
-                                resultPixels[index] = Color.clear;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    Debug.Log($"[SpriteInbetweener] ⚠️ Offset muy pequeño ({offset.magnitude:F2}), pero Content Alignment está activado. " +
-                             $"Usando interpolación normal. Si hay estiramiento, activa 'Advanced Alignment'.");
-                    // Sin desplazamiento significativo, usar interpolación normal
-                    for (int i = 0; i < resultPixels.Length; i++)
-                    {
-                        resultPixels[i] = Color.Lerp(startPixels[i], endPixels[i], t);
-                    }
-                }
-            }
-            else
-            {
-                Debug.Log("[SpriteInbetweener] Content Alignment DESACTIVADO - usando interpolación normal");
-                // Content alignment desactivado, usar interpolación normal
-                for (int i = 0; i < resultPixels.Length; i++)
-                {
-                    resultPixels[i] = Color.Lerp(startPixels[i], endPixels[i], t);
-                }
+                resultPixels[i] = Color.Lerp(startPixels[i], endPixels[i], t);
             }
             
             result.SetPixels(resultPixels);
