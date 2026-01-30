@@ -282,18 +282,37 @@ namespace SpriteTools
                     useContentAlignment
                 );
                 
-                EditorGUILayout.Space(3);
+                EditorGUILayout.Space(5);
                 
                 // ✅ SIEMPRE VISIBLE: Advanced Alignment (justo después del checkbox principal)
+                EditorGUILayout.LabelField("Modo de Alineación:", EditorStyles.boldLabel);
+                EditorGUI.indentLevel++;
+                
                 useAdvancedAlignment = EditorGUILayout.Toggle(
                     new GUIContent(
-                        "🔬 Advanced Alignment (Más Lento pero Más Preciso)",
+                        "Advanced Alignment (Más Lento pero Más Preciso)",
                         "Usa correlación cruzada para encontrar el mejor offset. " +
                         "Más preciso pero más lento. Activar SOLO si el método normal no funciona."
                     ),
                     useAdvancedAlignment
                 );
                 
+                if (useAdvancedAlignment)
+                {
+                    EditorGUILayout.HelpBox(
+                        "⚠️ MODO AVANZADO ACTIVADO - Más preciso pero más lento",
+                        MessageType.Warning
+                    );
+                }
+                else
+                {
+                    EditorGUILayout.HelpBox(
+                        "Modo normal: rápido y eficiente. Activa 'Advanced Alignment' si sigue estirándose.",
+                        MessageType.Info
+                    );
+                }
+                
+                EditorGUI.indentLevel--;
                 EditorGUILayout.Space(5);
                 
                 // ✅ Opciones que solo se muestran si Content Alignment está activado
