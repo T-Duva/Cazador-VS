@@ -325,7 +325,8 @@ namespace SpriteTools
                 }
                 
                 EditorGUI.indentLevel--;
-                else
+                
+                if (!useContentAlignment)
                 {
                     EditorGUILayout.HelpBox(
                         "❌ Content Alignment DESACTIVADO\n" +
@@ -1529,7 +1530,7 @@ namespace SpriteTools
                 if (offset.magnitude > 0.1f)
                 {
                     Debug.Log($"[SpriteInbetweener] Aplicando alineación: offset magnitude = {offset.magnitude:F2}");
-                {
+                    
                     // ✅ MEJORA: Suavizar el offset durante la interpolación
                     // El offset debe reducirse gradualmente durante la interpolación
                     // para que la alineación sea más natural
@@ -1589,14 +1590,6 @@ namespace SpriteTools
             {
                 Debug.Log("[SpriteInbetweener] Content Alignment DESACTIVADO - usando interpolación normal");
                 // Content alignment desactivado, usar interpolación normal
-                for (int i = 0; i < resultPixels.Length; i++)
-                {
-                    resultPixels[i] = Color.Lerp(startPixels[i], endPixels[i], t);
-                }
-            }
-            else
-            {
-                // Método original (sin alineación)
                 for (int i = 0; i < resultPixels.Length; i++)
                 {
                     resultPixels[i] = Color.Lerp(startPixels[i], endPixels[i], t);
