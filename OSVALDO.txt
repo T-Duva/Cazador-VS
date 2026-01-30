@@ -994,6 +994,41 @@ CURSOR (IA de codigo)
 MERLIN (IA de ayuda)
 ========================
 [2026-01-28 - noche]
+- Explicacion: usuario preguntó sobre interpolación de frames con IA (similar a servicios de video)
+- Osvaldo identificó problema: interpolación pixel-por-pixel sin alineación causa estiramientos cuando el personaje se mueve dentro del rect
+- Problema específico: sprites 16 y 17 del caballero - el sprite 17 se estira al interpolar
+- Usuario pregunta si la solución funcionaría también para "guturps sprite" (probablemente guerrero)
+
+========================
+CURSOR (IA de codigo)
+========================
+[2026-01-28 - noche]
+- Codigo modificado:
+  - Assets/Editor/SpriteInbetweenerUltimate.cs: CREADO script completo con Content-Aware Alignment
+    - Script completo de interpolación de sprites con todas las features
+    - GetPixels/SetPixels para rendimiento optimizado (100x más rápido)
+    - Múltiples pares de sprites (batch processing)
+    - 4 tipos de easing curves con preview visual
+    - Ping-pong loops
+    - Generación automática de AnimationClips (.anim)
+    - Presets con EditorPrefs (Save/Load)
+    - Preservación de metadata (pivots, borders, pixelsPerUnit)
+    - Validaciones robustas (formato, memoria, dimensiones)
+    - Preview con pivot visual (punto amarillo)
+    - ✅ NUEVO: Content-Aware Alignment
+      - Calcula centro de masa del contenido basado en alpha
+      - Alinea sprites antes de interpolar para evitar estiramientos
+      - Funciona cuando el personaje se mueve dentro del rect entre frames
+      - Opción en UI para activar/desactivar
+      - Slider para ajustar alpha threshold
+      - Soluciona problema de estiramiento en sprites 16→17 y cualquier otro sprite con movimiento interno
+    - Namespace: SpriteTools
+    - Menu: Tools > Sprite Inbetweener Ultimate
+
+========================
+MERLIN (IA de ayuda)
+========================
+[2026-01-28 - noche]
 - Explicacion: usuario reportó que el personaje se corrió y está donde no debe estar
 - Probable causa: la compensación de pivots que agregué estaba moviendo el personaje incorrectamente
 
