@@ -1860,7 +1860,6 @@ namespace SpriteTools
                 pingPongLoop = this.pingPongLoop,
                 useContentAlignment = this.useContentAlignment
             };
-            };
             
             string json = JsonUtility.ToJson(preset);
             EditorPrefs.SetString(PRESET_KEY, json);
