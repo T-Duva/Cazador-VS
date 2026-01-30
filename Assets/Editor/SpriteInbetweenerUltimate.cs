@@ -1482,9 +1482,19 @@ namespace SpriteTools
         /// </summary>
         private Texture2D ExtractSpriteTexture(Sprite sprite)
         {
-            if (sprite == null) return null;
+            if (sprite == null)
+            {
+                Debug.LogError("[SpriteInbetweener] ExtractSpriteTexture: sprite is null");
+                return null;
+            }
             
             Texture2D sourceTexture = sprite.texture;
+            if (sourceTexture == null)
+            {
+                Debug.LogError($"[SpriteInbetweener] ExtractSpriteTexture: texture is null for sprite {sprite.name}");
+                return null;
+            }
+            
             Rect spriteRect = sprite.rect;
             
             // Convertir rect a enteros
@@ -1493,23 +1503,54 @@ namespace SpriteTools
             int width = Mathf.FloorToInt(spriteRect.width);
             int height = Mathf.FloorToInt(spriteRect.height);
             
+            // Validar dimensiones
+            if (width <= 0 || height <= 0)
+            {
+                Debug.LogError($"[SpriteInbetweener] ExtractSpriteTexture: Invalid dimensions for sprite {sprite.name}: {width}x{height}");
+                return null;
+            }
+            
+            if (x < 0 || y < 0 || x + width > sourceTexture.width || y + height > sourceTexture.height)
+            {
+                Debug.LogError($"[SpriteInbetweener] ExtractSpriteTexture: Sprite rect out of bounds for {sprite.name}. " +
+                             $"Rect: ({x}, {y}, {width}, {height}), Texture: {sourceTexture.width}x{sourceTexture.height}");
+                return null;
+            }
+            
             // Asegurar que la textura sea readable
             string path = AssetDatabase.GetAssetPath(sourceTexture);
             TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
             if (importer != null && !importer.isReadable)
             {
+                Debug.Log($"[SpriteInbetweener] Making texture readable: {path}");
                 importer.isReadable = true;
                 AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+                // Recargar la textura después de reimportar
+                sourceTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
             }
             
             // Crear nueva textura con el tamaño del sprite
             Texture2D extracted = new Texture2D(width, height, TextureFormat.RGBA32, false);
             extracted.filterMode = FilterMode.Point;
             
-            // Extraer píxeles del sprite (Unity usa coordenadas Y invertidas)
-            Color[] pixels = sourceTexture.GetPixels(x, sourceTexture.height - y - height, width, height);
-            extracted.SetPixels(pixels);
-            extracted.Apply();
+            // ✅ CORREGIDO: Extraer píxeles del sprite (Unity usa coordenadas Y invertidas)
+            // spriteRect.y está en coordenadas de Unity (desde abajo), GetPixels usa desde arriba
+            int sourceY = sourceTexture.height - Mathf.FloorToInt(spriteRect.y + spriteRect.height);
+            
+            try
+            {
+                Color[] pixels = sourceTexture.GetPixels(x, sourceY, width, height);
+                extracted.SetPixels(pixels);
+                extracted.Apply();
+                
+                Debug.Log($"[SpriteInbetweener] Extracted sprite {sprite.name}: {width}x{height} from texture {sourceTexture.width}x{sourceTexture.height} at ({x}, {sourceY})");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[SpriteInbetweener] Error extracting sprite {sprite.name}: {e.Message}");
+                DestroyImmediate(extracted);
+                return null;
+            }
             
             return extracted;
         }
