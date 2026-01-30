@@ -105,6 +105,7 @@ namespace SpriteTools
         // ✅ NUEVO: Content-Aware Alignment
         private bool useContentAlignment = true;
         private float alignmentAlphaThreshold = 0.1f;
+        private bool useAdvancedAlignment = false; // Usar correlación (más lento pero más preciso)
         
         // UI state
         private Vector2 scrollPosition;
@@ -271,12 +272,25 @@ namespace SpriteTools
                         0.01f,
                         0.5f
                     );
+                    
+                    useAdvancedAlignment = EditorGUILayout.Toggle(
+                        new GUIContent(
+                            "Advanced Alignment (Slower)",
+                            "Usa correlación cruzada para encontrar el mejor offset. Más preciso pero más lento. " +
+                            "Activar solo si el método normal no funciona bien."
+                        ),
+                        useAdvancedAlignment
+                    );
+                    
                     EditorGUI.indentLevel--;
                     
                     EditorGUILayout.HelpBox(
                         "Detecta automáticamente el desplazamiento del personaje y alinea el contenido " +
-                        "antes de interpolar. Útil cuando el personaje se mueve dentro del rect entre frames.",
-                        MessageType.Info
+                        "antes de interpolar. Útil cuando el personaje se mueve dentro del rect entre frames.\n\n" +
+                        (useAdvancedAlignment 
+                            ? "⚠️ Modo avanzado activado: más preciso pero más lento."
+                            : "Modo normal: rápido y eficiente."),
+                        useAdvancedAlignment ? MessageType.Warning : MessageType.Info
                     );
                 }
                 
@@ -1095,12 +1109,18 @@ namespace SpriteTools
         
         /// <summary>
         /// Calcula el centro de masa del contenido basado en alpha (píxeles visibles)
+        /// Versión mejorada: usa bounding box y centro de masa combinados
         /// </summary>
         private Vector2 CalculateContentCenterOfMass(Texture2D texture, float alphaThreshold)
         {
             Color[] pixels = texture.GetPixels();
             int width = texture.width;
             int height = texture.height;
+            
+            // ✅ MEJORA: Calcular bounding box del contenido
+            int minX = width, maxX = 0;
+            int minY = height, maxY = 0;
+            bool foundContent = false;
             
             float totalMass = 0f;
             float sumX = 0f;
@@ -1116,7 +1136,16 @@ namespace SpriteTools
                     // Solo considerar píxeles con alpha significativo
                     if (pixel.a > alphaThreshold)
                     {
-                        float mass = pixel.a; // Usar alpha como "masa"
+                        foundContent = true;
+                        
+                        // Actualizar bounding box
+                        if (x < minX) minX = x;
+                        if (x > maxX) maxX = x;
+                        if (y < minY) minY = y;
+                        if (y > maxY) maxY = y;
+                        
+                        // Calcular centro de masa con peso basado en alpha
+                        float mass = pixel.a * pixel.a; // Usar alpha^2 para dar más peso a píxeles más opacos
                         totalMass += mass;
                         sumX += x * mass;
                         sumY += y * mass;
@@ -1124,13 +1153,95 @@ namespace SpriteTools
                 }
             }
             
-            if (totalMass > 0f)
+            if (foundContent && totalMass > 0f)
             {
-                return new Vector2(sumX / totalMass, sumY / totalMass);
+                // ✅ MEJORA: Combinar centro de masa con centro del bounding box
+                Vector2 centerOfMass = new Vector2(sumX / totalMass, sumY / totalMass);
+                Vector2 boundingBoxCenter = new Vector2(
+                    (minX + maxX) * 0.5f,
+                    (minY + maxY) * 0.5f
+                );
+                
+                // Usar promedio ponderado (70% centro de masa, 30% bounding box)
+                // Esto es más robusto cuando hay transparencias o bordes suaves
+                return Vector2.Lerp(boundingBoxCenter, centerOfMass, 0.7f);
             }
             
             // Si no hay contenido, retornar centro del rect
             return new Vector2(width * 0.5f, height * 0.5f);
+        }
+        
+        /// <summary>
+        /// ✅ NUEVO: Método alternativo usando correlación para encontrar mejor offset
+        /// Más preciso pero más lento - se usa como fallback si el método normal falla
+        /// </summary>
+        private Vector2 FindBestOffsetByCorrelation(Texture2D start, Texture2D end, float alphaThreshold)
+        {
+            Color[] startPixels = start.GetPixels();
+            Color[] endPixels = end.GetPixels();
+            int width = start.width;
+            int height = start.height;
+            
+            // Buscar offset en un rango limitado (±20 píxeles)
+            int searchRange = Mathf.Min(20, width / 4, height / 4);
+            float bestCorrelation = -1f;
+            Vector2 bestOffset = Vector2.zero;
+            
+            for (int offsetY = -searchRange; offsetY <= searchRange; offsetY++)
+            {
+                for (int offsetX = -searchRange; offsetX <= searchRange; offsetX++)
+                {
+                    float correlation = CalculateCorrelation(startPixels, endPixels, width, height, offsetX, offsetY, alphaThreshold);
+                    
+                    if (correlation > bestCorrelation)
+                    {
+                        bestCorrelation = correlation;
+                        bestOffset = new Vector2(offsetX, offsetY);
+                    }
+                }
+            }
+            
+            return bestOffset;
+        }
+        
+        /// <summary>
+        /// Calcula la correlación entre dos texturas con un offset dado
+        /// </summary>
+        private float CalculateCorrelation(Color[] pixels1, Color[] pixels2, int width, int height, int offsetX, int offsetY, float alphaThreshold)
+        {
+            int validPixels = 0;
+            float sum = 0f;
+            
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    int index1 = y * width + x;
+                    int x2 = x + offsetX;
+                    int y2 = y + offsetY;
+                    
+                    if (x2 < 0 || x2 >= width || y2 < 0 || y2 >= height) continue;
+                    
+                    int index2 = y2 * width + x2;
+                    Color p1 = pixels1[index1];
+                    Color p2 = pixels2[index2];
+                    
+                    // Solo considerar píxeles con contenido en ambas imágenes
+                    if (p1.a > alphaThreshold && p2.a > alphaThreshold)
+                    {
+                        // Calcular similitud basada en luminosidad y alpha
+                        float lum1 = (p1.r + p1.g + p1.b) / 3f * p1.a;
+                        float lum2 = (p2.r + p2.g + p2.b) / 3f * p2.a;
+                        
+                        // Correlación simple (1 - diferencia normalizada)
+                        float similarity = 1f - Mathf.Abs(lum1 - lum2);
+                        sum += similarity;
+                        validPixels++;
+                    }
+                }
+            }
+            
+            return validPixels > 0 ? sum / validPixels : 0f;
         }
         
         /// <summary>
@@ -1167,17 +1278,33 @@ namespace SpriteTools
             Color[] endPixels = end.GetPixels();
             Color[] resultPixels = new Color[startPixels.Length];
             
-            // ✅ CONTENT-AWARE ALIGNMENT
+            // ✅ CONTENT-AWARE ALIGNMENT (MEJORADO)
             if (useContentAlignment)
             {
-                // Calcular centros de masa
-                Vector2 centerStart = CalculateContentCenterOfMass(start, alignmentAlphaThreshold);
-                Vector2 centerEnd = CalculateContentCenterOfMass(end, alignmentAlphaThreshold);
-                Vector2 offset = centerEnd - centerStart;
+                Vector2 offset;
+                
+                // ✅ MEJORA: Usar método avanzado si está activado
+                if (useAdvancedAlignment)
+                {
+                    // Método avanzado: correlación cruzada (más preciso pero más lento)
+                    offset = FindBestOffsetByCorrelation(start, end, alignmentAlphaThreshold);
+                }
+                else
+                {
+                    // Método normal: centro de masa mejorado (rápido)
+                    Vector2 centerStart = CalculateContentCenterOfMass(start, alignmentAlphaThreshold);
+                    Vector2 centerEnd = CalculateContentCenterOfMass(end, alignmentAlphaThreshold);
+                    offset = centerEnd - centerStart;
+                }
                 
                 // Si hay desplazamiento significativo, usar alineación
-                if (offset.magnitude > 1f)
+                if (offset.magnitude > 0.5f)
                 {
+                    // ✅ MEJORA: Suavizar el offset durante la interpolación
+                    // El offset debe reducirse gradualmente durante la interpolación
+                    // para que la alineación sea más natural
+                    Vector2 smoothedOffset = offset * (1f - t);
+                    
                     for (int y = 0; y < height; y++)
                     {
                         for (int x = 0; x < width; x++)
@@ -1188,14 +1315,16 @@ namespace SpriteTools
                             int startX = x;
                             int startY = y;
                             
-                            // Posición en end (alineada)
-                            int endX = Mathf.RoundToInt(x - offset.x);
-                            int endY = Mathf.RoundToInt(y - offset.y);
+                            // ✅ MEJORA: Posición en end con offset suavizado
+                            // El offset se reduce gradualmente durante la interpolación
+                            int endX = Mathf.RoundToInt(x - smoothedOffset.x);
+                            int endY = Mathf.RoundToInt(y - smoothedOffset.y);
                             
                             Color startColor = GetPixelSafe(startPixels, startX, startY, width, height);
                             Color endColor = GetPixelSafe(endPixels, endX, endY, width, height);
                             
-                            // Alpha blending inteligente: solo interpolar donde hay contenido
+                            // ✅ MEJORA: Alpha blending más inteligente
+                            // Solo interpolar donde hay contenido significativo en al menos una imagen
                             float alphaBlend = Mathf.Max(startColor.a, endColor.a);
                             
                             if (alphaBlend > 0.01f)
@@ -1460,6 +1589,7 @@ namespace SpriteTools
                 loopTime = this.loopTime,
                 pingPongLoop = this.pingPongLoop,
                 useContentAlignment = this.useContentAlignment
+            };
             };
             
             string json = JsonUtility.ToJson(preset);

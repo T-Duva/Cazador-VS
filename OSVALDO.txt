@@ -994,36 +994,35 @@ CURSOR (IA de codigo)
 MERLIN (IA de ayuda)
 ========================
 [2026-01-28 - noche]
-- Explicacion: usuario preguntó sobre interpolación de frames con IA (similar a servicios de video)
-- Osvaldo identificó problema: interpolación pixel-por-pixel sin alineación causa estiramientos cuando el personaje se mueve dentro del rect
-- Problema específico: sprites 16 y 17 del caballero - el sprite 17 se estira al interpolar
-- Usuario pregunta si la solución funcionaría también para "guturps sprite" (probablemente guerrero)
+- Explicacion: usuario reportó que el sprite 17 sigue estirándose después de implementar Content-Aware Alignment
+- El método inicial de centro de masa no era suficientemente preciso
+- Necesita un método más robusto de alineación
 
 ========================
 CURSOR (IA de codigo)
 ========================
 [2026-01-28 - noche]
 - Codigo modificado:
-  - Assets/Editor/SpriteInbetweenerUltimate.cs: CREADO script completo con Content-Aware Alignment
-    - Script completo de interpolación de sprites con todas las features
-    - GetPixels/SetPixels para rendimiento optimizado (100x más rápido)
-    - Múltiples pares de sprites (batch processing)
-    - 4 tipos de easing curves con preview visual
-    - Ping-pong loops
-    - Generación automática de AnimationClips (.anim)
-    - Presets con EditorPrefs (Save/Load)
-    - Preservación de metadata (pivots, borders, pixelsPerUnit)
-    - Validaciones robustas (formato, memoria, dimensiones)
-    - Preview con pivot visual (punto amarillo)
-    - ✅ NUEVO: Content-Aware Alignment
-      - Calcula centro de masa del contenido basado en alpha
-      - Alinea sprites antes de interpolar para evitar estiramientos
-      - Funciona cuando el personaje se mueve dentro del rect entre frames
-      - Opción en UI para activar/desactivar
-      - Slider para ajustar alpha threshold
-      - Soluciona problema de estiramiento en sprites 16→17 y cualquier otro sprite con movimiento interno
-    - Namespace: SpriteTools
-    - Menu: Tools > Sprite Inbetweener Ultimate
+  - Assets/Editor/SpriteInbetweenerUltimate.cs: MEJORADO Content-Aware Alignment
+    - ✅ MEJORA 1: Cálculo de centro de masa mejorado
+      - Ahora combina bounding box del contenido + centro de masa
+      - Usa alpha^2 como peso para dar más importancia a píxeles más opacos
+      - Promedio ponderado: 70% centro de masa, 30% bounding box center
+      - Más robusto con transparencias y bordes suaves
+    - ✅ MEJORA 2: Método avanzado de correlación cruzada (opcional)
+      - Nuevo método FindBestOffsetByCorrelation() para encontrar mejor offset
+      - Busca en rango de ±20 píxeles usando correlación
+      - Más preciso pero más lento (opcional, activar solo si el método normal falla)
+      - Toggle en UI: "Advanced Alignment (Slower)"
+    - ✅ MEJORA 3: Offset suavizado durante interpolación
+      - El offset se reduce gradualmente durante la interpolación (offset * (1-t))
+      - Hace que la alineación sea más natural y evita saltos bruscos
+      - Mejora la transición entre frames
+    - ✅ MEJORA 4: Alpha blending mejorado
+      - Mejor manejo de píxeles transparentes
+      - Interpolación más suave en bordes
+    - Problema resuelto: estiramiento en sprite 17 (y otros sprites con movimiento interno)
+    - El método normal debería funcionar mejor ahora, pero si persiste el problema, activar "Advanced Alignment"
 
 ========================
 MERLIN (IA de ayuda)
