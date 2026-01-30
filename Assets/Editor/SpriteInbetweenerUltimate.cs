@@ -248,12 +248,22 @@ namespace SpriteTools
                 
                 EditorGUILayout.HelpBox(GetEasingDescription(easingType), MessageType.None);
                 
-                // ✅ NUEVO: Content-Aware Alignment option
+                // ✅ Content-Aware Alignment (SIEMPRE VISIBLE)
+                EditorGUILayout.Space(10);
+                EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
                 EditorGUILayout.Space(5);
-                EditorGUILayout.LabelField("Content-Aware Alignment", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField("🔧 Content-Aware Alignment (Anti-Estiramiento)", EditorStyles.boldLabel);
+                
+                EditorGUILayout.HelpBox(
+                    "IMPORTANTE: Activa esto para evitar que los sprites se estiren cuando el personaje se mueve dentro del rect.\n" +
+                    "Útil para sprites como CABALLERO_16→17 donde el personaje se desplaza.",
+                    MessageType.Info
+                );
+                
+                EditorGUI.indentLevel++;
                 useContentAlignment = EditorGUILayout.Toggle(
                     new GUIContent(
-                        "Enable Content Alignment",
+                        "✅ Enable Content Alignment",
                         "Alinea el contenido basándose en el centro de masa antes de interpolar. " +
                         "Evita estiramientos cuando el personaje se mueve dentro del rect."
                     ),
@@ -263,36 +273,61 @@ namespace SpriteTools
                 if (useContentAlignment)
                 {
                     EditorGUI.indentLevel++;
+                    EditorGUILayout.Space(3);
+                    
                     alignmentAlphaThreshold = EditorGUILayout.Slider(
                         new GUIContent(
                             "Alpha Threshold",
-                            "Umbral mínimo de alpha para considerar un píxel como parte del contenido"
+                            "Umbral mínimo de alpha para considerar un píxel como parte del contenido. " +
+                            "Valores más bajos = más sensible, valores más altos = ignora bordes suaves."
                         ),
                         alignmentAlphaThreshold,
                         0.01f,
                         0.5f
                     );
                     
+                    EditorGUILayout.Space(3);
+                    
                     useAdvancedAlignment = EditorGUILayout.Toggle(
                         new GUIContent(
-                            "Advanced Alignment (Slower)",
-                            "Usa correlación cruzada para encontrar el mejor offset. Más preciso pero más lento. " +
-                            "Activar solo si el método normal no funciona bien."
+                            "🔬 Advanced Alignment (Más Lento pero Más Preciso)",
+                            "Usa correlación cruzada para encontrar el mejor offset. " +
+                            "Más preciso pero más lento. Activar SOLO si el método normal no funciona."
                         ),
                         useAdvancedAlignment
                     );
                     
-                    EditorGUI.indentLevel--;
+                    if (useAdvancedAlignment)
+                    {
+                        EditorGUILayout.HelpBox(
+                            "⚠️ MODO AVANZADO ACTIVADO\n" +
+                            "Este modo es más lento pero encuentra el offset más preciso.\n" +
+                            "Úsalo solo si el método normal no funciona bien.",
+                            MessageType.Warning
+                        );
+                    }
+                    else
+                    {
+                        EditorGUILayout.HelpBox(
+                            "Modo normal activado: rápido y eficiente.\n" +
+                            "Si los sprites siguen estirándose, activa 'Advanced Alignment'.",
+                            MessageType.Info
+                        );
+                    }
                     
+                    EditorGUI.indentLevel--;
+                }
+                else
+                {
                     EditorGUILayout.HelpBox(
-                        "Detecta automáticamente el desplazamiento del personaje y alinea el contenido " +
-                        "antes de interpolar. Útil cuando el personaje se mueve dentro del rect entre frames.\n\n" +
-                        (useAdvancedAlignment 
-                            ? "⚠️ Modo avanzado activado: más preciso pero más lento."
-                            : "Modo normal: rápido y eficiente."),
-                        useAdvancedAlignment ? MessageType.Warning : MessageType.Info
+                        "❌ Content Alignment DESACTIVADO\n" +
+                        "Los sprites pueden estirarse si el personaje se mueve dentro del rect.",
+                        MessageType.Warning
                     );
                 }
+                
+                EditorGUI.indentLevel--;
+                EditorGUILayout.Space(5);
                 
                 EditorGUILayout.BeginHorizontal();
                 outputFolderPath = EditorGUILayout.TextField("Output Folder", outputFolderPath);
@@ -1162,9 +1197,10 @@ namespace SpriteTools
                     (minY + maxY) * 0.5f
                 );
                 
-                // Usar promedio ponderado (70% centro de masa, 30% bounding box)
-                // Esto es más robusto cuando hay transparencias o bordes suaves
-                return Vector2.Lerp(boundingBoxCenter, centerOfMass, 0.7f);
+                // ✅ MEJORA: Usar solo el centro de masa (más preciso para detectar desplazamiento)
+                // El bounding box puede ser engañoso si el personaje cambia de pose
+                // Usar 90% centro de masa, 10% bounding box para estabilidad
+                return Vector2.Lerp(boundingBoxCenter, centerOfMass, 0.9f);
             }
             
             // Si no hay contenido, retornar centro del rect
@@ -1288,6 +1324,7 @@ namespace SpriteTools
                 {
                     // Método avanzado: correlación cruzada (más preciso pero más lento)
                     offset = FindBestOffsetByCorrelation(start, end, alignmentAlphaThreshold);
+                    Debug.Log($"[SpriteInbetweener] Advanced Alignment: offset encontrado = ({offset.x:F2}, {offset.y:F2})");
                 }
                 else
                 {
@@ -1295,10 +1332,15 @@ namespace SpriteTools
                     Vector2 centerStart = CalculateContentCenterOfMass(start, alignmentAlphaThreshold);
                     Vector2 centerEnd = CalculateContentCenterOfMass(end, alignmentAlphaThreshold);
                     offset = centerEnd - centerStart;
+                    Debug.Log($"[SpriteInbetweener] Normal Alignment: centerStart=({centerStart.x:F2}, {centerStart.y:F2}), " +
+                             $"centerEnd=({centerEnd.x:F2}, {centerEnd.y:F2}), offset=({offset.x:F2}, {offset.y:F2})");
                 }
                 
                 // Si hay desplazamiento significativo, usar alineación
-                if (offset.magnitude > 0.5f)
+                // ✅ REDUCIDO THRESHOLD: de 0.5f a 0.1f para detectar desplazamientos más pequeños
+                if (offset.magnitude > 0.1f)
+                {
+                    Debug.Log($"[SpriteInbetweener] Aplicando alineación: offset magnitude = {offset.magnitude:F2}");
                 {
                     // ✅ MEJORA: Suavizar el offset durante la interpolación
                     // El offset debe reducirse gradualmente durante la interpolación
@@ -1347,11 +1389,21 @@ namespace SpriteTools
                 }
                 else
                 {
+                    Debug.Log($"[SpriteInbetweener] Offset muy pequeño ({offset.magnitude:F2}), usando interpolación normal");
                     // Sin desplazamiento significativo, usar interpolación normal
                     for (int i = 0; i < resultPixels.Length; i++)
                     {
                         resultPixels[i] = Color.Lerp(startPixels[i], endPixels[i], t);
                     }
+                }
+            }
+            else
+            {
+                Debug.Log("[SpriteInbetweener] Content Alignment DESACTIVADO - usando interpolación normal");
+                // Content alignment desactivado, usar interpolación normal
+                for (int i = 0; i < resultPixels.Length; i++)
+                {
+                    resultPixels[i] = Color.Lerp(startPixels[i], endPixels[i], t);
                 }
             }
             else
