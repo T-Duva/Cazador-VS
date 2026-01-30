@@ -123,7 +123,7 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
     flipGreenChannel: 0
-  isReadable: 0
+  isReadable: 1
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
@@ -215,20 +215,20 @@ TextureImporter:
       name: CABALLERO_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 945
-        width: 87
-        height: 135
+        x: 24
+        y: 949
+        width: 65
+        height: 130
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 412f346ce944b6110800000000000000
-      internalID: 1255172369874678292
+      spriteID: 1b2d8c22000000000800000000000000
+      internalID: 583586481
       vertices: []
       indices: 
       edges: []
@@ -237,20 +237,20 @@ TextureImporter:
       name: CABALLERO_1
       rect:
         serializedVersion: 2
-        x: 165
-        y: 945
-        width: 59
-        height: 129
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 166
+        y: 949
+        width: 57
+        height: 124
+      alignment: 9
+      pivot: {x: 0.5, y: 0.496063}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: a8b6add4de9ea1f50800000000000000
-      internalID: 6853046988420311946
+      spriteID: bd020bfeffffffff0800000000000000
+      internalID: -273669925
       vertices: []
       indices: 
       edges: []
@@ -259,350 +259,20 @@ TextureImporter:
       name: CABALLERO_2
       rect:
         serializedVersion: 2
-        x: 296
-        y: 945
-        width: 60
-        height: 130
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: d34cc0292c6ba3ff0800000000000000
-      internalID: -55531098598489027
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: CABALLERO_3
-      rect:
-        serializedVersion: 2
-        x: 456
-        y: 947
+        x: 297
+        y: 949
         width: 58
-        height: 128
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        height: 125
+      alignment: 9
+      pivot: {x: 0.5, y: 0.4921875}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: b48464bd7e40634c0800000000000000
-      internalID: -4308250599670527925
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: CABALLERO_4
-      rect:
-        serializedVersion: 2
-        x: 538
-        y: 948
-        width: 64
-        height: 128
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 20f440ff15d821e80800000000000000
-      internalID: -8209343787432653054
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: CABALLERO_5
-      rect:
-        serializedVersion: 2
-        x: 677
-        y: 948
-        width: 63
-        height: 128
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 6ddbc9a29f4701030800000000000000
-      internalID: 3463396726958505430
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: CABALLERO_6
-      rect:
-        serializedVersion: 2
-        x: 811
-        y: 948
-        width: 61
-        height: 128
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: c99ab0f9fe14af250800000000000000
-      internalID: 5979163952709085596
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: CABALLERO_7
-      rect:
-        serializedVersion: 2
-        x: 955
-        y: 948
-        width: 123
-        height: 132
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 950a4161b4c9d8a50800000000000000
-      internalID: 6525043281436647513
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: CABALLERO_8
-      rect:
-        serializedVersion: 2
-        x: 4
-        y: 674
-        width: 83
-        height: 128
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 59619f4a3778d24f0800000000000000
-      internalID: -851875823744379243
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: CABALLERO_9
-      rect:
-        serializedVersion: 2
-        x: 143
-        y: 674
-        width: 83
-        height: 128
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 403ea40384f620d00800000000000000
-      internalID: 937434028285027076
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: CABALLERO_10
-      rect:
-        serializedVersion: 2
-        x: 276
-        y: 674
-        width: 83
-        height: 128
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: bb7e2693c5daa36e0800000000000000
-      internalID: -1856981284725528645
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: CABALLERO_11
-      rect:
-        serializedVersion: 2
-        x: 438
-        y: 674
-        width: 60
-        height: 128
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 5f03816916d5b2770800000000000000
-      internalID: 8587059788223361269
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: CABALLERO_12
-      rect:
-        serializedVersion: 2
-        x: 541
-        y: 674
-        width: 63
-        height: 129
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: d0213dd3fcdbf7a80800000000000000
-      internalID: -8466840076640120307
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: CABALLERO_13
-      rect:
-        serializedVersion: 2
-        x: 679
-        y: 675
-        width: 63
-        height: 128
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: b05b7abfc8720a840800000000000000
-      internalID: 5233226253475493131
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: CABALLERO_14
-      rect:
-        serializedVersion: 2
-        x: 808
-        y: 676
-        width: 68
-        height: 128
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 5f661bcfcba5a0ce0800000000000000
-      internalID: -1438237363251616011
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: CABALLERO_15
-      rect:
-        serializedVersion: 2
-        x: 955
-        y: 675
-        width: 60
-        height: 128
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 34dd5fb9da7b0ba00800000000000000
-      internalID: 770317492554161475
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: CABALLERO_16
-      rect:
-        serializedVersion: 2
-        x: 28
-        y: 404
-        width: 65
-        height: 126
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: f869376f080b16250800000000000000
-      internalID: 5936219851788097167
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: CABALLERO_17
-      rect:
-        serializedVersion: 2
-        x: 160
-        y: 402
-        width: 69
-        height: 135
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 07353fa3835e78be0800000000000000
-      internalID: -1474958323270593680
+      spriteID: 67ca61a7000000000800000000000000
+      internalID: 2048306294
       vertices: []
       indices: 
       edges: []
@@ -611,64 +281,284 @@ TextureImporter:
       name: CABALLERO_18
       rect:
         serializedVersion: 2
-        x: 312
-        y: 404
-        width: 50
-        height: 131
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 457
+        y: 949
+        width: 56
+        height: 125
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 391a1ac4671e70210800000000000000
-      internalID: 1299254915727729043
+      spriteID: ba36932cffffffff0800000000000000
+      internalID: -1036426325
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: CABALLERO_19
+      name: CABALLERO_3
       rect:
         serializedVersion: 2
-        x: 418
-        y: 406
-        width: 90
-        height: 128
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 539
+        y: 949
+        width: 62
+        height: 126
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 253aea35eb860ad60800000000000000
-      internalID: 7899428913064878930
+      spriteID: 42b1f4e8ffffffff0800000000000000
+      internalID: -1907418332
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: CABALLERO_20
+      name: CABALLERO_4
       rect:
         serializedVersion: 2
-        x: 492
-        y: 513
-        width: 21
-        height: 9
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 678
+        y: 949
+        width: 61
+        height: 126
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: dec2d83f180891290800000000000000
-      internalID: -7919157174129054483
+      spriteID: 8f350d5affffffff0800000000000000
+      internalID: -1513073672
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CABALLERO_5
+      rect:
+        serializedVersion: 2
+        x: 812
+        y: 949
+        width: 59
+        height: 126
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f6b5e30bffffffff0800000000000000
+      internalID: -1338090641
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CABALLERO_6
+      rect:
+        serializedVersion: 2
+        x: 956
+        y: 949
+        width: 57
+        height: 127
+      alignment: 9
+      pivot: {x: 0.5, y: 0.4921875}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fb26ee02000000000800000000000000
+      internalID: 552493759
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CABALLERO_10
+      rect:
+        serializedVersion: 2
+        x: 439
+        y: 675
+        width: 65
+        height: 130
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 41040601000000000800000000000000
+      internalID: 274743316
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CABALLERO_11
+      rect:
+        serializedVersion: 2
+        x: 542
+        y: 675
+        width: 61
+        height: 127
+      alignment: 9
+      pivot: {x: 0.5, y: 0.496063}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7c6ea005000000000800000000000000
+      internalID: 1342891719
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CABALLERO_12
+      rect:
+        serializedVersion: 2
+        x: 680
+        y: 675
+        width: 61
+        height: 126
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1612ddb0000000000800000000000000
+      internalID: 199041377
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CABALLERO_13
+      rect:
+        serializedVersion: 2
+        x: 809
+        y: 675
+        width: 66
+        height: 126
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b2854b87000000000800000000000000
+      internalID: 2025084971
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CABALLERO_14
+      rect:
+        serializedVersion: 2
+        x: 956
+        y: 675
+        width: 58
+        height: 126
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 973497a1000000000800000000000000
+      internalID: 444154745
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CABALLERO_15
+      rect:
+        serializedVersion: 2
+        x: 26
+        y: 405
+        width: 63
+        height: 124
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5080645}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cb8e002dffffffff0800000000000000
+      internalID: -771692356
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CABALLERO_16
+      rect:
+        serializedVersion: 2
+        x: 160
+        y: 405
+        width: 65
+        height: 130
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fcfee658ffffffff0800000000000000
+      internalID: -2056327217
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CABALLERO_17
+      rect:
+        serializedVersion: 2
+        x: 303
+        y: 405
+        width: 65
+        height: 130
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c1569d47000000000800000000000000
+      internalID: 1960404252
       vertices: []
       indices: 
       edges: []
@@ -677,20 +567,20 @@ TextureImporter:
       name: CABALLERO_21
       rect:
         serializedVersion: 2
-        x: 532
-        y: 410
-        width: 96
-        height: 130
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 533
+        y: 405
+        width: 94
+        height: 135
+      alignment: 9
+      pivot: {x: 0.5, y: 0.46666667}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 27f4c549dfd2ce0d0800000000000000
-      internalID: -3392285852177772686
+      spriteID: cdc2ce41000000000800000000000000
+      internalID: 351022300
       vertices: []
       indices: 
       edges: []
@@ -699,20 +589,20 @@ TextureImporter:
       name: CABALLERO_22
       rect:
         serializedVersion: 2
-        x: 654
-        y: 414
+        x: 795
+        y: 405
         width: 111
-        height: 119
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        height: 140
+      alignment: 9
+      pivot: {x: 0.5, y: 0.45}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: d6d7fef98e5f102c0800000000000000
-      internalID: -4467018975910331027
+      spriteID: eece93ffffffffff0800000000000000
+      internalID: -12981010
       vertices: []
       indices: 
       edges: []
@@ -721,20 +611,20 @@ TextureImporter:
       name: CABALLERO_23
       rect:
         serializedVersion: 2
-        x: 794
-        y: 412
-        width: 113
-        height: 128
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 940
+        y: 405
+        width: 119
+        height: 140
+      alignment: 9
+      pivot: {x: 0.5, y: 0.45}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: b832b10b67ab57430800000000000000
-      internalID: 3780132481170875275
+      spriteID: c6f68a4bffffffff0800000000000000
+      internalID: -1264029844
       vertices: []
       indices: 
       edges: []
@@ -743,20 +633,20 @@ TextureImporter:
       name: CABALLERO_24
       rect:
         serializedVersion: 2
-        x: 944
-        y: 411
-        width: 114
+        x: 0
+        y: 130
+        width: 111
         height: 128
-      alignment: 0
-      pivot: {x: 0, y: 0}
+      alignment: 9
+      pivot: {x: 0.5, y: 0.4921875}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3504538c5757d9b40800000000000000
-      internalID: 5448640272918724691
+      spriteID: 1b194689ffffffff0800000000000000
+      internalID: -1738239567
       vertices: []
       indices: 
       edges: []
@@ -765,20 +655,20 @@ TextureImporter:
       name: CABALLERO_25
       rect:
         serializedVersion: 2
-        x: 996
-        y: 395
-        width: 7
-        height: 6
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 144
+        y: 130
+        width: 125
+        height: 127
+      alignment: 9
+      pivot: {x: 0.5, y: 0.496063}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 649afc0ce3b263950800000000000000
-      internalID: 6428373066640763206
+      spriteID: cb6f16f9ffffffff0800000000000000
+      internalID: -1620969796
       vertices: []
       indices: 
       edges: []
@@ -787,20 +677,20 @@ TextureImporter:
       name: CABALLERO_26
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 112
-        height: 258
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 275
+        y: 130
+        width: 127
+        height: 120
+      alignment: 9
+      pivot: {x: 0.5, y: 0.525}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 77ad69d0a0d5ebe60800000000000000
-      internalID: 7979917887506143863
+      spriteID: ea0efa4cffffffff0800000000000000
+      internalID: -995106642
       vertices: []
       indices: 
       edges: []
@@ -809,42 +699,20 @@ TextureImporter:
       name: CABALLERO_27
       rect:
         serializedVersion: 2
-        x: 143
-        y: 129
-        width: 127
-        height: 129
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 423
+        y: 132
+        width: 97
+        height: 125
+      alignment: 9
+      pivot: {x: 0.5, y: 0.4846154}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 8a47d85f08dc63fc0800000000000000
-      internalID: -3515396505356897112
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: CABALLERO_28
-      rect:
-        serializedVersion: 2
-        x: 274
-        y: 134
-        width: 129
-        height: 112
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 58339f4d63b04b700800000000000000
-      internalID: 555080984202654597
+      spriteID: 7d295cafffffffff0800000000000000
+      internalID: -87715113
       vertices: []
       indices: 
       edges: []
@@ -853,20 +721,20 @@ TextureImporter:
       name: CABALLERO_29
       rect:
         serializedVersion: 2
-        x: 422
-        y: 131
-        width: 99
-        height: 127
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 550
+        y: 130
+        width: 109
+        height: 130
+      alignment: 9
+      pivot: {x: 0.5, y: 0.4846154}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: c3eb8d494f81bbac0800000000000000
-      internalID: -3838446818654896580
+      spriteID: aa128628ffffffff0800000000000000
+      internalID: -2107104854
       vertices: []
       indices: 
       edges: []
@@ -875,20 +743,42 @@ TextureImporter:
       name: CABALLERO_30
       rect:
         serializedVersion: 2
-        x: 549
-        y: 138
-        width: 111
+        x: 675
+        y: 130
+        width: 120
         height: 119
-      alignment: 0
-      pivot: {x: 0, y: 0}
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5294118}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 02237a662085ca930800000000000000
-      internalID: 4155793323491537440
+      spriteID: 66a116abffffffff0800000000000000
+      internalID: -1168041370
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CABALLERO_28
+      rect:
+        serializedVersion: 2
+        x: 830
+        y: 130
+        width: 95
+        height: 130
+      alignment: 9
+      pivot: {x: 0.5, y: 0.4846154}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a0063784000000000800000000000000
+      internalID: 1215520778
       vertices: []
       indices: 
       edges: []
@@ -897,64 +787,42 @@ TextureImporter:
       name: CABALLERO_31
       rect:
         serializedVersion: 2
-        x: 685
-        y: 138
-        width: 107
-        height: 110
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 950
+        y: 130
+        width: 119
+        height: 130
+      alignment: 9
+      pivot: {x: 0.5, y: 0.4846154}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3df4dfd0141fa8490800000000000000
-      internalID: -7743111347600273453
+      spriteID: 2dd8d8ceffffffff0800000000000000
+      internalID: -326267438
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: CABALLERO_32
+      name: CABALLERO_19
       rect:
         serializedVersion: 2
-        x: 835
-        y: 134
-        width: 87
-        height: 125
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 419
+        y: 405
+        width: 88
+        height: 126
+      alignment: 9
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 3a72102ee3637f5e0800000000000000
-      internalID: -1875971076068923485
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: CABALLERO_33
-      rect:
-        serializedVersion: 2
-        x: 955
-        y: 139
-        width: 113
-        height: 114
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 1ddd21c9702cc0190800000000000000
-      internalID: -7994801900550431279
+      spriteID: 55e32efd954b04946b6c4094ce89832c
+      internalID: -898948566
       vertices: []
       indices: 
       edges: []
@@ -963,7 +831,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 2fa83ea70f1fc5f49a722b1e1e03dfb3
     internalID: 0
     vertices: []
     indices: 
@@ -971,8 +839,46 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries: []
-    nameFileIdTable: {}
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.0,"y":0.0},"autoSlicingMethod":1,"spriteAlignment":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      0: 351022300
+      CABALLERO_0: 583586481
+      CABALLERO_1: -273669925
+      CABALLERO_10: 274743316
+      CABALLERO_11: 1342891719
+      CABALLERO_12: 199041377
+      CABALLERO_13: 2025084971
+      CABALLERO_14: 444154745
+      CABALLERO_15: -771692356
+      CABALLERO_16: -2056327217
+      CABALLERO_17: 1960404252
+      CABALLERO_18: -1036426325
+      CABALLERO_19: -898948566
+      CABALLERO_2: 2048306294
+      CABALLERO_20: 592307408
+      CABALLERO_21: 351022300
+      CABALLERO_22: -12981010
+      CABALLERO_23: -1264029844
+      CABALLERO_24: -1738239567
+      CABALLERO_25: -1620969796
+      CABALLERO_26: -995106642
+      CABALLERO_27: -87715113
+      CABALLERO_28: 1215520778
+      CABALLERO_29: -2107104854
+      CABALLERO_3: -1907418332
+      CABALLERO_30: -1168041370
+      CABALLERO_31: -326267438
+      CABALLERO_32: 1386379891
+      CABALLERO_33: -1207768004
+      CABALLERO_34: 1927849378
+      CABALLERO_4: -1513073672
+      CABALLERO_5: -1338090641
+      CABALLERO_6: 552493759
+      CABALLERO_7: -1390087788
+      CABALLERO_8: -1203957123
+      CABALLERO_9: -1513682452
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
