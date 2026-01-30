@@ -284,31 +284,38 @@ namespace SpriteTools
                 
                 EditorGUILayout.Space(5);
                 
-                // ✅ SIEMPRE VISIBLE: Advanced Alignment (justo después del checkbox principal)
-                EditorGUILayout.LabelField("Modo de Alineación:", EditorStyles.boldLabel);
-                EditorGUI.indentLevel++;
+                // ✅ SIEMPRE VISIBLE: Advanced Alignment (OBLIGATORIO Y VISIBLE)
+                EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+                EditorGUILayout.Space(3);
+                EditorGUILayout.LabelField("⚙️ Modo de Alineación Avanzada:", EditorStyles.boldLabel);
                 
+                EditorGUI.indentLevel++;
                 useAdvancedAlignment = EditorGUILayout.Toggle(
                     new GUIContent(
-                        "Advanced Alignment (Más Lento pero Más Preciso)",
+                        "🔬 USAR Advanced Alignment (Recomendado si hay estiramiento)",
                         "Usa correlación cruzada para encontrar el mejor offset. " +
-                        "Más preciso pero más lento. Activar SOLO si el método normal no funciona."
+                        "Más preciso pero más lento. RECOMENDADO activar si los sprites se estiran."
                     ),
                     useAdvancedAlignment
                 );
                 
+                EditorGUILayout.Space(2);
+                
                 if (useAdvancedAlignment)
                 {
                     EditorGUILayout.HelpBox(
-                        "⚠️ MODO AVANZADO ACTIVADO - Más preciso pero más lento",
-                        MessageType.Warning
+                        "✅ MODO AVANZADO ACTIVADO\n" +
+                        "Este modo es más lento pero encuentra el offset más preciso.\n" +
+                        "Debería solucionar el problema de estiramiento.",
+                        MessageType.Info
                     );
                 }
                 else
                 {
                     EditorGUILayout.HelpBox(
-                        "Modo normal: rápido y eficiente. Activa 'Advanced Alignment' si sigue estirándose.",
-                        MessageType.Info
+                        "⚠️ MODO NORMAL ACTIVADO\n" +
+                        "Si los sprites se estiran (como CABALLERO_17), ACTIVA 'Advanced Alignment' arriba.",
+                        MessageType.Warning
                     );
                 }
                 
@@ -1552,11 +1559,13 @@ namespace SpriteTools
                              $"centerEnd=({centerEnd.x:F2}, {centerEnd.y:F2}), offset=({offset.x:F2}, {offset.y:F2})");
                 }
                 
-                // Si hay desplazamiento significativo, usar alineación
-                // ✅ REDUCIDO THRESHOLD: de 0.5f a 0.1f para detectar desplazamientos más pequeños
-                if (offset.magnitude > 0.1f)
+                // ✅ MEJORA: SIEMPRE aplicar alineación si Content Alignment está activado
+                // Reducir threshold a 0.01 para detectar cualquier desplazamiento
+                bool aplicarAlineacion = offset.magnitude > 0.01f;
+                
+                if (aplicarAlineacion)
                 {
-                    Debug.Log($"[SpriteInbetweener] Aplicando alineación: offset magnitude = {offset.magnitude:F2}");
+                    Debug.Log($"[SpriteInbetweener] ✅ Aplicando alineación: offset magnitude = {offset.magnitude:F2}, offset = ({offset.x:F2}, {offset.y:F2})");
                     
                     // ✅ MEJORA: Suavizar el offset durante la interpolación
                     // El offset debe reducirse gradualmente durante la interpolación
@@ -1605,7 +1614,8 @@ namespace SpriteTools
                 }
                 else
                 {
-                    Debug.Log($"[SpriteInbetweener] Offset muy pequeño ({offset.magnitude:F2}), usando interpolación normal");
+                    Debug.Log($"[SpriteInbetweener] ⚠️ Offset muy pequeño ({offset.magnitude:F2}), pero Content Alignment está activado. " +
+                             $"Usando interpolación normal. Si hay estiramiento, activa 'Advanced Alignment'.");
                     // Sin desplazamiento significativo, usar interpolación normal
                     for (int i = 0; i < resultPixels.Length; i++)
                     {
