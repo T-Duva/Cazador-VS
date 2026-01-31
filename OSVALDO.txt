@@ -1,4 +1,74 @@
 ========================
+CURSOR (IA de código)
+========================
+[2026-01-30 - Limpieza de scripts de Editor]
+- Archivos BORRADOS (10 scripts de Editor que no son esenciales):
+  1. Assets/Editor/AsignarSpritesAuto.cs
+  2. Assets/Editor/AssignCaballeroFramesFromSprite.cs
+  3. Assets/Editor/AutoPivotCalculator.cs
+  4. Assets/Editor/ConfigurarSprites.cs
+  5. Assets/Editor/CropSpriteSheet.cs
+  6. Assets/Editor/ProcesarSpriteMago.cs
+  7. Assets/Editor/RebuildSpriteSheet.cs
+  8. Assets/Editor/RemoveMissingScripts.cs
+  9. Assets/Editor/RescaleCaballeroSheet.cs
+  10. Assets/Editor/SpriteInterpolationEditor.cs
+- Archivos MANTENIDOS (5 scripts de Editor que son útiles):
+  4. AutoSetupOnLoad.cs - Se ejecuta automáticamente al abrir Unity, verifica carpetas y muestra tips
+  6. ConfigurarIconosHUD.cs - Configura automáticamente iconos del HUD (pixel nítido, sin compresión)
+  13. ReimportarIconosHUD.cs - Reimporta iconos del HUD manualmente desde Tools > Reimportar Iconos HUD
+  8. CorregirInputSystem.cs - Configura Input System para evitar errores de eventos descartados
+  9. CreateFolders.cs - Crea carpetas básicas del proyecto automáticamente
+- Código modificado:
+  - Assets/Scripts/UIManager.cs: actualizados comentarios eliminando referencias a AutoPivotCalculator
+- Nota: Todos los archivos borrados eran scripts de Editor (herramientas), no afectan el funcionamiento del juego en runtime
+
+========================
+MERLIN (IA de ayuda)
+========================
+=== SESIÓN: Corrección de ExtractSpriteTexture ===
+FECHA: 30 de Enero 2026
+PROBLEMA: Las imágenes interpoladas salían negras
+
+CAUSA IDENTIFICADA:
+- Cursor calculaba sourceY con inversión de coordenadas Y
+- Fórmula incorrecta: int sourceY = sourceTexture.height - Mathf.FloorToInt(spriteRect.y + spriteRect.height);
+- Error conceptual: sprite.rect.y y GetPixels() usan EL MISMO sistema de coordenadas (bottom-up)
+- No hay que invertir nada
+
+SOLUCIÓN APLICADA:
+1. Eliminá la variable sourceY
+2. Usá directamente las coordenadas x, y del sprite.rect
+3. Cambio en ExtractSpriteTexture línea ~1542:
+
+ANTES (INCORRECTO):
+int sourceY = sourceTexture.height - Mathf.FloorToInt(spriteRect.y + spriteRect.height);
+Color[] pixels = sourceTexture.GetPixels(x, sourceY, width, height);
+
+DESPUÉS (CORRECTO):
+int y = Mathf.FloorToInt(spriteRect.y);
+Color[] pixels = sourceTexture.GetPixels(x, y, width, height);
+
+LOGS MANTUVIMOS:
+- Conteo de píxeles visibles (alpha > 0.01f)
+- Validación de bounds antes de extraer
+- Warnings si los píxeles extraídos están vacíos
+- Logs en CreateInterpolatedFrame para verificar resultado
+
+RESULTADO ESPERADO:
+- ExtractSpriteTexture ahora extrae correctamente la región del sprite
+- CreateInterpolatedFrame interpola sin problemas
+- Las imágenes ya no deberían salir negras
+- Los logs mostrarán cuántos píxeles visibles tiene cada frame
+
+PRÓXIMOS PASOS:
+- Probar nuevamente con los sprites alineados
+- Verificar logs en consola de Unity
+- Si aún hay estiramientos, revisar la alineación visual de los sprites originales
+
+
+========================
+
 CURSOR - VERIFICAR ASIGNACIÓN Y ACTIVAR ANIMACIÓN CON caballeroFrames
 ========================
 [2026-01-28]

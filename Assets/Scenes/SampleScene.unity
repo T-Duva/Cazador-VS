@@ -850,7 +850,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 160, y: 30}
+  m_SizeDelta: {x: 120, y: 240}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1629831907
 MonoBehaviour:
@@ -928,7 +928,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+  m_Sprite: {fileID: 21300000, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1063,7 +1063,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -264983920, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -1191,6 +1191,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   imgJugador: {fileID: 1837177837}
+  imgCaballero: {fileID: 0}
   panelStatsJugadorRectSerialized: {fileID: 2037271478}
   panelHudEnemigo: {fileID: 0}
   hudCanvas: {fileID: 0}
@@ -1212,20 +1213,49 @@ MonoBehaviour:
   "tama\xF1oBotonDefensa": {x: 120, y: 120}
   offsetBotonAtaque: {x: -120, y: 0}
   offsetBotonDefensa: {x: 120, y: 0}
-  guerreroRunFrameTime: 0.2
-  guerreroAttackFrameTime: 0.2
-  caballeroSheet: {fileID: -264983920, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
-  caballeroColumns: 8
-  caballeroRows: 4
-  caballeroTargetSize: {x: 120, y: 240}
-  caballeroTrimTransparent: 0
-  caballeroMoverDuranteAtaque: 1
-  caballeroIdleFrameTime: 0.15
-  caballeroAttackFrameTime: 0.2
+  caballeroSheet: {fileID: 583586481, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  caballeroIdleFrameTime: 0.24
+  caballeroInicioCarreraFrameTime: 0.25
+  caballeroRunFrameTime: 0.25
+  caballeroAttackFrameTime: 0.32
+  caballeroAttackImpactFrameTime: 0.32
   caballeroIdleFrameCount: 16
-  caballeroAttackFrameCount: 17
+  caballeroAttackFrameCount: 16
   caballeroIdleFrames: 000000000100000002000000030000000400000005000000060000000700000008000000090000000a0000000b0000000c0000000d0000000e0000000f000000
-  caballeroAttackFrames: 100000001100000012000000130000001400000015000000160000001700000018000000190000001a0000001b0000001c0000001d0000001e0000001f00000000000000
+  caballeroAttackFrames: 100000001100000012000000130000001400000015000000160000001700000018000000190000001a0000001b0000001c0000001d0000001e0000001f000000
+  caballeroFrames:
+  - {fileID: 583586481, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  - {fileID: -273669925, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  - {fileID: 2048306294, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  - {fileID: -1907418332, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  - {fileID: -1513073672, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  - {fileID: -1338090641, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  - {fileID: 552493759, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  - {fileID: 21300000, guid: 5f154edaacd0a2f4aac9b3cfb94fa829, type: 2}
+  - {fileID: 21300000, guid: 39cab56b53ea4724b97ffbeb8819bae7, type: 2}
+  - {fileID: 21300000, guid: 47205224cdcea8a4d82bedd907619d4e, type: 2}
+  - {fileID: 274743316, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  - {fileID: 1342891719, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  - {fileID: 199041377, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  - {fileID: 2025084971, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  - {fileID: 444154745, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  - {fileID: -771692356, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  - {fileID: -2056327217, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  - {fileID: 1960404252, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  - {fileID: -1036426325, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  - {fileID: -898948566, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  - {fileID: 21300000, guid: 4111344bd0ebec141b01f4177dbacf60, type: 2}
+  - {fileID: 351022300, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  - {fileID: -12981010, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  - {fileID: -1264029844, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  - {fileID: -1738239567, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  - {fileID: -1620969796, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  - {fileID: -995106642, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  - {fileID: -87715113, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  - {fileID: 1215520778, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  - {fileID: -2107104854, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  - {fileID: -1168041370, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
+  - {fileID: -326267438, guid: 1a6107d5badc2a14c895c6fa3437c151, type: 3}
 --- !u!1 &2037271477
 GameObject:
   m_ObjectHideFlags: 0

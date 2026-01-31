@@ -2337,13 +2337,12 @@ public class UIManager : MonoBehaviour
     /// <summary>
     /// Aplica un sprite a una imagen, respetando los pivots configurados en el Sprite Editor.
     /// IMPORTANTE: Los pivots de los sprites son CONSTANTES y solo se LEEN, NUNCA se modifican desde este código.
-    /// Solo el usuario o el script AutoPivotCalculator pueden cambiar los pivots a través del Sprite Editor de Unity.
+    /// Solo el usuario puede cambiar los pivots a través del Sprite Editor de Unity.
     /// Unity maneja automáticamente los pivots cuando se asigna el sprite.
     /// 
     /// NOTA: Los sprites 7, 8 y 9 (CABALLERO_7, CABALLERO_8, CABALLERO_9) pueden tener
     /// pivots diferentes a los demás, causando que se muevan cuando aparecen en la animación.
     /// Verificar en el Sprite Editor que estos 3 sprites tengan el mismo pivot que los demás.
-    /// El script AutoPivotCalculator tiene permiso para modificar los pivots de los sprites.
     /// </summary>
     private void ApplySpriteToImage(Image imagen, Sprite sprite)
     {
