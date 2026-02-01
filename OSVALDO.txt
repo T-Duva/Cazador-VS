@@ -1,6 +1,29 @@
 ========================
 CURSOR (IA de código)
 ========================
+[2026-01-30 - Creación de script para animaciones interpoladas]
+- Archivo CREADO:
+  - Assets/Editor/CrearAnimacionesInterpoladas.cs
+- Funcionalidad:
+  - Crea automáticamente 30 Animation Clips usando los sprites interpolados del Spritesheet.png
+  - Cada Animation Clip contiene 4 frames interpolados (CABALLERO_X_001 a CABALLERO_X_004)
+  - Crea un Animator Controller con todas las animaciones configuradas
+  - Compatible con UI Image (no SpriteRenderer)
+  - Organiza los sprites por keyframe y ordena los frames interpolados correctamente
+- Uso:
+  - Tools > Crear Animaciones Interpoladas
+  - Configurar ruta del Spritesheet.png (por defecto: Assets/Sprites/Personajes/Guerrero/Spritesheet.png)
+  - Configurar carpeta de salida (por defecto: Assets/Animations/CaballeroInterpolado)
+  - Ajustar cantidad de keyframes (30), frames por keyframe (4) y tiempo por frame (0.1s)
+  - Click en "Crear Animaciones y Animator Controller"
+- Resultado:
+  - 30 Animation Clips (.anim) en la carpeta de salida
+  - 1 Animator Controller (.controller) con todas las animaciones
+  - Los clips están listos para usar con UI Image mediante Animator component
+
+========================
+CURSOR (IA de código)
+========================
 [2026-01-30 - Limpieza de scripts de Editor]
 - Archivos BORRADOS (10 scripts de Editor que no son esenciales):
   1. Assets/Editor/AsignarSpritesAuto.cs

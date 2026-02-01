@@ -27,17 +27,14 @@ namespace SpriteMultiKeyframeTools
 
             scrollPosition = GUILayout.BeginScrollView(scrollPosition);
 
-            // Input Settings
             GUILayout.Label("Keyframe Sprites (Up to 30)", EditorStyles.boldLabel);
             
-            // Resize list
             int newSize = EditorGUILayout.IntField("Number of Keyframes", keyframeSprites.Count);
             while (keyframeSprites.Count < newSize && keyframeSprites.Count < 30)
                 keyframeSprites.Add(null);
             while (keyframeSprites.Count > newSize)
                 keyframeSprites.RemoveAt(keyframeSprites.Count - 1);
 
-            // Display sprite fields
             for (int i = 0; i < keyframeSprites.Count; i++)
             {
                 keyframeSprites[i] = (Sprite)EditorGUILayout.ObjectField($"Keyframe {i + 1}", keyframeSprites[i], typeof(Sprite), false);
@@ -49,7 +46,6 @@ namespace SpriteMultiKeyframeTools
             EditorGUILayout.Space();
             GUILayout.Label("Preview", EditorStyles.boldLabel);
 
-            // Dropdown for transition selection
             List<string> transitionOptions = new List<string>();
             for (int i = 0; i < keyframeSprites.Count - 1; i++)
             {
@@ -141,20 +137,6 @@ namespace SpriteMultiKeyframeTools
                 }
             }
 
-            // Check dimensions
-            int width = (int)keyframeSprites[0].rect.width;
-            int height = (int)keyframeSprites[0].rect.height;
-
-            for (int i = 1; i < keyframeSprites.Count; i++)
-            {
-                if ((int)keyframeSprites[i].rect.width != width || (int)keyframeSprites[i].rect.height != height)
-                {
-                    statusMessage = $"All sprites must have same dimensions. Keyframe 1: {width}x{height}, Keyframe {i + 1}: {(int)keyframeSprites[i].rect.width}x{(int)keyframeSprites[i].rect.height}";
-                    return false;
-                }
-            }
-
-            // Check texture readable
             try
             {
                 keyframeSprites[0].texture.GetPixel(0, 0);
@@ -169,10 +151,32 @@ namespace SpriteMultiKeyframeTools
             return true;
         }
 
+        private void GetMaxDimensions(out int maxWidth, out int maxHeight)
+        {
+            maxWidth = 0;
+            maxHeight = 0;
+
+            foreach (Sprite sprite in keyframeSprites)
+            {
+                if (sprite != null)
+                {
+                    int w = (int)sprite.rect.width;
+                    int h = (int)sprite.rect.height;
+                    if (w > maxWidth) maxWidth = w;
+                    if (h > maxHeight) maxHeight = h;
+                }
+            }
+
+            Debug.Log($"[MultiKeyframe] Max dimensions found: {maxWidth}x{maxHeight}");
+        }
+
         private void GenerateSequence()
         {
             string folderPath = EditorUtility.SaveFolderPanel("Save Sequence", "Assets", "InterpolatedSequence");
             if (string.IsNullOrEmpty(folderPath)) return;
+
+            // Find max dimensions
+            GetMaxDimensions(out int maxWidth, out int maxHeight);
 
             EditorUtility.DisplayProgressBar("Generating", "Processing keyframes...", 0f);
 
@@ -185,8 +189,9 @@ namespace SpriteMultiKeyframeTools
                     Sprite startSprite = keyframeSprites[transitionIndex];
                     Sprite endSprite = keyframeSprites[transitionIndex + 1];
 
-                    Texture2D startTex = ExtractSpriteTexture(startSprite);
-                    Texture2D endTex = ExtractSpriteTexture(endSprite);
+                    // Extract and expand sprites to max size
+                    Texture2D startTex = ExtractAndExpandSpriteTexture(startSprite, maxWidth, maxHeight);
+                    Texture2D endTex = ExtractAndExpandSpriteTexture(endSprite, maxWidth, maxHeight);
 
                     if (startTex == null || endTex == null)
                     {
@@ -228,7 +233,7 @@ namespace SpriteMultiKeyframeTools
             }
         }
 
-        private Texture2D ExtractSpriteTexture(Sprite sprite)
+        private Texture2D ExtractAndExpandSpriteTexture(Sprite sprite, int targetWidth, int targetHeight)
         {
             if (sprite == null) return null;
 
@@ -253,20 +258,53 @@ namespace SpriteMultiKeyframeTools
                 sourceTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
             }
 
-            Texture2D extracted = new Texture2D(width, height, TextureFormat.RGBA32, false);
-            extracted.filterMode = FilterMode.Point;
-
             try
             {
-                Color[] pixels = sourceTexture.GetPixels(x, y, width, height);
-                extracted.SetPixels(pixels);
-                extracted.Apply();
-                return extracted;
+                // Extract original sprite pixels
+                Color[] spritePixels = sourceTexture.GetPixels(x, y, width, height);
+
+                // Create expanded texture
+                Texture2D expanded = new Texture2D(targetWidth, targetHeight, TextureFormat.RGBA32, false);
+                expanded.filterMode = FilterMode.Point;
+
+                // Fill with transparent
+                Color[] expandedPixels = new Color[targetWidth * targetHeight];
+                for (int i = 0; i < expandedPixels.Length; i++)
+                {
+                    expandedPixels[i] = new Color(0, 0, 0, 0);
+                }
+
+                // Calculate offset to center the sprite (pivot at 0.5, 0.5 = center)
+                int offsetX = (targetWidth - width) / 2;
+                int offsetY = (targetHeight - height) / 2;
+
+                // Place original sprite pixels in the center
+                for (int row = 0; row < height; row++)
+                {
+                    for (int col = 0; col < width; col++)
+                    {
+                        int srcIndex = row * width + col;
+                        int dstX = col + offsetX;
+                        int dstY = row + offsetY;
+                        int dstIndex = dstY * targetWidth + dstX;
+
+                        if (dstIndex >= 0 && dstIndex < expandedPixels.Length)
+                        {
+                            expandedPixels[dstIndex] = spritePixels[srcIndex];
+                        }
+                    }
+                }
+
+                expanded.SetPixels(expandedPixels);
+                expanded.Apply();
+
+                Debug.Log($"[MultiKeyframe] Expanded {sprite.name}: {width}x{height} → {targetWidth}x{targetHeight} (offset: {offsetX}, {offsetY})");
+
+                return expanded;
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"Error extracting sprite {sprite.name}: {e.Message}");
-                DestroyImmediate(extracted);
+                Debug.LogError($"Error extracting/expanding sprite {sprite.name}: {e.Message}");
                 return null;
             }
         }

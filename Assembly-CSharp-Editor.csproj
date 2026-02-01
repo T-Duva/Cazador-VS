@@ -61,24 +61,15 @@
     <Analyzer Include="E:\SALEM\UNITY\6000.1.1f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Editor\RescaleCaballeroSheet.cs" />
     <Compile Include="Assets\Editor\ConfigurarIconosHUD.cs" />
-    <Compile Include="Assets\Editor\RebuildSpriteSheet.cs" />
     <Compile Include="Assets\Editor\SpriteInbetweenerUltimate.cs" />
     <Compile Include="Assets\Editor\CorregirInputSystem.cs" />
     <Compile Include="Assets\Editor\AutoSetupOnLoad.cs" />
+    <Compile Include="Assets\Editor\SpriteSheetGenerator.cs" />
     <Compile Include="Assets\Editor\SetupGame.cs" />
     <Compile Include="Assets\Editor\ReimportarIconosHUD.cs" />
-    <Compile Include="Assets\Editor\CropSpriteSheet.cs" />
-    <Compile Include="Assets\Editor\ProcesarSpriteMago.cs" />
-    <Compile Include="Assets\Editor\RemoveMissingScripts.cs" />
-    <Compile Include="Assets\Editor\AssignCaballeroFramesFromSprite.cs" />
-    <Compile Include="Assets\Editor\AsignarSpritesAuto.cs" />
-    <Compile Include="Assets\Editor\SpriteInterpolationEditor.cs" />
     <Compile Include="Assets\Editor\CreateFolders.cs" />
     <Compile Include="Assets\Editor\BuildGame.cs" />
-    <Compile Include="Assets\Editor\AutoPivotCalculator.cs" />
-    <Compile Include="Assets\Editor\ConfigurarSprites.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
