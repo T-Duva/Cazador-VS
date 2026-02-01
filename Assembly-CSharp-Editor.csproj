@@ -64,6 +64,7 @@
     <Compile Include="Assets\Editor\ConfigurarIconosHUD.cs" />
     <Compile Include="Assets\Editor\SpriteInbetweenerUltimate.cs" />
     <Compile Include="Assets\Editor\CorregirInputSystem.cs" />
+    <Compile Include="Assets\Editor\CrearAnimacionesInterpoladas.cs" />
     <Compile Include="Assets\Editor\AutoSetupOnLoad.cs" />
     <Compile Include="Assets\Editor\SpriteSheetGenerator.cs" />
     <Compile Include="Assets\Editor\SetupGame.cs" />

@@ -1,6 +1,37 @@
 ========================
 CURSOR (IA de código)
 ========================
+[2026-01-30 - Integración completa de Animator para caballero]
+- Archivos CREADOS:
+  - Assets/Editor/ConfigurarAnimatorCaballero.cs - Script para configurar automáticamente el Animator
+- Archivos MODIFICADOS:
+  - Assets/Editor/CrearAnimacionesInterpoladas.cs:
+    - Ahora crea animaciones compuestas (Idle y Ataque) además de las individuales
+    - Crea Animator Controller con estados Idle y Ataque
+    - Configura transiciones automáticas entre estados
+    - Agrega parámetros "Atacar" y "VolverIdle"
+  - Assets/Scripts/UIManager.cs:
+    - Agregado campo caballeroAnimatorController (RuntimeAnimatorController)
+    - Agregado campo caballeroAnimator (Animator component)
+    - Agregado flag usarAnimator para alternar entre Animator y coroutines
+    - Modificado Initialize() para configurar Animator automáticamente
+    - Modificado MostrarAnimacionIdleCaballero() para usar Animator cuando esté disponible
+    - Modificado ReproducirAtaqueCaballeroCompleto() para usar Animator cuando esté disponible
+    - Agregado método EsperarAtaqueAnimatorYDaño() para sincronizar daño con animación
+- Funcionalidad:
+  - El sistema ahora puede usar Animator (nuevo) o coroutines (antiguo) según configuración
+  - Si caballeroAnimatorController está asignado en Inspector, usa Animator
+  - Si no está asignado, usa el sistema antiguo de coroutines
+  - Las animaciones compuestas (Idle y Ataque) combinan todos los keyframes interpolados
+- Pasos para usar:
+  1. Ejecutar Tools > Crear Animaciones Interpoladas (genera Animation Clips y Controller)
+  2. En UIManager (Inspector), asignar CaballeroInterpolado.controller al campo "Caballero Animator Controller"
+  3. El sistema detectará automáticamente y usará el Animator
+  4. O usar Tools > Configurar Animator Caballero para configuración automática
+
+========================
+CURSOR (IA de código)
+========================
 [2026-01-30 - Creación de script para animaciones interpoladas]
 - Archivo CREADO:
   - Assets/Editor/CrearAnimacionesInterpoladas.cs

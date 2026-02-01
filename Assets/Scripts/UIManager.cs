@@ -117,6 +117,11 @@ public class UIManager : MonoBehaviour
     private float? caballeroPosicionYReferencia = null; // Posición Y de referencia fija para todos los sprites
     private Coroutine corrutinaSuavizarY = null; // Coroutine para suavizar cambios de posición Y
     
+    [Header("Caballero Animator (Opcional)")]
+    [SerializeField] private RuntimeAnimatorController caballeroAnimatorController;
+    private Animator caballeroAnimator;
+    private bool usarAnimator = false; // Flag para usar Animator en lugar de coroutines
+    
     private RectTransform panelStatsJugadorRect;
     private bool _offsetAplicado = false;
     private Coroutine animacionDañoJugador;
@@ -303,6 +308,24 @@ public class UIManager : MonoBehaviour
         imgJugador.rectTransform.anchoredPosition = Vector2.zero;
         imgJugador.rectTransform.sizeDelta = new Vector2(150, 150);
         imgJugador.color = Color.white;
+        
+        // ✅ Inicializar Animator si está configurado
+        if (caballeroAnimatorController != null)
+        {
+            caballeroAnimator = imgJugador.GetComponent<Animator>();
+            if (caballeroAnimator == null)
+            {
+                caballeroAnimator = imgJugador.gameObject.AddComponent<Animator>();
+            }
+            caballeroAnimator.runtimeAnimatorController = caballeroAnimatorController;
+            caballeroAnimator.updateMode = AnimatorUpdateMode.UnscaledTime; // Para UI
+            usarAnimator = true;
+            Debug.Log($"[UIManager] ✅ Animator configurado para caballero: {caballeroAnimatorController.name}");
+        }
+        else
+        {
+            usarAnimator = false;
+        }
         
         lblNombreEnemigo = CrearTexto("LblNombreEnemigo", "", 14, Color.white);
         lblNombreEnemigo.rectTransform.anchorMin = new Vector2(1f, 1f);
@@ -1874,7 +1897,18 @@ public class UIManager : MonoBehaviour
             {
                 StopCoroutine(corrutinaAnimacion);
             }
-            corrutinaAnimacion = StartCoroutine(ReproducirAtaqueCaballeroCompleto(daño));
+            // ✅ Usar Animator si está disponible
+            if (usarAnimator && caballeroAnimator != null)
+            {
+                caballeroAnimator.SetTrigger("Atacar");
+                Debug.Log("[UIManager] Animator: Reproduciendo Ataque");
+                // El Animator manejará la animación, pero necesitamos esperar y aplicar daño
+                StartCoroutine(EsperarAtaqueAnimatorYDaño(daño));
+            }
+            else
+            {
+                corrutinaAnimacion = StartCoroutine(ReproducirAtaqueCaballeroCompleto(daño));
+            }
         }
     }
 
@@ -1945,16 +1979,31 @@ public class UIManager : MonoBehaviour
             imgCaballero.gameObject.SetActive(false);
         }
         
-        if (corrutinaIdleCaballero != null)
-        {
-            StopCoroutine(corrutinaIdleCaballero);
-        }
-        
         imgJugador.gameObject.SetActive(true);
         imgJugador.color = Color.white;
         imgJugador.preserveAspect = true;
         ApplyCaballeroSizeFromFrames();
-        corrutinaIdleCaballero = StartCoroutine(ReproducirIdleCaballero());
+        
+        // ✅ Usar Animator si está disponible
+        if (usarAnimator && caballeroAnimator != null)
+        {
+            if (corrutinaIdleCaballero != null)
+            {
+                StopCoroutine(corrutinaIdleCaballero);
+                corrutinaIdleCaballero = null;
+            }
+            caballeroAnimator.SetTrigger("VolverIdle");
+            Debug.Log("[UIManager] Animator: Reproduciendo Idle");
+        }
+        else
+        {
+            // Sistema antiguo con coroutines
+            if (corrutinaIdleCaballero != null)
+            {
+                StopCoroutine(corrutinaIdleCaballero);
+            }
+            corrutinaIdleCaballero = StartCoroutine(ReproducirIdleCaballero());
+        }
     }
 
     private void DetenerAnimacionesIdle()
@@ -2011,6 +2060,41 @@ public class UIManager : MonoBehaviour
         {
             MostrarAnimacionIdleCaballero();
         }
+    }
+    
+    /// <summary>
+    /// Espera a que termine la animación de ataque del Animator y aplica el daño
+    /// </summary>
+    private IEnumerator EsperarAtaqueAnimatorYDaño(int daño)
+    {
+        if (caballeroAnimator == null || gameManager == null) yield break;
+        
+        // Esperar un frame para que el Animator active la animación
+        yield return null;
+        
+        // Esperar a que la animación de ataque termine (aproximadamente)
+        // La animación de ataque tiene todos los keyframes de 16-31, cada uno con 4 frames a 0.1s = ~6.4s total
+        float duracionAtaque = 6.4f; // Aproximado, ajustar según necesidad
+        
+        // Esperar hasta el momento del impacto (aproximadamente 70% de la animación)
+        yield return new WaitForSeconds(duracionAtaque * 0.7f);
+        
+        // Aplicar daño en el momento del impacto
+        if (gameManager != null)
+        {
+            gameManager.IniciarDañoEnemigoDesdeUI(daño);
+        }
+        
+        // Esperar a que termine la animación completa
+        yield return new WaitForSeconds(duracionAtaque * 0.3f);
+        
+        // Volver a idle
+        if (caballeroAnimator != null)
+        {
+            caballeroAnimator.SetTrigger("VolverIdle");
+        }
+        
+        caballeroAtaqueEnCurso = false;
     }
     
     private IEnumerator ReproducirAnimacion(string carpeta, string animacion, int cantidadFrames, int daño, bool esJugador)
