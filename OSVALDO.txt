@@ -1,6 +1,53 @@
 ========================
 CURSOR (IA de código)
 ========================
+[2026-01-30 - Fix: Corregir retorno del caballero a posición original después del ataque]
+- Archivos MODIFICADOS:
+  - Assets/Scripts/UIManager.cs:
+    - Establecer caballeroAtaqueEnCurso = false ANTES de iniciar animación idle
+      - Permite que ApplySpriteToImage fuerce correctamente la posición X durante la transición
+      - Evita que el personaje quede desplazado después del ataque
+    - Forzar posición X de referencia al iniciar animación idle en MostrarAnimacionIdleCaballero()
+      - Si hay una posición X de referencia establecida (después de un ataque), se fuerza al inicio
+      - Asegura que el personaje comience en la posición correcta al volver a idle
+- Problema resuelto:
+  - El personaje no volvía a su posición original después del ataque
+  - Causa: caballeroAtaqueEnCurso se establecía en false después de iniciar idle, impidiendo que ApplySpriteToImage forzara la posición X
+- Solución:
+  - Establecer caballeroAtaqueEnCurso = false antes de IniciarAnimacionIdle()
+  - Forzar posición X de referencia al inicio de MostrarAnimacionIdleCaballero() si está establecida
+  - El personaje ahora vuelve correctamente a su posición original y la mantiene durante idle
+
+========================
+CURSOR (IA de código)
+========================
+[2026-01-30 - Ajustes de velocidad y poses en animación del caballero]
+- Archivos MODIFICADOS:
+  - Assets/Scripts/UIManager.cs:
+    - Agregados campos ajustables en Inspector:
+      - caballeroAtaqueVelocidadMovimiento (float, default 1.0): Multiplicador de velocidad de movimiento durante el ataque
+      - caballeroPoseEspecialFrameIndex (int, default -1): Índice del frame del ataque que durará más tiempo (0-3 para frames 24-27)
+      - caballeroPoseEspecialTiempoExtra (float, default 0.3): Tiempo extra en segundos para la pose especial
+    - Modificado MoverConFrames() para aceptar multiplicador de velocidad (parámetro opcional velocidadMultiplicador)
+    - Aplicado multiplicador de velocidad en ida y vuelta del ataque
+    - Agregada lógica para aplicar tiempo extra a la pose especial durante el ataque
+    - Mejorado comentario en fase 4 (vuelta) para asegurar que el personaje vuelva a su lugar
+- Funcionalidad:
+  - Velocidad de movimiento del ataque: ajustable desde Inspector (1.0 = normal, 2.0 = doble velocidad, 0.5 = mitad)
+  - Pose especial: permite que un frame específico del ataque dure más tiempo para énfasis visual
+  - Velocidad de frames del idle: ya existía caballeroIdleFrameTime, ahora más visible con Tooltip
+  - El personaje ya volvía a su lugar después del ataque, se mejoró el comentario para claridad
+- Uso:
+  - En Inspector de UIManager, sección "⚙️ Velocidades de Animación (Ajustables)":
+    - Ajustar caballeroIdleFrameTime para velocidad de frames en idle
+    - Ajustar caballeroAtaqueVelocidadMovimiento para velocidad de movimiento del ataque
+  - En sección "⚙️ Pose Especial (Duración Extra)":
+    - Establecer caballeroPoseEspecialFrameIndex (0-3 para frames 24-27 del ataque, -1 para desactivar)
+    - Ajustar caballeroPoseEspecialTiempoExtra para tiempo extra en segundos
+
+========================
+CURSOR (IA de código)
+========================
 [2026-01-30 - Integración completa de Animator para caballero]
 - Archivos CREADOS:
   - Assets/Editor/ConfigurarAnimatorCaballero.cs - Script para configurar automáticamente el Animator
