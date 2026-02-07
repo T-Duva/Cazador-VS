@@ -96,50 +96,41 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Vector2 offsetBotonAtaque = new Vector2(-120f, 0f);
     [SerializeField] private Vector2 offsetBotonDefensa = new Vector2(120f, 0f);
     
-    [Header("Caballero SpriteSheet (Idle + Ataque)")]
-    [SerializeField] private Sprite caballeroSheet;
-    
-    [Header("⚙️ Velocidades de Animación (Ajustables)")]
-    [Tooltip("Velocidad de frames en Idle (segundos por frame). Valores más altos = más lento")]
-    [SerializeField] private float caballeroIdleFrameTime = 0.18f; // Idle más lento y relajado (0.15-0.2f es natural)
-    [SerializeField] private float caballeroInicioCarreraFrameTime = 0.12f; // Inicio de carrera: transición suave desde idle
-    [SerializeField] private float caballeroRunFrameTime = 0.08f; // Carrera rápida pero controlada (0.08-0.1f es natural)
-    [SerializeField] private float caballeroAttackFrameTime = 0.12f; // Ataque: tiempo base (ahora se usan tiempos individuales para frames 24-27)
-    
-    [Header("⚙️ Velocidad de Movimiento del Ataque")]
-    [Tooltip("Multiplicador de velocidad de movimiento durante el ataque. 1.0 = normal, 2.0 = doble velocidad, 0.5 = mitad")]
-    [SerializeField] private float caballeroAtaqueVelocidadMovimiento = 1.0f;
-    
-    [Header("⚙️ Configuración de Tiempos de Frames del Ataque (24-27)")]
-    [Tooltip("Tiempo del frame 24 (preparación)")]
-    [SerializeField] private float caballeroFrame24Time = 0.36f;
-    [Tooltip("Tiempo del frame 25")]
-    [SerializeField] private float caballeroFrame25Time = 0.45f;
-    [Tooltip("Tiempo del frame 26 (énfasis - este es el que quieres que dure más)")]
-    [SerializeField] private float caballeroFrame26Time = 1.95f;
-    [Tooltip("Tiempo del frame 27 (impacto)")]
-    [SerializeField] private float caballeroFrame27Time = 0.45f;
-    [SerializeField] private int caballeroIdleFrameCount = 18;
-    private bool caballeroAtaqueEnCurso = false;
-    [SerializeField] private int caballeroAttackFrameCount = 7;
-    [SerializeField] private int[] caballeroIdleFrames;
-    [SerializeField] private int[] caballeroAttackFrames;
-    [SerializeField] private Sprite[] caballeroFrames;
-    // caballeroFrames contendrá los 32 sprites del caballero: idle (0..15) y ataque (16..31)
-    private Vector2 caballeroMaxFrameSize;
-    private bool caballeroMaxFrameSizeReady = false;
-    private Sprite[] caballeroFramesOrdered;
-    private bool caballeroFramesOrderedReady = false;
-    private float? caballeroPosicionYReferencia = null; // Posición Y de referencia fija para todos los sprites
-    private float? caballeroPosicionXReferencia = null; // Posición X de referencia fija durante idle
-    private float? caballeroTamañoVisualAnteriorX = null; // Tamaño visual anterior para detectar cambios
-    private float? caballeroTamañoVisualAnteriorY = null; // Tamaño visual anterior para detectar cambios
-    private Coroutine corrutinaSuavizarY = null; // Coroutine para suavizar cambios de posición Y
-    
-    [Header("Caballero Animator (Opcional)")]
-    [SerializeField] private RuntimeAnimatorController caballeroAnimatorController;
+    [Header("⚙️ Sistema de Animación - Animator Controller")]
+    [Tooltip("El Animator debe estar en el mismo objeto que imgJugador con el controller CaballeroInterpolado")]
     private Animator caballeroAnimator;
-    private bool usarAnimator = false; // Flag para usar Animator en lugar de coroutines
+    private bool caballeroAtaqueEnCurso = false;
+    
+    [Header("⚙️ Control Manual - Tiempos de las Fases")]
+    [Tooltip("FASE 1: Prepare_to_atack - Tiempo de inicio de animación")]
+    [SerializeField] private float tiempoInicioPrepareToAttack = 0.1f;
+    [Tooltip("FASE 1: Prepare_to_atack - Tiempo de transición después de esta fase")]
+    [SerializeField] private float tiempoTransicionDespuesPrepare = 0.3f;
+    
+    [Tooltip("FASE 2: Run+Atack - Tiempo de inicio de animación")]
+    [SerializeField] private float tiempoInicioRunAtack = 0.1f;
+    [Tooltip("FASE 2: Run+Atack - Posición X real donde está el enemigo")]
+    public float posicionXEnemigo = 434f;
+    [Tooltip("FASE 2: Run+Atack - Velocidad de movimiento hacia el enemigo (unidades por segundo)")]
+    [SerializeField] private float velocidadMovimientoAtaque = 1500f;
+    [Tooltip("FASE 2: Run+Atack - Offset desde la posición del enemigo (cuánto se acerca)")]
+    [SerializeField] private float offsetObjetivoEnemigo = 120f;
+    [Tooltip("FASE 2: Run+Atack - Tiempo de espera después de la carrera (antes del golpe)")]
+    [SerializeField] private float tiempoEsperaAntesGolpe = 0.8f;
+    
+    [Tooltip("FASE 3: FinishHim - Tiempo de inicio de animación")]
+    [SerializeField] private float tiempoInicioFinishHim = 0.1f;
+    [Tooltip("FASE 3: FinishHim - Tiempo de espera después del golpe (antes del regreso)")]
+    [SerializeField] private float tiempoEsperaDespuesGolpe = 0.5f;
+    [Tooltip("FASE 3: FinishHim - Tiempo de transición antes de Run+Back")]
+    [SerializeField] private float tiempoTransicionAntesRunBack = 0.3f;
+    
+    [Tooltip("FASE 4: Run+Back - Tiempo de inicio de animación")]
+    [SerializeField] private float tiempoInicioRunBack = 0.1f;
+    [Tooltip("FASE 4: Run+Back - Velocidad de la animación. 1.0 = normal, 2.0 = doble velocidad, 3.0 = triple velocidad")]
+    [SerializeField] private float velocidadRunMasBack = 2.0f;
+    [Tooltip("FASE 4: Run+Back - Tiempo de transición antes de volver a Idle")]
+    [SerializeField] private float tiempoTransicionAntesIdle = 0.3f;
     
     private RectTransform panelStatsJugadorRect;
     private bool _offsetAplicado = false;
@@ -159,6 +150,172 @@ public class UIManager : MonoBehaviour
     #endregion
     
     #region Inicializacion
+    
+    private void Awake()
+    {
+        // BUSCAR SOLO EL OBJETO QUE TIENE EL ANIMATOR CORRECTO
+        if (imgJugador == null)
+        {
+            // Buscar por Animator primero (método más confiable)
+            Animator[] todosLosAnimators = FindObjectsByType<Animator>(FindObjectsSortMode.None);
+            foreach (Animator anim in todosLosAnimators)
+            {
+                if (anim.runtimeAnimatorController != null && anim.runtimeAnimatorController.name == "CaballeroInterpolado")
+                {
+                    imgJugador = anim.GetComponent<Image>();
+                    caballeroAnimator = anim;
+                    if (imgJugador != null)
+                    {
+                        Debug.Log("[UIManager] ✓ Objeto correcto encontrado por Animator: " + imgJugador.name);
+                        break;
+                    }
+                }
+            }
+            
+            // Si no se encontró por Animator, buscar por nombre pero VERIFICAR que tenga Animator
+            if (imgJugador == null)
+            {
+                GameObject[] posiblesObjetos = { 
+                    GameObject.Find("ImageJugador"), 
+                    GameObject.Find("ImgJugador") 
+                };
+                
+                foreach (GameObject obj in posiblesObjetos)
+                {
+                    if (obj != null)
+                    {
+                        Animator anim = obj.GetComponent<Animator>();
+                        if (anim != null && anim.runtimeAnimatorController != null && 
+                            anim.runtimeAnimatorController.name == "CaballeroInterpolado")
+                        {
+                            imgJugador = obj.GetComponent<Image>();
+                            caballeroAnimator = anim;
+                            Debug.Log("[UIManager] ✓ Objeto correcto encontrado por nombre: " + obj.name);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            // Si ya está asignado, verificar que tenga el Animator correcto
+            if (caballeroAnimator == null)
+            {
+                caballeroAnimator = imgJugador.GetComponent<Animator>();
+            }
+            
+            if (caballeroAnimator != null && caballeroAnimator.runtimeAnimatorController != null)
+            {
+                if (caballeroAnimator.runtimeAnimatorController.name != "CaballeroInterpolado")
+                {
+                    Debug.LogError("[UIManager] ❌ imgJugador asignado NO tiene el Animator correcto. Buscando el correcto...");
+                    imgJugador = null;
+                    caballeroAnimator = null;
+                    // Re-buscar
+                    Awake();
+                    return;
+                }
+            }
+        }
+        
+        // AUTO-CONEXIÓN: Buscar ImageJugador automáticamente si imgCaballero es null
+        // Esto evita que Tomás tenga que arrastrar manualmente el objeto
+        if (imgCaballero == null)
+        {
+            GameObject imageJugadorObj = GameObject.Find("ImageJugador");
+            if (imageJugadorObj != null)
+            {
+                imgCaballero = imageJugadorObj.GetComponent<Image>();
+                if (imgCaballero != null)
+                {
+                    Debug.Log("[UIManager] ✓ imgCaballero asignado automáticamente desde ImageJugador: " + imgCaballero.name);
+                }
+                else
+                {
+                    Debug.LogWarning("[UIManager] ⚠ ImageJugador encontrado pero no tiene componente Image");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("[UIManager] ⚠ No se encontró ImageJugador en la escena para auto-asignar imgCaballero");
+            }
+        }
+        
+        if (imgEnemigo == null)
+        {
+            imgEnemigo = GetComponentInChildren<Image>();
+            // Buscar específicamente el enemigo (no el jugador)
+            Image[] images = FindObjectsByType<Image>(FindObjectsSortMode.None);
+            foreach (Image img in images)
+            {
+                if (img != imgJugador && img.name.Contains("Enemigo"))
+                {
+                    imgEnemigo = img;
+                    break;
+                }
+            }
+        }
+        
+        // Asignar automáticamente imgJugador si está vacío
+        if (imgJugador == null && caballeroAnimator != null)
+        {
+            imgJugador = caballeroAnimator.GetComponent<Image>();
+            if (imgJugador != null)
+            {
+                Debug.Log("[UIManager] ✓ imgJugador asignado automáticamente desde caballeroAnimator: " + imgJugador.name);
+            }
+        }
+        
+        if (imgJugador != null)
+        {
+            imgJugador.preserveAspect = true;
+            
+            // Asegurar Sorting Order mayor que el fondo
+            Canvas canvas = imgJugador.GetComponentInParent<Canvas>();
+            if (canvas != null)
+            {
+                CanvasRenderer canvasRenderer = imgJugador.canvasRenderer;
+                if (canvasRenderer != null)
+                {
+                    // El Sorting Order en UI se controla por el orden en la jerarquía
+                    // Asegurar que esté al final para estar arriba
+                    imgJugador.transform.SetAsLastSibling();
+                }
+            }
+            
+            // FORZAR animación Idle al inicio si el Animator está disponible
+            if (caballeroAnimator != null && caballeroAnimator.runtimeAnimatorController != null)
+            {
+                if (caballeroAnimator.runtimeAnimatorController.name == "CaballeroInterpolado")
+                {
+                    // Iniciar Idle inmediatamente
+                    StartCoroutine(ForzarIdleAlInicio());
+                }
+            }
+        }
+        
+        Debug.Log("[UIManager] Awake: Referencias inicializadas - imgJugador: " + (imgJugador != null ? imgJugador.name : "null") + ", imgEnemigo: " + (imgEnemigo != null) + ", caballeroAnimator: " + (caballeroAnimator != null));
+    }
+    
+    private IEnumerator ForzarIdleAlInicio()
+    {
+        // Esperar un frame para que Unity termine de inicializar
+        yield return null;
+        
+        if (caballeroAnimator != null && imgJugador != null)
+        {
+            // Asegurar que el Animator esté habilitado
+            if (!caballeroAnimator.enabled)
+            {
+                caballeroAnimator.enabled = true;
+            }
+            
+            // Forzar animación Idle
+            MostrarAnimacionIdleCaballero();
+            Debug.Log("[UIManager] ✓ Animación Idle forzada al inicio");
+        }
+    }
     
     public void Initialize(GameManager gm)
     {
@@ -218,7 +375,7 @@ public class UIManager : MonoBehaviour
         panelMenu = CrearPanel("PanelMenu", new Color(0.1f, 0.1f, 0.15f, 1f));
         CrearPanelMenu();
         
-        panelJuego = CrearPanel("PanelJuego", new Color(0.15f, 0.15f, 0.2f, 1f));
+        panelJuego = CrearPanel("PanelJuego", new Color(0.15f, 0.15f, 0.2f, 0f)); // Transparente
         CrearPanelJuego();
         
         panelPostPelea = CrearPanel("PanelPostPelea", new Color(0.1f, 0.1f, 0.15f, 1f));
@@ -319,32 +476,9 @@ public class UIManager : MonoBehaviour
         pbEscudo1Rect.sizeDelta = new Vector2(200, 20);
         pbEscudo1.transform.SetParent(panelJuego.transform, false);
         
-        GameObject imgObj = new GameObject("ImgJugador");
-        imgObj.transform.SetParent(panelJuego.transform, false);
-        imgJugador = imgObj.AddComponent<Image>();
-        imgJugador.rectTransform.anchorMin = new Vector2(0.1f, 0.3f);
-        imgJugador.rectTransform.anchorMax = new Vector2(0.1f, 0.3f);
-        imgJugador.rectTransform.anchoredPosition = Vector2.zero;
-        imgJugador.rectTransform.sizeDelta = new Vector2(150, 150);
-        imgJugador.color = Color.white;
-        
-        // ✅ Inicializar Animator si está configurado
-        if (caballeroAnimatorController != null)
-        {
-            caballeroAnimator = imgJugador.GetComponent<Animator>();
-            if (caballeroAnimator == null)
-            {
-                caballeroAnimator = imgJugador.gameObject.AddComponent<Animator>();
-            }
-            caballeroAnimator.runtimeAnimatorController = caballeroAnimatorController;
-            caballeroAnimator.updateMode = AnimatorUpdateMode.UnscaledTime; // Para UI
-            usarAnimator = true;
-            Debug.Log($"[UIManager] ✅ Animator configurado para caballero: {caballeroAnimatorController.name}");
-        }
-        else
-        {
-            usarAnimator = false;
-        }
+        // NO CREAR imgJugador aquí - debe existir en la escena con el Animator ya configurado
+        // Si no existe, se buscará en Awake() por el Animator CaballeroInterpolado
+        // Esto previene la creación de objetos duplicados
         
         lblNombreEnemigo = CrearTexto("LblNombreEnemigo", "", 14, Color.white);
         lblNombreEnemigo.rectTransform.anchorMin = new Vector2(1f, 1f);
@@ -952,7 +1086,7 @@ public class UIManager : MonoBehaviour
         
         string tipoJugador = gameManager.GetTipoJugador();
         string tipoEnemigo = gameManager.GetTipoEnemigo();
-        bool usarCaballeroFrames = tipoJugador == "Guerrero" && HasCaballeroFramesReady();
+        bool usarCaballeroFrames = tipoJugador == "Guerrero" && caballeroAnimator != null;
         if (!string.IsNullOrEmpty(tipoJugador))
         {
             IniciarAnimacionIdle(tipoJugador, true);
@@ -1907,7 +2041,7 @@ public class UIManager : MonoBehaviour
             animacionAtaque.gameObject.SetActive(false);
         }
         
-        if (tipo == "Guerrero" && esJugador && caballeroSheet != null)
+        if (tipo == "Guerrero" && esJugador && caballeroAnimator != null)
         {
             if (caballeroAtaqueEnCurso) return;
             caballeroAtaqueEnCurso = true;
@@ -1981,67 +2115,66 @@ public class UIManager : MonoBehaviour
         }
     }
     
+    #region AnimatorControl - Sistema de Animaciones del Caballero
+    
+    /// <summary>
+    /// Ejecuta una animación del caballero usando el Animator Controller "CaballeroInterpolado".
+    /// Los 5 nombres EXACTOS de animaciones disponibles son:
+    /// - "Idle" - Estado de reposo
+    /// - "Prepare_to_atack" - Preparación antes del ataque
+    /// - "Run+Atack" - Carrera hacia el enemigo
+    /// - "FinishHim" - Ataque/remate
+    /// - "Run+Back" - Retirada/regreso
+    /// </summary>
+    private bool EjecutarAnimacionCaballero(string nombreAnimacion, string fase)
+    {
+        if (caballeroAnimator == null)
+        {
+            Debug.LogError("[UIManager] Animator es null. No se puede ejecutar animación: " + nombreAnimacion + " (Fase: " + fase + ")");
+            return false;
+        }
+        
+        if (!caballeroAnimator.enabled)
+        {
+            Debug.LogWarning("[UIManager] Animator no está habilitado. Habilitándolo...");
+            caballeroAnimator.enabled = true;
+        }
+        
+        int stateHash = Animator.StringToHash(nombreAnimacion);
+        if (!caballeroAnimator.HasState(0, stateHash))
+        {
+            Debug.LogError("[UIManager] No se pudo encontrar la animación: " + nombreAnimacion + " (Fase: " + fase + ")");
+            Debug.LogError("[UIManager] El estado '" + nombreAnimacion + "' no existe en el Animator Controller. Verifica el nombre exacto en el Controller.");
+            return false;
+        }
+        
+        caballeroAnimator.Play(nombreAnimacion);
+        Debug.Log("[UIManager] Iniciando: " + nombreAnimacion + " (Fase: " + fase + ")");
+        
+        return true;
+    }
+    
     public void MostrarAnimacionIdleCaballero()
     {
-        if (caballeroSheet == null && !HasCaballeroFramesReady()) return;
-        if (imgJugador == null) return;
-        if (imgCaballero != null)
+        if (imgJugador == null || caballeroAnimator == null) 
         {
-            imgCaballero.gameObject.SetActive(false);
+            Debug.LogWarning("[UIManager] imgJugador o caballeroAnimator es null");
+            return;
         }
+        
+        if (imgCaballero != null) imgCaballero.gameObject.SetActive(false);
         
         imgJugador.gameObject.SetActive(true);
         imgJugador.color = Color.white;
         imgJugador.preserveAspect = true;
         
-        // ✅ GUARDAR POSICIÓN ANTES de aplicar tamaño (para no perderla)
-        RectTransform rect = imgJugador.rectTransform;
-        Vector2 posicionAntes = rect.anchoredPosition;
-        
-        // ✅ FORZAR POSICIÓN X DE REFERENCIA si está establecida (después de un ataque)
-        if (caballeroPosicionXReferencia.HasValue)
+        if (corrutinaIdleCaballero != null)
         {
-            posicionAntes = new Vector2(caballeroPosicionXReferencia.Value, posicionAntes.y);
-            rect.anchoredPosition = posicionAntes;
-            Debug.Log($"[UIManager] 🎯 Posición X forzada desde referencia al iniciar idle: {posicionAntes}");
+            StopCoroutine(corrutinaIdleCaballero);
+            corrutinaIdleCaballero = null;
         }
         
-        ApplyCaballeroSizeFromFrames();
-        
-        // ✅ RESTAURAR POSICIÓN DESPUÉS de aplicar tamaño (por si cambió)
-        // Si tenemos una posición X de referencia, usarla; si no, usar la posición antes
-        Vector2 posicionObjetivo = posicionAntes;
-        if (caballeroPosicionXReferencia.HasValue)
-        {
-            posicionObjetivo = new Vector2(caballeroPosicionXReferencia.Value, posicionAntes.y);
-        }
-        
-        if (Vector2.Distance(rect.anchoredPosition, posicionObjetivo) > 0.1f)
-        {
-            Debug.Log($"[UIManager] ⚠️ Posición cambió al aplicar tamaño en idle! Restaurando: {rect.anchoredPosition} -> {posicionObjetivo}");
-            rect.anchoredPosition = posicionObjetivo;
-        }
-        
-        // ✅ Usar Animator si está disponible
-        if (usarAnimator && caballeroAnimator != null)
-        {
-            if (corrutinaIdleCaballero != null)
-            {
-                StopCoroutine(corrutinaIdleCaballero);
-                corrutinaIdleCaballero = null;
-            }
-            caballeroAnimator.SetTrigger("VolverIdle");
-            Debug.Log("[UIManager] Animator: Reproduciendo Idle");
-        }
-        else
-        {
-            // Sistema antiguo con coroutines
-            if (corrutinaIdleCaballero != null)
-            {
-                StopCoroutine(corrutinaIdleCaballero);
-            }
-            corrutinaIdleCaballero = StartCoroutine(ReproducirIdleCaballero());
-        }
+        EjecutarAnimacionCaballero("Idle", "Idle");
     }
 
     private void DetenerAnimacionesIdle()
@@ -2063,92 +2196,28 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    private IEnumerator ReproducirIdleCaballero()
-    {
-        Sprite[] sprites = ObtenerSpritesCaballeroIdle();
-        if (sprites.Length == 0) yield break;
-        
-        int index = 0;
-        Sprite spriteAnterior = null;
-        while (true)
-        {
-            if (imgJugador == null) yield break;
-            
-            // ✅ Suavizar transición: aplicar sprite gradualmente
-            Sprite sprite = sprites[index];
-            if (sprite != null)
-            {
-                // Log para detectar salto entre último idle (15) y principio (0)
-                if (spriteAnterior != null)
-                {
-                    int indiceAnterior = System.Array.IndexOf(sprites, spriteAnterior);
-                    int indiceActual = index;
-                    bool esTransicion15a0 = (indiceAnterior == sprites.Length - 1 && indiceActual == 0);
-                    
-                    if (esTransicion15a0)
-                    {
-                        Vector2 posAntes = imgJugador.rectTransform.anchoredPosition;
-                        Debug.Log($"[UIManager] 🔄 TRANSICIÓN IDLE: {spriteAnterior.name} (índice {indiceAnterior}) -> {sprite.name} (índice {indiceActual}) - Posición ANTES: {posAntes}");
-                    }
-                }
-                
-                ApplySpriteToImage(imgJugador, sprite);
-                spriteAnterior = sprite;
-            }
-            
-            // ✅ Tiempo variable: algunos frames pueden ser ligeramente más rápidos o lentos para naturalidad
-            float tiempoFrame = caballeroIdleFrameTime;
-            // Variación sutil (±10%) para hacer la animación más orgánica
-            float variacion = UnityEngine.Random.Range(-0.02f, 0.02f);
-            tiempoFrame = Mathf.Clamp(tiempoFrame + variacion, caballeroIdleFrameTime * 0.9f, caballeroIdleFrameTime * 1.1f);
-            
-            index = (index + 1) % sprites.Length;
-            yield return new WaitForSeconds(tiempoFrame);
-        }
-    }
-
     private IEnumerator IniciarIdleCaballeroDespuesDeInit()
     {
+        // Esperar frames adicionales para asegurar que todo esté inicializado
         yield return null;
-        if ((caballeroSheet != null || HasCaballeroFramesReady()) && imgJugador != null)
+        yield return null;
+        
+        if (caballeroAnimator != null && imgJugador != null)
         {
+            // Asegurar que el Animator esté habilitado
+            if (!caballeroAnimator.enabled)
+            {
+                caballeroAnimator.enabled = true;
+            }
+            
+            // Forzar animación Idle
             MostrarAnimacionIdleCaballero();
+            Debug.Log("[UIManager] ✓ Animación Idle iniciada después de Initialize");
         }
-    }
-    
-    /// <summary>
-    /// Espera a que termine la animación de ataque del Animator y aplica el daño
-    /// </summary>
-    private IEnumerator EsperarAtaqueAnimatorYDaño(int daño)
-    {
-        if (caballeroAnimator == null || gameManager == null) yield break;
-        
-        // Esperar un frame para que el Animator active la animación
-        yield return null;
-        
-        // Esperar a que la animación de ataque termine (aproximadamente)
-        // La animación de ataque tiene todos los keyframes de 16-31, cada uno con 4 frames a 0.1s = ~6.4s total
-        float duracionAtaque = 6.4f; // Aproximado, ajustar según necesidad
-        
-        // Esperar hasta el momento del impacto (aproximadamente 70% de la animación)
-        yield return new WaitForSeconds(duracionAtaque * 0.7f);
-        
-        // Aplicar daño en el momento del impacto
-        if (gameManager != null)
+        else
         {
-            gameManager.IniciarDañoEnemigoDesdeUI(daño);
+            Debug.LogWarning("[UIManager] ⚠ No se pudo iniciar Idle: caballeroAnimator o imgJugador es null");
         }
-        
-        // Esperar a que termine la animación completa
-        yield return new WaitForSeconds(duracionAtaque * 0.3f);
-        
-        // Volver a idle
-        if (caballeroAnimator != null)
-        {
-            caballeroAnimator.SetTrigger("VolverIdle");
-        }
-        
-        caballeroAtaqueEnCurso = false;
     }
     
     private IEnumerator ReproducirAnimacion(string carpeta, string animacion, int cantidadFrames, int daño, bool esJugador)
@@ -2209,26 +2278,26 @@ public class UIManager : MonoBehaviour
             }
         }
         
-        Debug.Log($"Iniciando animación: {carpeta}, Frames esperados: {cantidadFrames}, Cargados: {spritesCargados}");
+        Debug.Log("Iniciando animación: " + carpeta + ", Frames esperados: " + cantidadFrames + ", Cargados: " + spritesCargados);
         
-        Debug.Log($"Reproduciendo {cantidadFrames} frames para {carpeta}");
+        Debug.Log("Reproduciendo " + cantidadFrames + " frames para " + carpeta);
         for (int i = 0; i < cantidadFrames; i++)
         {
             if (sprites[i] != null)
             {
                 animacionAtaque.sprite = sprites[i];
-                animacionAtaque.color = new Color(1f, 1f, 1f, 1f); // Mantener opacidad completa para el sprite
-                Debug.Log($"Mostrando frame {i + 1}/{cantidadFrames} de {carpeta}");
+                animacionAtaque.color = new Color(1f, 1f, 1f, 1f);
+                Debug.Log("Mostrando frame " + (i + 1) + "/" + cantidadFrames + " de " + carpeta);
             }
             else
             {
-                Debug.LogWarning($"Sprite {i + 1} de {carpeta} no se pudo cargar - continuando con siguiente frame");
+                Debug.LogWarning("Sprite " + (i + 1) + " de " + carpeta + " no se pudo cargar - continuando con siguiente frame");
             }
             
             yield return new WaitForSeconds(tiempoPorFrame);
         }
         
-        Debug.Log($"Animación completada: {carpeta}");
+        Debug.Log("Animación completada: " + carpeta);
         
         
         yield return new WaitForSeconds(1.5f);
@@ -2255,751 +2324,225 @@ public class UIManager : MonoBehaviour
 
     private IEnumerator ReproducirAtaqueCaballeroCompleto(int daño)
     {
-        if (imgJugador == null) yield break;
-        if (!imgJugador.gameObject.activeInHierarchy)
+        if (imgJugador == null || caballeroAnimator == null) 
         {
-            imgJugador.gameObject.SetActive(true);
-        }
-        imgJugador.color = Color.white;
-        imgJugador.preserveAspect = true;
-        
-        // ✅ Desactivar Animator temporalmente durante el ataque (para que no interfiera con el movimiento)
-        bool animatorEstabaActivo = false;
-        if (caballeroAnimator != null && caballeroAnimator.enabled)
-        {
-            animatorEstabaActivo = true;
-            caballeroAnimator.enabled = false;
-            Debug.Log("[UIManager] 🔧 Animator desactivado temporalmente durante el ataque");
-        }
-        
-        if (HasCaballeroFramesReady())
-        {
-            // Inicio de carrera: sprites 16..19 (sin movimiento)
-            Sprite[] inicioCarreraFrames = caballeroFrames != null ? GetCaballeroFramesExact(Enumerable.Range(16, 4).ToArray(), "inicio carrera 16..19") : Array.Empty<Sprite>();
-            // Corrida derecha: sprites 20..23 (con movimiento)
-            Sprite[] runRightFrames = caballeroFrames != null ? GetCaballeroFramesExact(Enumerable.Range(20, 4).ToArray(), "corrida derecha 20..23") : Array.Empty<Sprite>();
-            // Golpe: sprites 24..27 (sin movimiento, en el extremo)
-            Sprite[] caballeroAttackFramesLocal = caballeroFrames != null ? GetCaballeroFramesExact(Enumerable.Range(24, 4).ToArray(), "golpe 24..27") : Array.Empty<Sprite>();
-            // Corrida izquierda: sprites 28..31 (con movimiento)
-            Sprite[] baseLeftFrames = caballeroFrames != null ? GetCaballeroFramesExact(Enumerable.Range(28, 4).ToArray(), "corrida izquierda 28..31") : Array.Empty<Sprite>();
-            int targetRunCount = runRightFrames.Length > 0 ? runRightFrames.Length : 4;
-            Sprite[] runLeftFrames = RepeatFrames(baseLeftFrames, targetRunCount);
-            
-            if (inicioCarreraFrames.Length == 0)
-            {
-                // Reactivar Animator antes de salir
-                if (animatorEstabaActivo && caballeroAnimator != null)
-                {
-                    caballeroAnimator.enabled = true;
-                }
-                caballeroAtaqueEnCurso = false;
-                yield break;
-            }
-            if (runRightFrames.Length == 0)
-            {
-                // Reactivar Animator antes de salir
-                if (animatorEstabaActivo && caballeroAnimator != null)
-                {
-                    caballeroAnimator.enabled = true;
-                }
-                caballeroAtaqueEnCurso = false;
-                yield break;
-            }
-            if (caballeroAttackFramesLocal.Length == 0)
-            {
-                // Reactivar Animator antes de salir
-                if (animatorEstabaActivo && caballeroAnimator != null)
-                {
-                    caballeroAnimator.enabled = true;
-                }
-                caballeroAtaqueEnCurso = false;
-                yield break;
-            }
-            if (runLeftFrames.Length == 0)
-            {
-                // Reactivar Animator antes de salir
-                if (animatorEstabaActivo && caballeroAnimator != null)
-                {
-                    caballeroAnimator.enabled = true;
-                }
-                caballeroAtaqueEnCurso = false;
-                yield break;
-            }
-            
-            RectTransform caballeroRect = imgJugador.rectTransform;
-            Vector2 caballeroInicio = caballeroRect.anchoredPosition;
-            
-            // ✅ GUARDAR POSICIÓN X DE REFERENCIA al inicio del ataque
-            caballeroPosicionXReferencia = caballeroInicio.x;
-            Debug.Log($"[UIManager] 🎯 Posición X de referencia guardada al inicio del ataque: {caballeroPosicionXReferencia.Value:F2}");
-            
-            Vector2 caballeroObjetivo = caballeroInicio + new Vector2(400f, 0f);
-            if (imgEnemigo != null)
-            {
-                RectTransform enemigoRect = imgEnemigo.rectTransform;
-                float worldDelta = enemigoRect.position.x - caballeroRect.position.x;
-                float moveRight = Mathf.Max(200f, Mathf.Abs(worldDelta) - 150f);
-                caballeroObjetivo = caballeroInicio + new Vector2(moveRight, 0f);
-            }
-            
-            // Fase 1: Inicio de carrera (16..19) - SIN MOVIMIENTO
-            // ✅ Transición suave desde idle: usar tiempo de inicio de carrera
-            for (int i = 0; i < inicioCarreraFrames.Length; i++)
-            {
-                if (inicioCarreraFrames[i] != null)
-                {
-                    ApplySpriteToImage(imgJugador, inicioCarreraFrames[i]);
-                }
-                // ✅ Acelerar gradualmente: primeros frames más lentos, últimos más rápidos
-                float tiempoFrame = Mathf.Lerp(caballeroInicioCarreraFrameTime, caballeroRunFrameTime, (float)i / Mathf.Max(1, inicioCarreraFrames.Length - 1));
-                yield return new WaitForSeconds(tiempoFrame);
-            }
-            
-            // Fase 2: Corrida derecha (20..23) - CON MOVIMIENTO
-            // Repetir los frames varias veces para que el movimiento dure más y se vea natural
-            int ciclosCorrida = 3; // Repetir 3 veces el ciclo completo de 4 frames (20-23)
-            List<Sprite> idaFramesRepetidos = new List<Sprite>();
-            for (int ciclo = 0; ciclo < ciclosCorrida; ciclo++)
-            {
-                for (int i = 0; i < runRightFrames.Length; i++)
-                {
-                    if (runRightFrames[i] != null)
-                    {
-                        idaFramesRepetidos.Add(runRightFrames[i]);
-                    }
-                }
-            }
-            Sprite[] idaFrames = idaFramesRepetidos.ToArray();
-            float runFrameTime = caballeroRunFrameTime;
-            // Aplicar multiplicador de velocidad de movimiento
-            float velocidadMovimiento = caballeroAtaqueVelocidadMovimiento;
-            yield return StartCoroutine(MoverConFrames(imgJugador, caballeroInicio, caballeroObjetivo, idaFrames, runFrameTime, velocidadMovimiento));
-            caballeroRect.anchoredPosition = caballeroObjetivo;
-            
-            // Fase 3: Golpe en el extremo con frames 24..27
-            // ✅ Tiempos variables: inicio rápido, impacto lento, recuperación rápida
-            // NOTA: Solo los frames 25 y 26 (índices 1 y 2) reciben tiempo extra
-            for (int i = 0; i < caballeroAttackFramesLocal.Length; i++)
-            {
-                if (caballeroAttackFramesLocal[i] != null)
-                {
-                    ApplySpriteToImage(imgJugador, caballeroAttackFramesLocal[i]);
-                }
-                
-                // ✅ Tiempo configurable por frame individual (24, 25, 26, 27)
-                float tiempoFrame;
-                int spriteNumero = 24 + i; // Número real del sprite (24, 25, 26, 27)
-                
-                // Usar tiempos individuales configurados para cada frame
-                switch (i)
-                {
-                    case 0: // Frame 24
-                        tiempoFrame = caballeroFrame24Time;
-                        break;
-                    case 1: // Frame 25
-                        tiempoFrame = caballeroFrame25Time;
-                        break;
-                    case 2: // Frame 26 (énfasis - este es el que dura más)
-                        tiempoFrame = caballeroFrame26Time;
-                        break;
-                    case 3: // Frame 27
-                        tiempoFrame = caballeroFrame27Time;
-                        break;
-                    default:
-                        tiempoFrame = caballeroAttackFrameTime;
-                        break;
-                }
-                
-                Debug.Log($"[UIManager] ⏱️ Frame {spriteNumero} (índice {i}): TIEMPO = {tiempoFrame:F3}s (configurado individualmente)");
-                
-                yield return new WaitForSeconds(tiempoFrame);
-            }
-            
-            Debug.Log($"[UIManager] ✅ Fase 3 (Golpe 24-27) COMPLETADA. Iniciando aplicación de daño...");
-            
-            // Aplicar daño después de completar todos los frames del ataque
-            if (gameManager != null)
-            {
-                gameManager.IniciarDañoEnemigoDesdeUI(daño);
-            }
-            
-            // Pequeña pausa después del daño antes de volver
-            yield return new WaitForSeconds(0.1f);
-            
-            Debug.Log($"[UIManager] ✅ Daño aplicado. Iniciando Fase 4 (Corrida izquierda 28-31)...");
-            Debug.Log($"[UIManager] 📍 Posición actual: {caballeroRect.anchoredPosition}, objetivo vuelta: {caballeroInicio}");
-            
-            // Fase 4: Volver usando frames de correr a la izquierda (28..31) - CON MOVIMIENTO
-            // Repetir los frames varias veces para que el movimiento dure más y se vea natural
-            int ciclosVuelta = 3; // Repetir 3 veces el ciclo completo de 4 frames (28-31)
-            List<Sprite> vueltaFramesRepetidos = new List<Sprite>();
-            for (int ciclo = 0; ciclo < ciclosVuelta; ciclo++)
-            {
-                for (int i = 0; i < baseLeftFrames.Length; i++)
-                {
-                    if (baseLeftFrames[i] != null)
-                    {
-                        vueltaFramesRepetidos.Add(baseLeftFrames[i]);
-                    }
-                }
-            }
-            Sprite[] returnFrames = vueltaFramesRepetidos.ToArray();
-            Debug.Log($"[UIManager] 📦 Fase 4: {returnFrames.Length} frames de vuelta preparados (ciclos: {ciclosVuelta}, frames base: {baseLeftFrames.Length})");
-            
-            if (returnFrames.Length == 0)
-            {
-                // Si no hay frames de vuelta, usar el último frame del ataque como fallback
-                Sprite lastAttackFrame = caballeroAttackFramesLocal != null && caballeroAttackFramesLocal.Length > 0 
-                    ? caballeroAttackFramesLocal[caballeroAttackFramesLocal.Length - 1] 
-                    : null;
-                returnFrames = lastAttackFrame != null ? new Sprite[] { lastAttackFrame } : Array.Empty<Sprite>();
-                Debug.LogWarning($"[UIManager] ⚠️ No hay frames de vuelta (28-31), usando último frame del ataque como fallback");
-            }
-            
-            float returnFrameTime = caballeroRunFrameTime;
-            // Aplicar multiplicador de velocidad de movimiento también en la vuelta
-            float velocidadMovimientoVuelta = caballeroAtaqueVelocidadMovimiento;
-            Debug.Log($"[UIManager] 🏃 Iniciando movimiento de vuelta: {caballeroObjetivo} -> {caballeroInicio}, velocidad={velocidadMovimientoVuelta}, frameTime={returnFrameTime}");
-            yield return StartCoroutine(MoverConFrames(imgJugador, caballeroObjetivo, caballeroInicio, returnFrames, returnFrameTime, velocidadMovimientoVuelta));
-            
-            Debug.Log($"[UIManager] ✅ Fase 4 COMPLETADA. Posición final ANTES de forzar: {caballeroRect.anchoredPosition}, objetivo: {caballeroInicio}");
-            
-            // ✅ Asegurar que el personaje esté en la posición inicial antes de iniciar idle
-            caballeroRect.anchoredPosition = caballeroInicio;
-            Debug.Log($"[UIManager] 📍 Posición forzada a inicial: {caballeroInicio}, posición actual verificada: {caballeroRect.anchoredPosition}");
-            
-            // ✅ ESPERAR un frame para asegurar que la posición se haya aplicado
-            yield return null;
-            
-            // ✅ VERIFICAR Y FORZAR NUEVAMENTE después del frame
-            if (Vector2.Distance(caballeroRect.anchoredPosition, caballeroInicio) > 0.1f)
-            {
-                Debug.LogWarning($"[UIManager] ⚠️ La posición cambió después del frame! Forzando nuevamente: {caballeroRect.anchoredPosition} -> {caballeroInicio}");
-                caballeroRect.anchoredPosition = caballeroInicio;
-            }
-            
-            // ✅ ACTUALIZAR POSICIÓN X DE REFERENCIA antes de iniciar idle
-            caballeroPosicionXReferencia = caballeroInicio.x;
-            Debug.Log($"[UIManager] 🎯 Posición X de referencia actualizada después del ataque: {caballeroPosicionXReferencia.Value:F2}");
-            
-            // ✅ ESTABLECER caballeroAtaqueEnCurso = false ANTES de iniciar idle
-            // Esto permite que ApplySpriteToImage fuerce correctamente la posición X durante la transición
+            Debug.LogError("[UIManager] imgJugador o caballeroAnimator es null");
             caballeroAtaqueEnCurso = false;
-            Debug.Log($"[UIManager] 🔧 caballeroAtaqueEnCurso establecido en false antes de iniciar idle");
-            
-            // Iniciar idle después de que termine completamente la vuelta
-            Debug.Log($"[UIManager] 🔄 Iniciando animación idle... Posición antes de idle: {caballeroRect.anchoredPosition}");
-            IniciarAnimacionIdle("Guerrero", true);
-            
-            // ✅ FORZAR POSICIÓN DESPUÉS de iniciar idle (por si el idle la cambió)
-            yield return null;
-            caballeroRect.anchoredPosition = caballeroInicio;
-            Debug.Log($"[UIManager] 📍 Posición final después de iniciar idle: {caballeroRect.anchoredPosition}");
-            
-            // ✅ FORZAR UNA VEZ MÁS después de otro frame (por si acaso)
-            yield return null;
-            if (Vector2.Distance(caballeroRect.anchoredPosition, caballeroInicio) > 0.1f)
-            {
-                caballeroRect.anchoredPosition = caballeroInicio;
-                Debug.Log($"[UIManager] 📍 Posición forzada nuevamente después del segundo frame: {caballeroRect.anchoredPosition}");
-            }
-            
-            // ✅ Reactivar Animator si estaba activo antes del ataque
-            if (animatorEstabaActivo && caballeroAnimator != null)
-            {
-                caballeroAnimator.enabled = true;
-                Debug.Log("[UIManager] 🔧 Animator reactivado después del ataque");
-            }
             yield break;
         }
         
-        RectTransform jugadorRect = imgJugador.rectTransform;
-        Canvas canvas = jugadorRect.GetComponentInParent<Canvas>();
-        // Guardamos la posición anchoredPosition original para volver después
-        Vector2 inicio = jugadorRect.anchoredPosition;
-        // Calculamos posiciones ABSOLUTAS en el Canvas (no relativas a anchors)
-        Vector2 jugadorPosAbsoluta = RectTransformUtility.PixelAdjustPoint(jugadorRect.position, jugadorRect, canvas);
-        Vector2 enemigoPosAbsoluta = Vector2.zero;
-        if (imgEnemigo != null)
+        if (!imgJugador.gameObject.activeInHierarchy) imgJugador.gameObject.SetActive(true);
+        if (!caballeroAnimator.enabled) caballeroAnimator.enabled = true;
+        
+        // ===== FLUJO DE COMBATE DEL CABALLERO =====
+        // El sistema usa el Animator Controller "CaballeroInterpolado" con 5 estados exactos:
+        // 1. "Idle" - Estado inicial y final (Fase 0)
+        // 2. "Prepare_to_atack" - Preparación (Fase 1)
+        // 3. "Run+Atack" - Carrera hacia el enemigo (Fase 2)
+        // 4. "FinishHim" - Ataque/remate (Fase 3)
+        // 5. "Run+Back" - Retirada/regreso (Fase 4)
+        // ============================================
+        
+        // FASE 0: Salir de Idle (estado inicial)
+        // El caballero debe estar en Idle antes de iniciar el ataque
+        // DetenerAnimacionesIdle() ya fue llamado antes de esta función
+        
+        RectTransform caballeroRect = imgJugador.rectTransform;
+        Vector2 caballeroInicio = caballeroRect.anchoredPosition;
+        
+        // FÓRMULA EXACTA DE DESTINO: destinoX = posicionXEnemigo - offsetObjetivoEnemigo
+        // Usa la variable pública posicionXEnemigo (configurable en el Inspector) en lugar de leer del enemigo
+        float destinoX = posicionXEnemigo - offsetObjetivoEnemigo;
+        
+        Debug.Log($"[UIManager] Destino calculado: Posición X Enemigo={posicionXEnemigo}, Offset={offsetObjetivoEnemigo}, Destino X={destinoX}");
+        
+        Vector2 caballeroObjetivo = new Vector2(destinoX, caballeroInicio.y);
+        
+        // FASE 1: Prepare_to_atack
+        if (!EjecutarAnimacionCaballero("Prepare_to_atack", "Fase 1: Prepare_to_atack"))
         {
-            RectTransform enemigoRect = imgEnemigo.rectTransform;
-            enemigoPosAbsoluta = RectTransformUtility.PixelAdjustPoint(enemigoRect.position, enemigoRect, canvas);
+            Debug.LogError("[UIManager] Error al ejecutar animación de preparación. El ataque no puede continuar.");
+            caballeroAtaqueEnCurso = false;
+            yield break;
         }
-        // La distancia que queremos recorrer hacia el enemigo
-        float distanciaAvance = 0f;
-        if (imgEnemigo != null)
+        
+        // Esperar a que la animación comience y luego esperar su duración completa
+        yield return new WaitForSeconds(tiempoInicioPrepareToAttack);
+        float duracionPreparacion = caballeroAnimator.GetCurrentAnimatorStateInfo(0).length;
+        yield return new WaitForSeconds(duracionPreparacion);
+        
+        // Transición suave antes de cambiar a la siguiente fase
+        yield return new WaitForSeconds(tiempoTransicionDespuesPrepare);
+        
+        // FASE 2: Run+Atack (carrera hacia el enemigo)
+        if (!EjecutarAnimacionCaballero("Run+Atack", "Fase 2: Run+Atack"))
         {
-            // Calculamos cuánto tiene que avanzar para llegar cerca del enemigo
-            distanciaAvance = enemigoPosAbsoluta.x - jugadorPosAbsoluta.x - 120f;
+            Debug.LogError("[UIManager] Error al ejecutar animación de carrera. El ataque no puede continuar.");
+            caballeroAtaqueEnCurso = false;
+            yield break;
+        }
+        
+        // Asegurar que el caballero mire hacia la derecha (sin voltear)
+        imgJugador.rectTransform.localScale = Vector3.one;
+        
+        // Esperar a que la animación inicie
+        yield return new WaitForSeconds(tiempoInicioRunAtack);
+        
+        // MOVIMIENTO USANDO Vector2.MoveTowards HACIA EL DESTINO EXACTO
+        // El bucle continúa hasta que la distancia sea menor a 1f
+        float distanciaMinima = 1f;
+        float distanciaActual = Mathf.Abs(caballeroRect.anchoredPosition.x - destinoX);
+        
+        Debug.Log($"[UIManager] Iniciando movimiento: Posición inicial X={caballeroInicio.x}, Destino X={destinoX}, Distancia={distanciaActual}");
+        
+        while (distanciaActual > distanciaMinima)
+        {
+            // Usar Vector2.MoveTowards para mover hacia el objetivo exacto
+            Vector2 posicionActual = caballeroRect.anchoredPosition;
+            Vector2 nuevaPosicion = Vector2.MoveTowards(
+                posicionActual, 
+                caballeroObjetivo, 
+                velocidadMovimientoAtaque * Time.deltaTime
+            );
+            
+            // Actualizar solo la posición X (mantener Y constante)
+            caballeroRect.anchoredPosition = new Vector2(nuevaPosicion.x, caballeroInicio.y);
+            
+            // Verificar distancia actual (solo en X)
+            distanciaActual = Mathf.Abs(caballeroRect.anchoredPosition.x - destinoX);
+            
+            yield return null;
+        }
+        
+        // Asegurar posición final exacta
+        caballeroRect.anchoredPosition = new Vector2(destinoX, caballeroInicio.y);
+        Debug.Log($"[UIManager] Movimiento completado: Posición final X={caballeroRect.anchoredPosition.x}, Destino X={destinoX}, Distancia={Mathf.Abs(caballeroRect.anchoredPosition.x - destinoX)}");
+        
+        // Tiempo de espera antes del golpe (aumentado para transición más suave)
+        yield return new WaitForSeconds(tiempoEsperaAntesGolpe);
+        
+        // FASE 3: FinishHim (ataque/remate)
+        if (!EjecutarAnimacionCaballero("FinishHim", "Fase 3: FinishHim"))
+        {
+            Debug.LogError("[UIManager] Error al ejecutar animación de ataque. Continuando con el flujo...");
+        }
+        
+        // Esperar a que la animación inicie
+        yield return new WaitForSeconds(tiempoInicioFinishHim);
+        float duracionAtaque = caballeroAnimator.GetCurrentAnimatorStateInfo(0).length;
+        yield return new WaitForSeconds(duracionAtaque);
+        
+        Debug.Log("[UIManager] Aplicando daño al enemigo...");
+        if (gameManager != null) gameManager.IniciarDañoEnemigoDesdeUI(daño);
+        
+        // Tiempo de espera después del golpe (aumentado para transición más suave)
+        yield return new WaitForSeconds(tiempoEsperaDespuesGolpe);
+        
+        // Transición suave antes de cambiar a Run+Back
+        yield return new WaitForSeconds(tiempoTransicionAntesRunBack);
+        
+        // FASE 4: Run+Back (retirada)
+        // IMPORTANTE: Run+Back usa los sprites de espalda (grupos 26-30) del Animator
+        // NO voltear el sprite con localScale, el Animator ya tiene los sprites correctos
+        if (!EjecutarAnimacionCaballero("Run+Back", "Fase 4: Run+Back"))
+        {
+            Debug.LogError("[UIManager] Error al ejecutar animación de regreso. Continuando con el flujo...");
+        }
+        
+        // Mantener escala normal (sin voltear) porque Run+Back ya tiene sprites de espalda
+        imgJugador.rectTransform.localScale = Vector3.one;
+        
+        // ACELERAR LA VUELTA (Run+Back): Acelerar la animación para que los sprites cambien más rápido
+        float velocidadAnimacionOriginal = caballeroAnimator.speed;
+        caballeroAnimator.speed = velocidadRunMasBack; // Acelerar la animación (cambio de sprites)
+        
+        // Esperar a que la animación inicie
+        yield return new WaitForSeconds(tiempoInicioRunBack);
+        float duracionRegreso = caballeroAnimator.GetCurrentAnimatorStateInfo(0).length;
+        
+        // Movimiento suave de regreso con curva de aceleración/desaceleración
+        float tiempoTranscurridoRegreso = 0f;
+        while (tiempoTranscurridoRegreso < duracionRegreso)
+        {
+            tiempoTranscurridoRegreso += Time.deltaTime;
+            float t = Mathf.Clamp01(tiempoTranscurridoRegreso / duracionRegreso);
+            // Curva suave (ease-in-out) para movimiento más natural
+            float tSuave = t * t * (3f - 2f * t); // Smoothstep
+            caballeroRect.anchoredPosition = new Vector2(Mathf.Lerp(caballeroObjetivo.x, caballeroInicio.x, tSuave), caballeroInicio.y);
+            yield return null;
+        }
+        caballeroRect.anchoredPosition = caballeroInicio;
+        
+        // Restaurar velocidad original del Animator
+        caballeroAnimator.speed = velocidadAnimacionOriginal;
+        
+        // Transición suave antes de volver a Idle
+        yield return new WaitForSeconds(tiempoTransicionAntesIdle);
+        
+        caballeroAtaqueEnCurso = false;
+        
+        // FASE 0: Volver a Idle (estado final)
+        // Siempre volver a Idle al terminar el ataque para mantener la lógica del juego
+        MostrarAnimacionIdleCaballero();
+        
+        yield return null;
+        yield return null;
+        
+        if (Vector2.Distance(caballeroRect.anchoredPosition, caballeroInicio) < 5f && !caballeroAtaqueEnCurso)
+        {
+            Debug.Log("[UIManager] Sincronización: Caballero listo. Iniciando turno del enemigo...");
+            if (gameManager != null) gameManager.IniciarTurnoEnemigo();
         }
         else
         {
-            // Si no hay enemigo, avanza 400 píxeles por defecto
-            distanciaAvance = 400f;
-        }
-        // El objetivo es la posición inicial más el avance
-        Vector2 objetivo = inicio + new Vector2(distanciaAvance, 0f);
-        
-        Sprite[] attackFrames = ObtenerSpritesCaballeroAtaque();
-        if (attackFrames.Length == 0)
-        {
+            yield return new WaitForSeconds(0.1f);
+            caballeroRect.anchoredPosition = caballeroInicio;
             caballeroAtaqueEnCurso = false;
-            yield break;
+            if (gameManager != null) gameManager.IniciarTurnoEnemigo();
         }
         
-        yield return StartCoroutine(MoverConFrames(imgJugador, inicio, objetivo, attackFrames, caballeroAttackFrameTime, caballeroAtaqueVelocidadMovimiento));
-        
-        Debug.Log("[UIManager] Llamando a IniciarDañoEnemigoDesdeUI. daño=" + daño + ", gameManager=" + (gameManager != null));
-        if (gameManager != null)
-        {
-            gameManager.IniciarDañoEnemigoDesdeUI(daño);
-        }
-        
-        yield return StartCoroutine(MoverConFrames(imgJugador, objetivo, inicio, attackFrames, caballeroAttackFrameTime, caballeroAtaqueVelocidadMovimiento));
-        
-        jugadorRect.anchoredPosition = inicio;
-        IniciarAnimacionIdle("Guerrero", true);
         caballeroAtaqueEnCurso = false;
     }
+    #endregion
     
-    /// <summary>
-    /// Aplica un sprite a una imagen, respetando los pivots configurados en el Sprite Editor.
-    /// IMPORTANTE: Los pivots de los sprites son CONSTANTES y solo se LEEN, NUNCA se modifican desde este código.
-    /// Solo el usuario puede cambiar los pivots a través del Sprite Editor de Unity.
-    /// Unity maneja automáticamente los pivots cuando se asigna el sprite.
-    /// 
-    /// NOTA: Los sprites 7, 8 y 9 (CABALLERO_7, CABALLERO_8, CABALLERO_9) pueden tener
-    /// pivots diferentes a los demás, causando que se muevan cuando aparecen en la animación.
-    /// Verificar en el Sprite Editor que estos 3 sprites tengan el mismo pivot que los demás.
-    /// </summary>
-    private void ApplySpriteToImage(Image imagen, Sprite sprite)
+    #endregion
+    
+    #region Animaciones de Otros Personajes
+    
+    private IEnumerator ReproducirAnimacionIdle(string carpeta, string animacion, int cantidadFrames, bool esJugador)
     {
-        if (imagen == null || sprite == null) return;
+        Image imagenObjetivo = esJugador ? imgJugador : imgEnemigo;
+        if (imagenObjetivo == null || !imagenObjetivo.gameObject.activeInHierarchy) yield break;
         
-        // ✅ MANTENER TAMAÑO FIJO: Calcular tamaño máximo ANTES de asignar el sprite
-        // Esto evita que el personaje cambie de tamaño cuando se aplican sprites con diferentes rects
-        Vector2 tamañoFijo = Vector2.zero;
-        bool usarTamañoFijo = false;
-        if (imagen == imgJugador && HasCaballeroFramesReady())
+        Sprite[] sprites = new Sprite[cantidadFrames];
+        for (int i = 0; i < cantidadFrames; i++)
         {
-            // Asegurar que el tamaño máximo esté calculado
-            if (!caballeroMaxFrameSizeReady)
-            {
-                ApplyCaballeroSizeFromFrames();
-            }
-            // Guardar el tamaño fijo para aplicarlo después
-            if (caballeroMaxFrameSizeReady)
-            {
-                tamañoFijo = caballeroMaxFrameSize;
-                usarTamañoFijo = true;
-            }
+            #if UNITY_EDITOR
+            sprites[i] = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Personajes/" + carpeta + "/" + animacion + "/" + (i + 1) + ".png");
+            if (sprites[i] == null) sprites[i] = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Personajes/" + carpeta + "/" + (i + 1) + ".png");
+            if (sprites[i] == null) sprites[i] = Resources.Load<Sprite>("Sprites/Personajes/" + carpeta + "/" + animacion + "/" + (i + 1));
+            #else
+            sprites[i] = Resources.Load<Sprite>("Sprites/Personajes/" + carpeta + "/" + animacion + "/" + (i + 1));
+            #endif
         }
         
-        // ✅ Aplicar el nuevo sprite - Unity maneja automáticamente los pivots del Sprite Editor
-        // Los pivots que cambies en el Sprite Editor se aplican automáticamente cuando asignas el sprite
-        // IMPORTANTE: Después de cambiar pivots en Unity, asegurate de guardar y reimportar el asset
-        Vector2 tamañoAntes = imagen.rectTransform.sizeDelta;
-        Rect spriteRect = sprite.rect;
-        
-        imagen.sprite = sprite;
-        imagen.color = Color.white;
-        
-        Vector2 tamañoDespuesSprite = imagen.rectTransform.sizeDelta;
-        
-        // ✅ MANTENER PROPORCIONES: Usar preserveAspect para evitar distorsión
-        // Todos los sprites ocuparán el mismo espacio (tamañoFijo) pero mantendrán sus proporciones
-        if (usarTamañoFijo)
+        int frameIndex = 0;
+        while (imagenObjetivo != null && imagenObjetivo.gameObject.activeInHierarchy)
         {
-            // Guardar la posición antes de cambiar el tamaño
-            Vector2 posicionAntes = imagen.rectTransform.anchoredPosition;
-            Vector2 pivotSprite = sprite.pivot; // Valores absolutos en píxeles (solo para logs)
-            
-            // ✅ Establecer posición Y de referencia (usar el primer sprite como referencia)
-            if (!caballeroPosicionYReferencia.HasValue)
-            {
-                caballeroPosicionYReferencia = posicionAntes.y; // Guardar posición Y inicial como referencia fija
-                Debug.Log($"[UIManager] Posición Y de referencia establecida: {caballeroPosicionYReferencia.Value:F2} (sprite: {sprite.name}, pivot={pivotSprite})");
-            }
-            
-            // Establecer el tamaño del contenedor al máximo
-            // preserveAspect hará que el sprite se escale manteniendo sus proporciones dentro de ese espacio
-            imagen.preserveAspect = true; // ✅ Activar preserveAspect para mantener proporciones sin distorsión
-            imagen.rectTransform.sizeDelta = tamañoFijo; // Contenedor del tamaño máximo
-            
-            Vector2 tamañoDespuesAplicar = imagen.rectTransform.sizeDelta;
-            
-            // ✅ LOGS DETALLADOS: Mostrar información sobre tamaño del sprite
-            float tamañoAntesX = tamañoAntes.x;
-            float tamañoAntesY = tamañoAntes.y;
-            float diferenciaTamañoX = Mathf.Abs(tamañoDespuesAplicar.x - tamañoFijo.x);
-            float diferenciaTamañoY = Mathf.Abs(tamañoDespuesAplicar.y - tamañoFijo.y);
-            float diferenciaTamañoAntes = Mathf.Abs(tamañoDespuesAplicar.x - tamañoAntesX) + Mathf.Abs(tamañoDespuesAplicar.y - tamañoAntesY);
-            
-            // Calcular tamaño visual real del sprite (considerando preserveAspect)
-            float escalaX = tamañoFijo.x / spriteRect.width;
-            float escalaY = tamañoFijo.y / spriteRect.height;
-            float escala = Mathf.Min(escalaX, escalaY); // preserveAspect usa la escala menor
-            float tamañoVisualX = spriteRect.width * escala;
-            float tamañoVisualY = spriteRect.height * escala;
-            
-            Debug.Log($"[UIManager] 📏 Sprite '{sprite.name}': " +
-                      $"rect={spriteRect.width:F0}x{spriteRect.height:F0}, " +
-                      $"contenedor={tamañoFijo.x:F2}x{tamañoFijo.y:F2}, " +
-                      $"tamaño VISUAL={tamañoVisualX:F2}x{tamañoVisualY:F2} (escala={escala:F3}), " +
-                      $"tamaño ANTES={tamañoAntesX:F2}x{tamañoAntesY:F2}, " +
-                      $"tamaño DESPUÉS={tamañoDespuesAplicar.x:F2}x{tamañoDespuesAplicar.y:F2}, " +
-                      $"diferencia contenedor=({diferenciaTamañoX:F2}, {diferenciaTamañoY:F2}), " +
-                      $"diferencia antes={diferenciaTamañoAntes:F2}, " +
-                      $"preserveAspect={imagen.preserveAspect}, " +
-                      $"pivot={pivotSprite}");
-            
-            // Verificar si el tamaño visual cambió (más importante que el tamaño del contenedor)
-            if (caballeroTamañoVisualAnteriorX.HasValue && caballeroTamañoVisualAnteriorY.HasValue)
-            {
-                float diferenciaVisualX = Mathf.Abs(tamañoVisualX - caballeroTamañoVisualAnteriorX.Value);
-                float diferenciaVisualY = Mathf.Abs(tamañoVisualY - caballeroTamañoVisualAnteriorY.Value);
-                if (diferenciaVisualX > 0.1f || diferenciaVisualY > 0.1f)
-                {
-                    Debug.LogWarning($"[UIManager] ⚠️⚠️ Sprite '{sprite.name}': TAMAÑO VISUAL CAMBIÓ - " +
-                                     $"antes={caballeroTamañoVisualAnteriorX.Value:F2}x{caballeroTamañoVisualAnteriorY.Value:F2}, " +
-                                     $"ahora={tamañoVisualX:F2}x{tamañoVisualY:F2}, " +
-                                     $"diferencia=({diferenciaVisualX:F2}, {diferenciaVisualY:F2})");
-                }
-            }
-            caballeroTamañoVisualAnteriorX = tamañoVisualX;
-            caballeroTamañoVisualAnteriorY = tamañoVisualY;
-            
-            // Verificar si el tamaño cambió respecto al contenedor
-            if (diferenciaTamañoX > 0.01f || diferenciaTamañoY > 0.01f)
-            {
-                Debug.LogWarning($"[UIManager] ⚠️ Sprite '{sprite.name}': TAMAÑO CAMBIÓ RESPECTO AL CONTENEDOR - " +
-                                 $"esperado={tamañoFijo.x:F2}x{tamañoFijo.y:F2}, " +
-                                 $"obtenido={tamañoDespuesAplicar.x:F2}x{tamañoDespuesAplicar.y:F2}");
-            }
-            
-            // Verificar si el tamaño cambió respecto al sprite anterior
-            if (diferenciaTamañoAntes > 0.01f)
-            {
-                Debug.LogWarning($"[UIManager] ⚠️ Sprite '{sprite.name}': TAMAÑO CAMBIÓ RESPECTO AL SPRITE ANTERIOR - " +
-                                 $"antes={tamañoAntesX:F2}x{tamañoAntesY:F2}, " +
-                                 $"después={tamañoDespuesAplicar.x:F2}x{tamañoDespuesAplicar.y:F2}, " +
-                                 $"diferencia={diferenciaTamañoAntes:F2}");
-            }
-            
-            // ✅ MANTENER POSICIÓN Y CONSTANTE: Forzar posición Y de referencia inmediatamente
-            // Los pivots están mal configurados en los sprites, así que simplemente mantenemos la posición Y constante
-            Vector2 posicionActual = imagen.rectTransform.anchoredPosition;
-            float posicionYObjetivo = caballeroPosicionYReferencia.Value;
-            
-            // ✅ MANTENER POSICIÓN X CONSTANTE durante idle (no durante ataque)
-            float posicionXObjetivo = posicionActual.x;
-            if (!caballeroAtaqueEnCurso && caballeroPosicionXReferencia.HasValue)
-            {
-                posicionXObjetivo = caballeroPosicionXReferencia.Value;
-            }
-            else if (!caballeroAtaqueEnCurso && !caballeroPosicionXReferencia.HasValue)
-            {
-                // Establecer posición X de referencia la primera vez en idle
-                caballeroPosicionXReferencia = posicionActual.x;
-                Debug.Log($"[UIManager] Posición X de referencia establecida: {caballeroPosicionXReferencia.Value:F2}");
-            }
-            
-            // Forzar la posición Y y X inmediatamente (antes de que Unity pueda moverla)
-            imagen.rectTransform.anchoredPosition = new Vector2(posicionXObjetivo, posicionYObjetivo);
-            
-            // Forzar actualización del canvas inmediatamente
-            Canvas.ForceUpdateCanvases();
-            
-            // Verificar si Unity movió la posición después de la actualización
-            Vector2 posicionDespues = imagen.rectTransform.anchoredPosition;
-            float diferenciaY = Mathf.Abs(posicionDespues.y - posicionYObjetivo);
-            
-            // Si Unity movió la posición, forzarla de nuevo
-            if (diferenciaY > 0.01f)
-            {
-                imagen.rectTransform.anchoredPosition = new Vector2(posicionDespues.x, posicionYObjetivo);
-                
-                // Si la diferencia es grande, interpolar suavemente
-                if (diferenciaY > 0.5f)
-                {
-                    // Detener cualquier interpolación anterior
-                    if (corrutinaSuavizarY != null)
-                    {
-                        StopCoroutine(corrutinaSuavizarY);
-                    }
-                    // Iniciar interpolación suave
-                    corrutinaSuavizarY = StartCoroutine(SuavizarPosicionY(imagen.rectTransform, posicionDespues.y, posicionYObjetivo, 0.1f));
-                    
-                    Debug.LogWarning($"[UIManager] ⚠️ Sprite '{sprite.name}': SALTO DETECTADO - Y actual={posicionDespues.y:F2}, objetivo={posicionYObjetivo:F2}, diferencia={diferenciaY:F2}");
-                }
-            }
-        }
-        else
-        {
-            imagen.preserveAspect = true;
-            Debug.Log($"[UIManager] Sprite '{sprite.name}': rect={spriteRect.width}x{spriteRect.height}, tamaño={imagen.rectTransform.sizeDelta} (sin tamaño fijo)");
-        }
-        
-        // ✅ Forzar actualización para que los cambios se reflejen inmediatamente
-        Canvas.ForceUpdateCanvases();
-        
-        // ✅ Forzar el tamaño una vez más después de que Unity procese el layout
-        if (usarTamañoFijo)
-        {
-            // Usar la posición Y actual (ya ajustada con compensación basada en la referencia fija)
-            float posicionYParaForzar = imagen.rectTransform.anchoredPosition.y;
-            StartCoroutine(ForzarTamañoFijo(imagen.rectTransform, tamañoFijo, posicionYParaForzar));
+            if (frameIndex < sprites.Length && sprites[frameIndex] != null) imagenObjetivo.sprite = sprites[frameIndex];
+            frameIndex = (frameIndex + 1) % sprites.Length;
+            yield return new WaitForSeconds(0.1f);
         }
     }
     
-    private IEnumerator ForzarTamañoFijo(RectTransform rectTransform, Vector2 tamaño, float posicionYOriginal)
-    {
-        yield return null; // Esperar un frame para que Unity procese el layout
-        if (rectTransform != null)
-        {
-            Vector2 tamañoAntes = rectTransform.sizeDelta;
-            Vector2 posicionAntes = rectTransform.anchoredPosition;
-            
-            rectTransform.sizeDelta = tamaño;
-            
-            // ✅ Mantener la posición Y original para evitar desplazamientos verticales
-            rectTransform.anchoredPosition = new Vector2(posicionAntes.x, posicionYOriginal);
-            
-            Canvas.ForceUpdateCanvases();
-            
-            Vector2 tamañoDespues = rectTransform.sizeDelta;
-            Vector2 posicionDespues = rectTransform.anchoredPosition;
-            
-            float desplazamientoY = posicionDespues.y - posicionYOriginal;
-            if (Mathf.Abs(desplazamientoY) > 0.01f)
-            {
-                rectTransform.anchoredPosition = new Vector2(posicionDespues.x, posicionYOriginal);
-                // Log solo si el desplazamiento es significativo
-                if (Mathf.Abs(desplazamientoY) > 0.5f)
-                {
-                    Debug.LogWarning($"[UIManager] ⚠️ ForzarTamañoFijo: desplazamiento Y={desplazamientoY:F2}, corregido");
-                }
-            }
-        }
-    }
-    
-    private IEnumerator SuavizarPosicionY(RectTransform rectTransform, float desdeY, float haciaY, float duracion)
-    {
-        if (rectTransform == null) yield break;
-        
-        float tiempoInicio = Time.time;
-        float diferencia = haciaY - desdeY;
-        
-        while (Time.time - tiempoInicio < duracion)
-        {
-            if (rectTransform == null) yield break;
-            
-            float progreso = (Time.time - tiempoInicio) / duracion;
-            // Usar curva de suavizado (ease-out)
-            progreso = 1f - Mathf.Pow(1f - progreso, 3f);
-            
-            float posicionYActual = desdeY + diferencia * progreso;
-            Vector2 posicionActual = rectTransform.anchoredPosition;
-            rectTransform.anchoredPosition = new Vector2(posicionActual.x, posicionYActual);
-            
-            yield return null;
-        }
-        
-        // Asegurar que llegue exactamente al objetivo
-        if (rectTransform != null)
-        {
-            Vector2 posicionFinal = rectTransform.anchoredPosition;
-            rectTransform.anchoredPosition = new Vector2(posicionFinal.x, haciaY);
-        }
-    }
-
-    private bool HasCaballeroFramesReady()
-    {
-        return EnsureCaballeroFramesOrdered();
-    }
-
-
-    private void ApplyCaballeroSizeFromFrames()
-    {
-        if (imgJugador == null) return;
-        if (!HasCaballeroFramesReady()) return;
-        
-        // ✅ VERIFICAR SPrites FALTANTES
-        int spritesNullos = 0;
-        List<int> indicesFaltantes = new List<int>();
-        for (int i = 0; i < caballeroFrames.Length; i++)
-        {
-            if (caballeroFrames[i] == null)
-            {
-                spritesNullos++;
-                indicesFaltantes.Add(i);
-            }
-        }
-        
-        if (spritesNullos > 0)
-        {
-            Debug.LogError($"[UIManager] ⚠️ FALTAN {spritesNullos} SPRITES en caballeroFrames! Índices faltantes: {string.Join(", ", indicesFaltantes.Take(10))}");
-            if (indicesFaltantes.Count > 10)
-            {
-                Debug.LogError($"[UIManager] ... y {indicesFaltantes.Count - 10} más.");
-            }
-        }
-        
-        // ✅ Recalcular siempre para asegurar que tenemos el tamaño correcto
-        // No usar el flag caballeroMaxFrameSizeReady para permitir recálculo si es necesario
-        float maxW = 0f;
-        float maxH = 0f;
-        int spritesProcesados = 0;
-        
-        // ✅ Calcular el tamaño del contenedor para que todos los sprites se vean del mismo tamaño visual
-        // Con preserveAspect, Unity escala el sprite para que quepa dentro del contenedor usando la escala menor
-        // Para que todos los sprites se vean del mismo tamaño visual, necesitamos calcular el tamaño del contenedor
-        // que haga que todos los sprites se escalen al mismo tamaño visual máximo
-        float maxTamañoVisual = 0f;
-        
-        for (int i = 0; i < caballeroFrames.Length; i++)
-        {
-            Sprite sprite = caballeroFrames[i];
-            if (sprite == null) continue;
-            
-            // ✅ Usar el tamaño del rect del sprite (recorte)
-            Rect rect = sprite.rect;
-            if (rect.width > maxW) maxW = rect.width;
-            if (rect.height > maxH) maxH = rect.height;
-            
-            // ✅ Calcular el tamaño visual máximo que este sprite ocuparía
-            // El tamaño visual es el mayor entre width y height (la dimensión más grande del sprite)
-            float tamañoVisual = Mathf.Max(rect.width, rect.height);
-            if (tamañoVisual > maxTamañoVisual) maxTamañoVisual = tamañoVisual;
-            
-            spritesProcesados++;
-        }
-        
-        // ✅ Ajustar el tamaño del contenedor para que todos los sprites se vean del mismo tamaño visual
-        // Usamos un contenedor cuadrado del tamaño del máximo visual
-        // Con preserveAspect, cada sprite se escalará para que su dimensión más grande sea igual al tamaño del contenedor
-        // Esto asegura que todos los sprites se vean del mismo tamaño visual (su dimensión más grande será igual)
-        // PERO: si los sprites tienen proporciones muy diferentes, algunos pueden verse más pequeños
-        // Para solucionar esto, usamos el máximo entre maxW, maxH y maxTamañoVisual
-        float tamañoContenedor = Mathf.Max(maxW, maxH, maxTamañoVisual);
-        maxW = tamañoContenedor;
-        maxH = tamañoContenedor;
-        
-        if (maxW > 0f && maxH > 0f)
-        {
-            caballeroMaxFrameSize = new Vector2(maxW, maxH);
-            caballeroMaxFrameSizeReady = true;
-            Debug.Log($"[UIManager] Tamaño máximo calculado: {maxW}x{maxH} (tamaño visual máximo: {maxTamañoVisual}, de {spritesProcesados} sprites de {caballeroFrames.Length} totales)");
-            
-            // ✅ Log detallado de cada sprite con tamaño diferente al máximo
-            for (int i = 0; i < caballeroFrames.Length; i++)
-            {
-                Sprite sprite = caballeroFrames[i];
-                if (sprite == null) continue;
-                
-                Rect rect = sprite.rect;
-                float tamañoVisual = Mathf.Max(rect.width, rect.height);
-                if (Mathf.Abs(tamañoVisual - maxTamañoVisual) > 0.1f)
-                {
-                    Debug.Log($"[UIManager] Sprite '{sprite.name}': rect={rect.width:F0}x{rect.height:F0}, tamaño visual={tamañoVisual:F0} (diferente al máximo {maxTamañoVisual:F0}, diferencia={Mathf.Abs(tamañoVisual - maxTamañoVisual):F0})");
-                }
-            }
-        }
-        else
-        {
-            Debug.LogWarning($"[UIManager] No se pudo calcular el tamaño máximo. Sprites procesados: {spritesProcesados} de {caballeroFrames.Length} totales");
-        }
-        
-        // ✅ Aplicar el tamaño calculado
-        if (caballeroMaxFrameSizeReady)
-        {
-            imgJugador.rectTransform.sizeDelta = caballeroMaxFrameSize;
-            Debug.Log($"[UIManager] Tamaño aplicado a imgJugador: {caballeroMaxFrameSize}");
-        }
-    }
-
-    private IEnumerator MoverConFrames(Image imagen, Vector2 inicio, Vector2 fin, Sprite[] frames, float frameTime, float velocidadMultiplicador = 1.0f)
-    {
-        if (imagen == null) yield break;
-        int frameCount = Mathf.Max(1, frames.Length);
-        // Aplicar multiplicador de velocidad: reduce el tiempo total si velocidadMultiplicador > 1
-        float total = (frameCount * frameTime) / Mathf.Max(0.1f, velocidadMultiplicador);
-        float tiempo = 0f;
-        int frameIndex = -1;
-        Sprite spriteAnterior = null;
-        
-        while (tiempo < total)
-        {
-            tiempo += Time.deltaTime;
-            float t = total <= 0f ? 1f : Mathf.Clamp01(tiempo / total);
-            
-            // ✅ Suavizado mejorado: usar curva ease-in-out para movimiento más natural
-            float suavizado = t < 0.5f 
-                ? 2f * t * t  // Aceleración (ease-in)
-                : 1f - Mathf.Pow(-2f * t + 2f, 3f) / 2f; // Desaceleración (ease-out)
-            
-            imagen.rectTransform.anchoredPosition = Vector2.Lerp(inicio, fin, suavizado);
-            
-            // ✅ Transición suave entre frames: usar interpolación en lugar de cambio abrupto
-            // Ajustar frameTime con el multiplicador de velocidad
-            float frameTimeAjustado = frameTime / Mathf.Max(0.1f, velocidadMultiplicador);
-            int nuevoFrame = frameCount == 0 ? 0 : Mathf.Clamp(Mathf.FloorToInt(tiempo / frameTimeAjustado), 0, frameCount - 1);
-            float progresoFrame = (tiempo / frameTimeAjustado) - nuevoFrame; // 0.0 a 1.0 dentro del frame actual
-            
-            if (nuevoFrame != frameIndex || spriteAnterior == null)
-            {
-                frameIndex = nuevoFrame;
-                if (frameIndex < frames.Length && frames[frameIndex] != null)
-                {
-                    // ✅ Aplicar sprite inmediatamente pero con suavizado visual
-                    ApplySpriteToImage(imagen, frames[frameIndex]);
-                    spriteAnterior = frames[frameIndex];
-                }
-            }
-            
-            yield return null;
-        }
-        
-        // ✅ Asegurar posición final exacta
-        imagen.rectTransform.anchoredPosition = fin;
-        // Aplicar último frame si no se aplicó
-        if (frames.Length > 0 && frames[frames.Length - 1] != null)
-        {
-            ApplySpriteToImage(imagen, frames[frames.Length - 1]);
-        }
-    }
-    
-    private Sprite[] ObtenerSpritesRun(string tipo, bool haciaDerecha)
-    {
-        return ObtenerSpritesAttack(tipo);
-    }
+    private Sprite[] ObtenerSpritesRun(string tipo, bool haciaDerecha) => ObtenerSpritesAttack(tipo);
     
     private Sprite[] ObtenerSpritesAttack(string tipo)
     {
-        if (tipo == "Guerrero" && caballeroSheet != null)
-        {
-            return ObtenerSpritesCaballeroAtaque();
-        }
-        
-        int cantidadFrames = 0;
-        string carpeta = "";
-        if (tipo == "Guerrero")
-        {
-            cantidadFrames = 8;
-            carpeta = "Guerrero";
-        }
-        else if (tipo == "Mago")
-        {
-            cantidadFrames = 7;
-            carpeta = "Mago";
-        }
-        else if (tipo == "Cazador")
-        {
-            cantidadFrames = 9;
-            carpeta = "Cazador";
-        }
-        if (cantidadFrames == 0) return Array.Empty<Sprite>();
-        return CargarSpritesDesdeRecursos(carpeta, "attack", cantidadFrames);
+        var config = new Dictionary<string, (int frames, string carpeta)> { { "Mago", (7, "Mago") }, { "Cazador", (9, "Cazador") } };
+        if (!config.ContainsKey(tipo)) return Array.Empty<Sprite>();
+        var (frames, carpeta) = config[tipo];
+        return CargarSpritesDesdeRecursos(carpeta, "attack", frames);
     }
     
     private Sprite[] CargarSpritesDesdeRecursos(string carpeta, string animacion, int cantidadFrames)
@@ -3008,308 +2551,16 @@ public class UIManager : MonoBehaviour
         for (int i = 0; i < cantidadFrames; i++)
         {
             #if UNITY_EDITOR
-            string rutaNueva = $"Assets/Sprites/Personajes/{carpeta}/{animacion}/{i + 1}.png";
-            sprites[i] = AssetDatabase.LoadAssetAtPath<Sprite>(rutaNueva);
-            if (sprites[i] == null)
-            {
-                string ruta = $"Assets/Sprites/Personajes/{carpeta}/{i + 1}.png";
-                sprites[i] = AssetDatabase.LoadAssetAtPath<Sprite>(ruta);
-            }
-            if (sprites[i] == null)
-            {
-                sprites[i] = Resources.Load<Sprite>($"Sprites/Personajes/{carpeta}/{animacion}/{i + 1}");
-            }
+            sprites[i] = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Personajes/" + carpeta + "/" + animacion + "/" + (i + 1) + ".png");
+            if (sprites[i] == null) sprites[i] = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Personajes/" + carpeta + "/" + (i + 1) + ".png");
+            if (sprites[i] == null) sprites[i] = Resources.Load<Sprite>("Sprites/Personajes/" + carpeta + "/" + animacion + "/" + (i + 1));
             #else
-            sprites[i] = Resources.Load<Sprite>($"Sprites/Personajes/{carpeta}/{animacion}/{i + 1}");
+            sprites[i] = Resources.Load<Sprite>("Sprites/Personajes/" + carpeta + "/" + animacion + "/" + (i + 1));
             #endif
         }
         return sprites;
     }
     
-    private Sprite[] ObtenerSpritesCaballeroIdle()
-    {
-        if (TryGetCaballeroFrames(false, out Sprite[] framesFromArray))
-        {
-            return framesFromArray;
-        }
-        
-        if (!TryGetCaballeroSheet(out Texture2D sheet, out float cellW, out float cellH)) return Array.Empty<Sprite>();
-        
-        int idleCount = Mathf.Clamp(caballeroIdleFrameCount, 1, 18);
-        int[] frames = caballeroIdleFrames != null && caballeroIdleFrames.Length > 0
-            ? caballeroIdleFrames
-            : Enumerable.Range(0, idleCount).ToArray();
-        List<Sprite> result = new List<Sprite>(frames.Length);
-        float pixelsPerUnit = caballeroSheet.pixelsPerUnit;
-        for (int i = 0; i < frames.Length; i++)
-        {
-            Sprite sprite = CrearSpriteDesdeSheetCaballero(sheet, cellW, cellH, frames[i], pixelsPerUnit);
-            if (sprite != null)
-            {
-                result.Add(sprite);
-            }
-        }
-        return result.ToArray();
-    }
-    
-    private Sprite[] ObtenerSpritesCaballeroAtaque()
-    {
-        if (TryGetCaballeroFrames(true, out Sprite[] framesFromArray))
-        {
-            return framesFromArray;
-        }
-        
-        if (!TryGetCaballeroSheet(out Texture2D sheet, out float cellW, out float cellH)) return Array.Empty<Sprite>();
-        
-        int attackStart = 23;
-        int maxAttack = Mathf.Max(1, 30 - attackStart); // 23..29
-        int attackCount = Mathf.Clamp(caballeroAttackFrameCount, 1, maxAttack);
-        int[] frames = caballeroAttackFrames != null && caballeroAttackFrames.Length > 0
-            ? caballeroAttackFrames
-            : Enumerable.Range(attackStart, attackCount).ToArray();
-        List<Sprite> result = new List<Sprite>(frames.Length);
-        float pixelsPerUnit = caballeroSheet.pixelsPerUnit;
-        for (int i = 0; i < frames.Length; i++)
-        {
-            Sprite sprite = CrearSpriteDesdeSheetCaballero(sheet, cellW, cellH, frames[i], pixelsPerUnit);
-            if (sprite != null)
-            {
-                result.Add(sprite);
-            }
-        }
-        return result.ToArray();
-    }
-
-    private bool TryGetCaballeroFrames(bool ataque, out Sprite[] result)
-    {
-        result = Array.Empty<Sprite>();
-        if (caballeroFrames == null || caballeroFrames.Length < 32)
-        {
-            return false;
-        }
-        
-        int idleCount = Mathf.Clamp(caballeroIdleFrameCount, 1, 18);
-        int attackCount = Mathf.Clamp(caballeroAttackFrameCount, 1, 7);
-        int[] frames = ataque
-            ? (caballeroAttackFrames != null && caballeroAttackFrames.Length > 0
-                ? caballeroAttackFrames
-                : Enumerable.Range(23, attackCount).ToArray())
-            : (caballeroIdleFrames != null && caballeroIdleFrames.Length > 0
-                ? caballeroIdleFrames
-                : Enumerable.Range(0, idleCount).ToArray());
-        
-        result = PickCaballeroFrames(frames);
-        return result.Length > 0;
-    }
-
-    private Sprite[] PickCaballeroFrames(int[] indices)
-    {
-        if (indices == null || indices.Length == 0) return Array.Empty<Sprite>();
-        List<Sprite> list = new List<Sprite>(indices.Length);
-        for (int i = 0; i < indices.Length; i++)
-        {
-            int index = indices[i];
-            if (index < 0 || index >= caballeroFrames.Length) continue;
-            Sprite sprite = caballeroFrames[index];
-            if (sprite != null)
-            {
-                list.Add(sprite);
-            }
-        }
-        return list.ToArray();
-    }
-
-    private Sprite[] GetCaballeroFramesExact(int[] indices, string label)
-    {
-        if (indices == null || indices.Length == 0) return Array.Empty<Sprite>();
-        if (!EnsureCaballeroFramesOrdered())
-        {
-            Debug.LogError($"[UIManager] caballeroFrames no está ordenado o le faltan sprites para {label}.");
-            return Array.Empty<Sprite>();
-        }
-        List<Sprite> result = new List<Sprite>();
-        for (int i = 0; i < indices.Length; i++)
-        {
-            int index = indices[i];
-            if (index < 0 || index >= caballeroFramesOrdered.Length)
-            {
-                Debug.LogWarning($"[UIManager] Índice fuera de rango en {label}: índice {index}. Se usará el sprite anterior disponible.");
-                // Usar el último sprite disponible si hay uno
-                if (result.Count > 0)
-                {
-                    result.Add(result[result.Count - 1]);
-                    continue;
-                }
-                // Si no hay sprites anteriores, buscar el sprite más cercano disponible
-                for (int j = index - 1; j >= 0; j--)
-                {
-                    if (j < caballeroFramesOrdered.Length && caballeroFramesOrdered[j] != null)
-                    {
-                        result.Add(caballeroFramesOrdered[j]);
-                        break;
-                    }
-                }
-                continue;
-            }
-            Sprite sprite = caballeroFramesOrdered[index];
-            if (sprite == null)
-            {
-                Debug.LogWarning($"[UIManager] Sprite faltante en {label}: índice {index}. Se usará el sprite anterior disponible.");
-                // Usar el último sprite disponible si hay uno
-                if (result.Count > 0)
-                {
-                    result.Add(result[result.Count - 1]);
-                    continue;
-                }
-                // Si no hay sprites anteriores, buscar el sprite más cercano disponible
-                for (int j = index - 1; j >= 0; j--)
-                {
-                    if (j < caballeroFramesOrdered.Length && caballeroFramesOrdered[j] != null)
-                    {
-                        result.Add(caballeroFramesOrdered[j]);
-                        break;
-                    }
-                }
-                continue;
-            }
-            result.Add(sprite);
-        }
-        if (result.Count == 0)
-        {
-            Debug.LogError($"[UIManager] No se pudo obtener ningún sprite para {label}.");
-            return Array.Empty<Sprite>();
-        }
-        return result.ToArray();
-    }
-
-    private bool EnsureCaballeroFramesOrdered()
-    {
-        if (caballeroFramesOrderedReady && caballeroFramesOrdered != null && caballeroFramesOrdered.Length == 32)
-        {
-            return true;
-        }
-        if (caballeroFrames == null || caballeroFrames.Length < 32)
-        {
-            Debug.LogError("[UIManager] caballeroFrames debe tener 32 sprites (CABALLERO_0..CABALLERO_31).");
-            return false;
-        }
-        Sprite[] ordered = new Sprite[32];
-        for (int i = 0; i < caballeroFrames.Length; i++)
-        {
-            Sprite sprite = caballeroFrames[i];
-            if (sprite == null) continue;
-            int index = ExtractCaballeroIndex(sprite.name);
-            if (index < 0 || index >= ordered.Length) continue;
-            ordered[index] = sprite;
-        }
-        caballeroFramesOrdered = ordered;
-        caballeroFramesOrderedReady = true;
-        return true;
-    }
-
-    private int ExtractCaballeroIndex(string spriteName)
-    {
-        if (string.IsNullOrEmpty(spriteName)) return -1;
-        string digits = new string(spriteName.Where(char.IsDigit).ToArray());
-        if (int.TryParse(digits, out int index)) return index;
-        return -1;
-    }
-
-    private Sprite[] RepeatFrames(Sprite[] baseFrames, int targetLength)
-    {
-        if (baseFrames == null || baseFrames.Length == 0 || targetLength <= 0) return Array.Empty<Sprite>();
-        if (baseFrames.Length >= targetLength) return baseFrames;
-        List<Sprite> repeated = new List<Sprite>(targetLength);
-        int idx = 0;
-        while (repeated.Count < targetLength)
-        {
-            repeated.Add(baseFrames[idx % baseFrames.Length]);
-            idx++;
-        }
-        return repeated.ToArray();
-    }
-    
-    private bool TryGetCaballeroSheet(out Texture2D sheet, out float cellW, out float cellH)
-    {
-        sheet = null;
-        cellW = 0f;
-        cellH = 0f;
-        if (caballeroSheet == null) return false;
-        sheet = caballeroSheet.texture;
-        if (sheet == null) return false;
-        sheet.filterMode = FilterMode.Point;
-        sheet.wrapMode = TextureWrapMode.Clamp;
-        cellW = sheet.width / 4f;
-        cellH = sheet.height / 8f;
-        return cellW > 0f && cellH > 0f;
-    }
-    
-    private Sprite CrearSpriteDesdeSheetCaballero(Texture2D sheet, float cellW, float cellH, int index, float pixelsPerUnit)
-    {
-        const int columns = 4;
-        const int rows = 8;
-        int row = index / columns;
-        int col = index % columns;
-        if (row >= rows) return null;
-        
-        float x = col * cellW;
-        float y = sheet.height - ((row + 1) * cellH);
-        Rect rect = new Rect(x, y, cellW, cellH);
-        return Sprite.Create(sheet, rect, new Vector2(0.5f, 0.5f), pixelsPerUnit);
-    }
-    
-    
-    private IEnumerator ReproducirAnimacionIdle(string carpeta, string animacion, int cantidadFrames, bool esJugador)
-    {
-        Image imagenObjetivo = esJugador ? imgJugador : imgEnemigo;
-        if (imagenObjetivo == null || !imagenObjetivo.gameObject.activeInHierarchy) yield break;
-        
-        Sprite[] sprites = new Sprite[cantidadFrames];
-        
-        for (int i = 0; i < cantidadFrames; i++)
-        {
-            #if UNITY_EDITOR
-            string rutaNueva = $"Assets/Sprites/Personajes/{carpeta}/{animacion}/{i + 1}.png";
-            sprites[i] = AssetDatabase.LoadAssetAtPath<Sprite>(rutaNueva);
-            
-            if (sprites[i] == null)
-            {
-                string ruta = $"Assets/Sprites/Personajes/{carpeta}/{i + 1}.png";
-                sprites[i] = AssetDatabase.LoadAssetAtPath<Sprite>(ruta);
-            }
-            
-            if (sprites[i] == null)
-            {
-                sprites[i] = Resources.Load<Sprite>($"Sprites/Personajes/{carpeta}/{animacion}/{i + 1}");
-            }
-            #else
-            sprites[i] = Resources.Load<Sprite>($"Sprites/Personajes/{carpeta}/{animacion}/{i + 1}");
-            if (sprites[i] == null)
-            {
-                sprites[i] = Resources.Load<Sprite>($"Sprites/Personajes/{carpeta}/{i + 1}");
-            }
-            #endif
-        }
-        
-        float tiempoPorFrame = 0.5f; // Velocidad de animación idle
-        
-        while (true)
-        {
-            for (int i = 0; i < cantidadFrames; i++)
-            {
-                if (imagenObjetivo == null || !imagenObjetivo.gameObject.activeInHierarchy)
-                {
-                    yield break;
-                }
-                
-                if (sprites[i] != null)
-                {
-                    imagenObjetivo.sprite = sprites[i];
-                }
-                yield return new WaitForSeconds(tiempoPorFrame);
-            }
-        }
-    }
     
     private void MostrarTextoDaño(int daño, bool esJugador)
     {
@@ -3349,7 +2600,7 @@ public class UIManager : MonoBehaviour
     
     public void OcultarAnimacion()
     {
-        if (corrutinaAnimacion != null)
+        if (corrutinaAnimacion != null && !caballeroAtaqueEnCurso)
         {
             StopCoroutine(corrutinaAnimacion);
             corrutinaAnimacion = null;
@@ -3358,18 +2609,10 @@ public class UIManager : MonoBehaviour
         if (animacionAtaque != null)
         {
             animacionAtaque.gameObject.SetActive(false);
-            animacionAtaque.sprite = null; // Limpiar sprite
-            animacionAtaque.color = new Color(1f, 1f, 1f, 0f); // Completamente transparente
-            
-            Transform parent = animacionAtaque.transform.parent;
-            if (parent != null)
-            {
-                Transform dañoExistente = parent.Find("DañoTexto");
-                if (dañoExistente != null)
-                {
-                    Destroy(dañoExistente.gameObject);
-                }
-            }
+            animacionAtaque.sprite = null;
+            animacionAtaque.color = new Color(1f, 1f, 1f, 0f);
+            Transform dañoExistente = animacionAtaque.transform.parent?.Find("DañoTexto");
+            if (dañoExistente != null) Destroy(dañoExistente.gameObject);
         }
     }
     #endregion

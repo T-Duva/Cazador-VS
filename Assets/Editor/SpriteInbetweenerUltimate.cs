@@ -172,8 +172,41 @@ namespace SpriteMultiKeyframeTools
 
         private void GenerateSequence()
         {
+            // LOG DE INICIO: Al apretar 'Generate'
+            int totalSpritesToGenerate = (keyframeSprites.Count - 1) * framesPerTransition;
+            Debug.Log($"[SpriteInbetweener] ===== INICIANDO PROCESO =====");
+            Debug.Log($"[SpriteInbetweener] Iniciando proceso para {totalSpritesToGenerate} sprites");
+            Debug.Log($"[SpriteInbetweener] Keyframes: {keyframeSprites.Count}, Frames por transición: {framesPerTransition}");
+
             string folderPath = EditorUtility.SaveFolderPanel("Save Sequence", "Assets", "InterpolatedSequence");
-            if (string.IsNullOrEmpty(folderPath)) return;
+            if (string.IsNullOrEmpty(folderPath))
+            {
+                Debug.LogWarning("[SpriteInbetweener] ⚠ Proceso cancelado: No se seleccionó carpeta");
+                return;
+            }
+
+            // LOG DE RUTA: Imprimir la ruta exacta donde intenta guardar
+            Debug.Log($"[SpriteInbetweener] Ruta de guardado: {folderPath}");
+            
+            // Verificar que la carpeta existe
+            if (!Directory.Exists(folderPath))
+            {
+                try
+                {
+                    Directory.CreateDirectory(folderPath);
+                    Debug.Log($"[SpriteInbetweener] ✓ Carpeta creada: {folderPath}");
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"[SpriteInbetweener] ❌ ERROR: No se pudo crear la carpeta '{folderPath}'. Razón: {e.Message}");
+                    Debug.LogError($"[SpriteInbetweener] Verifica permisos de escritura o que la ruta sea válida.");
+                    return;
+                }
+            }
+            else
+            {
+                Debug.Log($"[SpriteInbetweener] ✓ Carpeta existe: {folderPath}");
+            }
 
             // Find max dimensions
             GetMaxDimensions(out int maxWidth, out int maxHeight);
@@ -183,6 +216,7 @@ namespace SpriteMultiKeyframeTools
             try
             {
                 int totalFrames = 0;
+                int grupoActual = 0; // Contador de grupo para el formato CABALLERO_[Grupo]_[Frame].png
 
                 for (int transitionIndex = 0; transitionIndex < keyframeSprites.Count - 1; transitionIndex++)
                 {
@@ -195,37 +229,97 @@ namespace SpriteMultiKeyframeTools
 
                     if (startTex == null || endTex == null)
                     {
-                        Debug.LogError($"Failed to extract sprites for transition {transitionIndex}");
+                        Debug.LogError($"[SpriteInbetweener] ❌ ERROR: No se pudieron extraer sprites para la transición {transitionIndex}");
                         continue;
                     }
 
-                    string baseName = startSprite.name;
+                    // REVISIÓN DE NOMBRES: Formato exacto CABALLERO_[Grupo]_[Frame].png
+                    // Intentar extraer el grupo del nombre del sprite, o usar el contador
+                    int grupo = grupoActual;
+                    string spriteName = startSprite.name;
+                    
+                    // Intentar extraer número de grupo del nombre (ej: "CABALLERO_26_001" -> grupo 26)
+                    if (spriteName.Contains("_"))
+                    {
+                        string[] partes = spriteName.Split('_');
+                        if (partes.Length >= 2 && int.TryParse(partes[1], out int grupoExtraido))
+                        {
+                            grupo = grupoExtraido;
+                            Debug.Log($"[SpriteInbetweener] Grupo extraído del nombre '{spriteName}': {grupo}");
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"[SpriteInbetweener] ⚠ No se pudo extraer grupo del nombre '{spriteName}', usando contador: {grupo}");
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"[SpriteInbetweener] ⚠ El nombre del sprite '{spriteName}' no tiene formato esperado, usando contador: {grupo}");
+                    }
 
                     for (int frameIndex = 0; frameIndex < framesPerTransition; frameIndex++)
                     {
                         float t = (float)frameIndex / (framesPerTransition - 1);
                         Texture2D interpolated = CreateInterpolatedFrame(startTex, endTex, t);
 
-                        string filename = $"{baseName}_{frameIndex + 1:D3}.png";
+                        if (interpolated == null)
+                        {
+                            Debug.LogError($"[SpriteInbetweener] ❌ ERROR: No se pudo crear frame interpolado para transición {transitionIndex}, frame {frameIndex}");
+                            continue;
+                        }
+
+                        // Formato exacto: CABALLERO_[Grupo]_[Frame].png
+                        int numeroFrame = frameIndex + 1;
+                        string filename = $"CABALLERO_{grupo}_{numeroFrame:D3}.png";
                         string filePath = Path.Combine(folderPath, filename);
 
-                        byte[] pngData = interpolated.EncodeToPNG();
-                        File.WriteAllBytes(filePath, pngData);
+                        try
+                        {
+                            byte[] pngData = interpolated.EncodeToPNG();
+                            if (pngData == null || pngData.Length == 0)
+                            {
+                                Debug.LogError($"[SpriteInbetweener] ❌ ERROR: No se pudo codificar PNG para '{filename}'");
+                                DestroyImmediate(interpolated);
+                                continue;
+                            }
+
+                            File.WriteAllBytes(filePath, pngData);
+                            
+                            // LOG DE ARCHIVO: Por cada imagen creada
+                            Debug.Log($"[SpriteInbetweener] ✓ Archivo '{filename}' creado exitosamente en: {filePath}");
+                            
+                            totalFrames++;
+                        }
+                        catch (System.Exception e)
+                        {
+                            // LOG DE ERROR: Si falla al guardar
+                            Debug.LogError($"[SpriteInbetweener] ❌ ERROR al guardar '{filename}': {e.Message}");
+                            Debug.LogError($"[SpriteInbetweener] Ruta completa: {filePath}");
+                            Debug.LogError($"[SpriteInbetweener] Verifica permisos de escritura o espacio en disco.");
+                        }
 
                         DestroyImmediate(interpolated);
-                        totalFrames++;
 
-                        float progress = (float)totalFrames / ((keyframeSprites.Count - 1) * framesPerTransition);
+                        float progress = (float)totalFrames / totalSpritesToGenerate;
                         EditorUtility.DisplayProgressBar("Generating", $"Frame {totalFrames}...", progress);
                     }
 
+                    grupoActual++; // Incrementar grupo para la siguiente transición
                     DestroyImmediate(startTex);
                     DestroyImmediate(endTex);
                 }
 
                 AssetDatabase.Refresh();
                 statusMessage = $"✅ Generated {totalFrames} frames successfully!";
-                Debug.Log($"[MultiKeyframe] Generated {totalFrames} frames in {folderPath}");
+                Debug.Log($"[SpriteInbetweener] ===== PROCESO COMPLETADO =====");
+                Debug.Log($"[SpriteInbetweener] ✓ Total de frames generados: {totalFrames}");
+                Debug.Log($"[SpriteInbetweener] ✓ Ubicación: {folderPath}");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[SpriteInbetweener] ❌ ERROR CRÍTICO durante la generación: {e.Message}");
+                Debug.LogError($"[SpriteInbetweener] Stack trace: {e.StackTrace}");
+                statusMessage = $"❌ Error: {e.Message}";
             }
             finally
             {

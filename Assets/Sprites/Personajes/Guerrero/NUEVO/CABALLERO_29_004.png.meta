@@ -116,10 +116,10 @@ TextureImporter:
       name: CABALLERO_29_004_0
       rect:
         serializedVersion: 2
-        x: 13
-        y: 18
-        width: 107
-        height: 110
+        x: 8
+        y: 13
+        width: 112
+        height: 119
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}

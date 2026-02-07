@@ -1,6 +1,373 @@
 ========================
 CURSOR (IA de código)
 ========================
+[2026-01-30 - CORRECCIÓN CRÍTICA: Animator Controller - AddState con posición]
+- PROBLEMA IDENTIFICADO:
+  - El script AsignarSpritesExactos.cs intentaba crear estados en el Animator Controller pero estos no aparecían
+  - Error CS1061: 'AnimatorState' does not contain a definition for 'position'
+  - El código intentaba asignar directamente nuevoEstado.position = posicion, lo cual no es válido
+  - Los estados se creaban pero no se guardaban correctamente o no aparecían en el Animator
+
+- CAUSA RAÍZ:
+  - AnimatorState NO tiene una propiedad 'position' que se pueda asignar directamente
+  - La posición de los estados en el Animator se maneja a través del ChildAnimatorState, no del AnimatorState
+  - AddState() tiene una sobrecarga que acepta la posición como segundo parámetro: AddState(nombre, posicion)
+
+- SOLUCIÓN IMPLEMENTADA:
+  - ✅ Eliminada asignación directa a nuevoEstado.position
+  - ✅ Cambiado a usar AddState(nombreClip, posicion) pasando la posición como segundo parámetro
+  - ✅ Si el estado ya existe, se elimina primero y luego se recrea con la posición correcta
+  - ✅ Para leer la posición, se usa childState.position (del ChildAnimatorState), no state.position
+  - ✅ Agregado Undo.RegisterCompleteObjectUndo para registrar cambios
+  - ✅ Agregado EditorUtility.SetDirty en cada estado creado
+  - ✅ Agregado AssetDatabase.SaveAssets() y AssetDatabase.ImportAsset con ForceUpdate
+
+- ARCHIVOS MODIFICADOS:
+  - Assets/Editor/AsignarSpritesExactos.cs:
+    - ConfigurarAnimatorController(): corregido uso de AddState con posición
+    - Línea ~392: Cambiado de AddState(nombreClip) a AddState(nombreClip, posicion)
+    - Línea ~426: Cambiado de childState.state.position a childState.position para leer posición
+    - Eliminada lógica compleja de verificación de estados existentes, ahora siempre elimina y recrea
+
+- CÓDIGO CORREGIDO:
+  ```csharp
+  // ANTES (INCORRECTO):
+  AnimatorState nuevoEstado = stateMachine.AddState(nombreClip);
+  nuevoEstado.position = posicion; // ❌ ERROR: AnimatorState no tiene 'position'
+  
+  // DESPUÉS (CORRECTO):
+  AnimatorState nuevoEstado = stateMachine.AddState(nombreClip, posicion); // ✅ Posición como parámetro
+  ```
+
+- RESULTADO ESPERADO:
+  - Los 5 estados (Idle, Prepare_to_atack, Run+Atack, FinishHim, Run+Back) se crean correctamente
+  - Los estados aparecen en el Animator Controller con sus posiciones asignadas (X: 200, Y: 0-280)
+  - Idle se configura como Default State
+  - Los estados se guardan correctamente y persisten después de ejecutar el script
+
+- PRÓXIMOS PASOS:
+  - Ejecutar Tools > Asignar Sprites Exactos por Grupos
+  - Primero: "ASIGNAR SPRITES Y LIMPIAR DUPLICADOS"
+  - Segundo: "LIMPIAR Y CONFIGURAR ANIMATOR CONTROLLER"
+  - Verificar en el Animator que los 5 estados aparezcan correctamente posicionados
+
+========================
+CURSOR (IA de código)
+========================
+[2026-01-30 - SOLUCIÓN DEFINITIVA: Eliminación de saltos del caballero]
+- PROBLEMA: El caballero saltaba verticalmente al cambiar de frame durante las animaciones
+- CAUSA: Diferentes tamaños de sprites, pivots inconsistentes, y falta de normalización de tamaño
+
+- SOLUCIÓN IMPLEMENTADA (basada en instrucciones de Osvaldo):
+  1. ✅ Componente UI - preserveAspect:
+     - preserveAspect activado SIEMPRE para imgJugador en Awake()
+     - preserveAspect forzado en ApplySpriteToImage() cada vez que se cambia un sprite
+     - Esto asegura que los sprites mantengan sus proporciones sin distorsión
+
+  2. ✅ Normalización de Tamaño:
+     - Tamaño fijo del RectTransform forzado SIEMPRE para el caballero
+     - Si no hay tamaño calculado, se usa un tamaño por defecto (200x200 o el tamaño del sprite actual)
+     - El tamaño del contenedor se fuerza ANTES y DESPUÉS de aplicar el sprite
+     - Todos los sprites ocupan el mismo espacio (tamañoFijo) pero mantienen sus proporciones
+
+  3. ✅ Pivote Fijo:
+     - Script AutoPivotCalculator.cs ya existe para configurar pivots a Bottom (0.5, 0.0)
+     - Usar Tools/Configurar Pivots Caballero (Bottom) en el editor para aplicar pivots
+     - Los pivots deben estar configurados como Bottom (pies) en todos los sprites
+
+  4. ✅ Script de Ajuste - CalcularPosicionYBasadaEnPies():
+     - Nueva función que calcula la posición Y basándose en los pies del sprite
+     - Ajusta la posición para que los pies siempre estén en la misma coordenada Y
+     - Compensa diferencias de tamaño visual entre sprites
+     - Mantiene los pies en la misma posición independientemente del espacio vacío superior
+
+- ARCHIVOS MODIFICADOS:
+  - Assets/Scripts/UIManager.cs:
+    - Awake(): Agregado imgJugador.preserveAspect = true
+    - ApplySpriteToImage(): 
+      * preserveAspect forzado SIEMPRE para imgJugador
+      * Tamaño fijo forzado SIEMPRE (con fallback a tamaño por defecto)
+      * Uso de CalcularPosicionYBasadaEnPies() para ajustar posición Y
+      * Tamaño del contenedor forzado antes y después de aplicar sprite
+    - CalcularPosicionYBasadaEnPies(): Nueva función para mantener pies en misma posición Y
+
+- RESULTADO ESPERADO:
+  - El caballero NO se moverá ni un píxel hacia arriba o abajo al cambiar de frame
+  - Los pies siempre estarán en la misma coordenada Y
+  - Los sprites mantendrán sus proporciones sin distorsión
+  - El tamaño visual será consistente entre todos los frames
+
+- PRÓXIMOS PASOS:
+  - Ejecutar Tools/Configurar Pivots Caballero (Bottom) para asegurar que todos los sprites tengan pivot Bottom
+  - Verificar en el Inspector que el componente Image del jugador tenga preserveAspect activado
+  - Probar en Play mode para confirmar que no hay saltos verticales
+
+========================
+CURSOR (IA de código)
+========================
+[2026-01-30 - PROBLEMA CRÍTICO: Coroutine se detiene después de aplicar daño]
+- PROBLEMA IDENTIFICADO (ANÁLISIS DE LOGS):
+  - ✅ Fase 4 se completa: "[UIManager] ✅ Fase 4 COMPLETADA. Posición final ANTES de forzar: (0.00, 0.00)"
+  - ✅ Posición se fuerza correctamente: "[UIManager] 📍 Posición forzada a inicial: (0.00, 0.00)"
+  - ✅ Daño se aplica: "[UIManager] ✅ Fase 4 completada. Aplicando daño al enemigo..."
+  - ✅ GameManager recibe el daño: "[GameManager] IniciarDañoEnemigoDesdeUI recibido. daño=27"
+  - ✅ AplicarDañoEnemigo se inicia: "[GameManager] AplicarDañoEnemigo iniciado. daño=27"
+  - ✅ Daño se aplica correctamente: "[GameManager] ✅ Daño aplicado al enemigo. Esperando a que termine la animación del jugador antes de iniciar turno del enemigo."
+  - ❌ NO aparece el log "[UIManager] ✅ Después de WaitForSeconds(0.1f) - Continuando coroutine..." (línea 2578)
+  - ❌ NO aparece el log "[UIManager] 🎯 Posición X de referencia actualizada después del ataque" (línea 2582)
+  - ❌ NO aparece el log "[UIManager] 🔧 caballeroAtaqueEnCurso establecido en false antes de iniciar idle" (línea 2587)
+  - ❌ NO aparece el log "[UIManager] 🔄 Iniciando animación idle..." (línea 2590)
+  - ❌ El personaje queda "congelado" en CABALLERO_31 (mirando a la izquierda)
+  - ❌ La coroutine ReproducirAtaqueCaballeroCompleto se detiene DESPUÉS de aplicar el daño pero ANTES de WaitForSeconds(0.1f)
+
+- CAUSA RAÍZ IDENTIFICADA:
+  - GameManager.AplicarDañoEnemigo() llama a uiManager.OcultarAnimacion() en línea 642
+  - OcultarAnimacion() en UIManager.cs (línea 3486-3492) hace:
+    ```csharp
+    if (corrutinaAnimacion != null)
+    {
+        StopCoroutine(corrutinaAnimacion);
+        corrutinaAnimacion = null;
+    }
+    ```
+  - Esto DETIENE la coroutine ReproducirAtaqueCaballeroCompleto que está guardada en corrutinaAnimacion
+  - El problema: OcultarAnimacion() está diseñado para otros tipos de personajes, pero está deteniendo TODAS las coroutines de animación, incluyendo la del caballero que todavía necesita completarse
+  - La coroutine se detiene JUSTO DESPUÉS de llamar a IniciarDañoEnemigoDesdeUI() pero ANTES de WaitForSeconds(0.1f)
+
+- PLAN DE SOLUCIÓN:
+  1. Modificar OcultarAnimacion() para que NO detenga la coroutine del caballero si caballeroAtaqueEnCurso == true
+     - Verificar si es un ataque del caballero antes de detener la coroutine
+     - Solo detener si NO es un ataque del caballero en curso
+  2. Alternativa: Modificar AplicarDañoEnemigo() para que NO llame a OcultarAnimacion() cuando es el caballero
+     - Verificar el tipo de personaje antes de llamar a OcultarAnimacion()
+  3. Alternativa: Crear un método separado OcultarAnimacionSinDetenerCaballero() que no detenga la coroutine del caballero
+  4. Asegurar que la limpieza garantizada en ReproducirAtaqueCaballeroCompleto se ejecute incluso si la coroutine se detiene
+     - Mover la limpieza a un método separado que se pueda llamar desde OnDisable o cuando se detecte que la coroutine se detuvo
+
+- SOLUCIÓN IMPLEMENTADA:
+  - ✅ Modificado OcultarAnimacion() para verificar si es un ataque del caballero antes de detener la coroutine
+  - ✅ Si caballeroAtaqueEnCurso == true, NO detiene la coroutine (deja que termine naturalmente)
+  - ✅ Esto permite que la coroutine del caballero complete su ciclo completo (incluida la vuelta a idle)
+  - ✅ Agregado log de protección para identificar cuándo se protege la coroutine del caballero
+
+- ARCHIVOS MODIFICADOS:
+  - Assets/Scripts/UIManager.cs: OcultarAnimacion() (línea ~3486)
+    - Agregada verificación: if (corrutinaAnimacion != null && !caballeroAtaqueEnCurso) antes de StopCoroutine
+    - Si caballeroAtaqueEnCurso == true, NO detiene la coroutine, permitiendo que complete su ciclo
+    - Agregado log informativo cuando se protege la coroutine del caballero
+
+- LOGS ESPERADOS PERO NO APARECEN (confirmación del problema):
+  - "[UIManager] ✅ Después de WaitForSeconds(0.1f) - Continuando coroutine..." (línea 2578)
+  - "[UIManager] 🎯 Posición X de referencia actualizada después del ataque: 0.00" (línea 2582)
+  - "[UIManager] 🔧 caballeroAtaqueEnCurso establecido en false antes de iniciar idle" (línea 2587)
+  - "[UIManager] 🔄 Iniciando animación idle... Posición antes de idle: (0.00, 0.00)" (línea 2590)
+
+========================
+CURSOR (IA de código)
+========================
+[2026-01-30 - MEJORAS PROFESIONALES: Estructura Robusta, Pivots y Sincronización]
+- CAMBIOS IMPLEMENTADOS:
+  1. ✅ ESTRUCTURA ROBUSTA en ReproducirAtaqueCaballeroCompleto:
+     - Agregado sistema de limpieza garantizada que asegura que el caballero NUNCA quede congelado
+     - Variables de control: caballeroRect, caballeroInicio, animatorEstabaActivo, ataqueCompletadoCorrectamente
+     - Limpieza garantizada al final de la coroutine que restaura posición, reactiva Animator y fuerza idle si falla algo
+     - Esto garantiza que incluso si hay excepciones o la coroutine se detiene, el caballero vuelve a idle
+  2. ✅ CONFIGURACIÓN DE PIVOTS:
+     - Actualizado AutoPivotCalculator.cs para buscar automáticamente el sprite sheet correcto
+     - Script Tools > Configurar Pivots Caballero (Bottom) configurará todos los sprites con pivot (0.5, 0.0) - Bottom Center
+     - Recordar: no todas las figuras están exactamente en el mismo lugar aunque midan lo mismo
+  3. ✅ INICIALIZACIÓN DE REFERENCIAS:
+     - Agregado Awake() en UIManager.cs para inicializar referencias vacías (imgJugador, imgEnemigo, caballeroAnimator)
+     - Agregado Awake() en GameManager.cs para inicializar referencias vacías (canvas, uiManager)
+     - Esto limpia warnings de Missing Reference en el Inspector
+  4. ✅ SINCRONIZACIÓN MEJORADA:
+     - IniciarTurnoEnemigo() ahora se llama SOLO cuando el caballero está en posición inicial Y en estado idle
+     - Verificación doble: caballeroEnPosicionInicial (distancia < 5f) Y caballeroEnIdle (!caballeroAtaqueEnCurso)
+     - Si no está listo, espera 0.1s adicionales y fuerza posición antes de iniciar turno del enemigo
+     - Esto asegura que el enemigo no ataque antes de que el jugador complete toda su animación
+- ARCHIVOS MODIFICADOS:
+  - Assets/Scripts/UIManager.cs:
+    - ReproducirAtaqueCaballeroCompleto: estructura robusta con limpieza garantizada
+    - Awake(): inicialización de referencias para limpiar warnings
+    - Sincronización mejorada para IniciarTurnoEnemigo()
+  - Assets/Scripts/GameManager.cs:
+    - Awake(): inicialización de referencias para limpiar warnings
+  - Assets/Editor/AutoPivotCalculator.cs:
+    - Actualizado assetPath para buscar automáticamente entre Spritesheet.png y CABALLERO.png
+- RESULTADO ESPERADO:
+  - El caballero NUNCA quedará congelado, incluso si falla el daño o hay excepciones
+  - Warnings de Missing Reference eliminados del Inspector
+  - Pivots configurados correctamente a Bottom para evitar saltos
+  - Sincronización perfecta: enemigo solo ataca cuando el jugador está completamente en idle
+
+========================
+CURSOR (IA de código)
+========================
+[2026-01-30 - PROBLEMA: Caballero no vuelve a idle después de completar Fase 4]
+- PROBLEMA IDENTIFICADO:
+  - El personaje SÍ completa la Fase 4 (vuelta) correctamente y regresa a posición (0.00, 0.00)
+  - El daño se aplica correctamente después de la Fase 4
+  - PERO después de aplicar el daño, NO aparece el log "🔄 Iniciando animación idle..."
+  - NO aparece el log "🎯 Posición X de referencia actualizada después del ataque"
+  - NO aparece el log "🔧 caballeroAtaqueEnCurso establecido en false antes de iniciar idle"
+  - El personaje queda "congelado" en el último frame de la vuelta (CABALLERO_31 mirando a la izquierda)
+  - La coroutine ReproducirAtaqueCaballeroCompleto parece detenerse después de aplicar el daño
+
+- ANÁLISIS DE LOGS:
+  - ✅ Fase 4 se completa: "[UIManager] ✅ Fase 4 COMPLETADA. Posición final ANTES de forzar: (0.00, 0.00)"
+  - ✅ Posición se fuerza correctamente: "[UIManager] 📍 Posición forzada a inicial: (0.00, 0.00)"
+  - ✅ Daño se aplica: "[UIManager] ✅ Fase 4 completada. Aplicando daño al enemigo..."
+  - ✅ GameManager recibe el daño: "[GameManager] IniciarDañoEnemigoDesdeUI recibido. daño=53"
+  - ✅ Daño se aplica correctamente: "[GameManager] ✅ Daño aplicado al enemigo. Esperando a que termine la animación del jugador antes de iniciar turno del enemigo."
+  - ❌ NO aparece el log "🔄 Iniciando animación idle..." (debería estar en línea 2538)
+  - ❌ NO aparece el log de "🎯 Posición X de referencia actualizada" (debería estar en línea 2530)
+  - ❌ NO aparece el log de "🔧 caballeroAtaqueEnCurso establecido en false" (debería estar en línea 2535)
+  - ❌ NO se llama a IniciarAnimacionIdle("Guerrero", true) (línea 2539)
+  - ❌ NO se llama a MostrarAnimacionIdleCaballero()
+
+- CAUSA PROBABLE:
+  - La coroutine ReproducirAtaqueCaballeroCompleto se está deteniendo después del `yield return new WaitForSeconds(0.1f);` en línea 2526
+  - Posible causa: la coroutine se detiene porque el GameObject o el componente UIManager se desactiva o destruye
+  - Otra posibilidad: hay un StopCoroutine o StopAllCoroutines que está deteniendo la coroutine
+  - Otra posibilidad: la coroutine se está esperando indefinidamente en algún yield
+  - Verificado: GameManager.AplicarDañoEnemigo hace `yield break` correctamente, no debería detener la coroutine del ataque
+  - Verificado: No hay StopCoroutine explícito para ReproducirAtaqueCaballeroCompleto en el código actual
+
+- PLAN DE SOLUCIÓN (IMPLEMENTADO):
+  1. ✅ Agregado log después de WaitForSeconds(0.1f) para confirmar que la coroutine continúa
+  2. ✅ Agregado try-catch alrededor de IniciarAnimacionIdle para capturar excepciones
+  3. ✅ Agregado log después de llamar a IniciarAnimacionIdle para confirmar que se ejecutó
+  4. ⏳ Pendiente: Verificar si el GameObject UIManager o el componente se desactiva durante el ataque
+  5. ⏳ Pendiente: Verificar si hay algún StopAllCoroutines() que esté deteniendo todas las coroutines
+  6. ⏳ Pendiente: Verificar si MostrarAnimacionIdleCaballero tiene alguna condición que impida su ejecución
+  7. ⏳ Pendiente: Si los logs muestran que la coroutine se detiene, considerar mover IniciarAnimacionIdle ANTES de aplicar el daño
+
+- CAMBIOS REALIZADOS:
+  - Assets/Scripts/UIManager.cs (líneas ~2526-2539):
+    - Agregado log "[UIManager] ✅ Después de WaitForSeconds(0.1f) - Continuando coroutine..." después del yield
+    - Agregado try-catch alrededor de IniciarAnimacionIdle para capturar excepciones
+    - Agregado log "[UIManager] ✅ IniciarAnimacionIdle llamado exitosamente" después de la llamada
+    - Esto permitirá identificar exactamente dónde se detiene la coroutine o si hay una excepción
+
+- ARCHIVOS A REVISAR:
+  - Assets/Scripts/UIManager.cs: ReproducirAtaqueCaballeroCompleto() (líneas ~2518-2552)
+  - Assets/Scripts/UIManager.cs: IniciarAnimacionIdle() (línea ~1940)
+  - Assets/Scripts/UIManager.cs: MostrarAnimacionIdleCaballero() (línea ~2000)
+  - Assets/Scripts/GameManager.cs: Verificar si hay StopAllCoroutines() que afecte al UIManager
+
+- LOGS ESPERADOS PERO NO APARECEN:
+  - "[UIManager] 🎯 Posición X de referencia actualizada después del ataque: 0.00" (línea 2530)
+  - "[UIManager] 🔧 caballeroAtaqueEnCurso establecido en false antes de iniciar idle" (línea 2535)
+  - "[UIManager] 🔄 Iniciando animación idle... Posición antes de idle: (0.00, 0.00)" (línea 2538)
+  - "[UIManager] 🎯 Posición X de referencia guardada al inicio del ataque: 0,00" (debería aparecer al inicio)
+  - Logs de MostrarAnimacionIdleCaballero() (línea ~2000)
+
+========================
+CURSOR (IA de código)
+========================
+[2026-01-30 - Configuración completa de Sprites y Pivots del Caballero]
+- Archivos CREADOS:
+  - Assets/Editor/AutoPivotCalculator.cs: Clase estática para calcular pivots en los pies (Bottom)
+  - Assets/Editor/ConfigurarPivotsCaballero.cs: Editor Window para configurar todos los pivots a Bottom
+  - Assets/Editor/VerificarConfiguracionCaballero.cs: Script para verificar y configurar automáticamente el sprite sheet
+- Archivos MODIFICADOS:
+  - Assets/Scripts/UIManager.cs:
+    - Mejorado MostrarAnimacionIdleCaballero() para resetear offsets y desplazamientos después de la Fase 4
+    - Agregada coroutine ResetearPosicionDespuesDeSprite() para resetear posición después de aplicar sprite
+    - Ahora resetea localScale y localRotation para eliminar cualquier transformación residual
+    - Fuerza posición Y de referencia si está establecida
+- Funcionalidad implementada:
+  1. Configuración de Pivots:
+     - Tools > Configurar Pivots Caballero (Bottom): Configura todos los sprites con pivot (0.5, 0.0) - Bottom Center
+     - Tools > Verificar y Configurar Sprite Sheet Caballero: Verifica y corrige configuración del sprite sheet
+     - Asegura que el sprite sheet esté en modo 'Multiple' y tipo 'Sprite (2D and UI)'
+  2. Limpieza de Warnings:
+     - Tools > Verificar Warnings del Proyecto: Busca y reporta warnings en UIManager
+     - Scripts verifican referencias nulas y configuraciones incorrectas
+  3. Sincronización Final:
+     - MostrarAnimacionIdleCaballero ahora resetea completamente el estado después de la Fase 4
+     - Resetea posición X e Y a valores de referencia
+     - Resetea scale y rotation
+     - Aplica primer sprite del idle inmediatamente
+     - Usa coroutine para resetear posición después de un frame (cuando Unity procesa el sprite)
+- Pasos para usar:
+  1. Ejecutar Tools > Verificar y Configurar Sprite Sheet Caballero (verifica configuración)
+  2. Ejecutar Tools > Configurar Pivots Caballero (Bottom) (configura todos los pivots a Bottom)
+  3. Verificar en consola que no haya warnings
+  4. Probar el juego - el personaje debería volver correctamente a idle sin saltos ni desplazamientos
+
+========================
+CURSOR (IA de código)
+========================
+[2026-01-30 - Problema: Caballero no vuelve a idle después del ataque]
+- Descripción del problema:
+  - El personaje SÍ completa la Fase 4 (vuelta) y regresa a su posición original (esto está funcionando)
+  - PERO después de volver, queda mirando hacia la izquierda (sprite CABALLERO_31) en lugar de volver a idle
+  - El idle debería iniciarse automáticamente después de completar la vuelta, pero no lo hace
+  - El personaje queda "congelado" en el último frame de la vuelta (CABALLERO_31 que mira a la izquierda)
+- Causa identificada:
+  - Cuando se llama a IniciarAnimacionIdle() después de la Fase 4, el último sprite visible es CABALLERO_31 (mira a la izquierda)
+  - El idle debería empezar con CABALLERO_0 (mira a la derecha), pero no se aplica inmediatamente
+  - El idle se inicia pero el sprite no cambia hasta que la coroutine avanza al siguiente frame
+- Solución aplicada:
+  - Modificado MostrarAnimacionIdleCaballero() para forzar el primer sprite del idle (CABALLERO_0) inmediatamente
+  - Antes de iniciar la coroutine o el Animator, se aplica directamente el primer sprite del idle
+  - Esto asegura que el personaje vuelva a mirar hacia la derecha inmediatamente después de la vuelta
+  - Archivos modificados:
+    - Assets/Scripts/UIManager.cs: MostrarAnimacionIdleCaballero() - agregado código para aplicar primer sprite inmediatamente
+- Cambios en GameManager:
+  - Separado IniciarDañoEnemigoDesdeUI() de IniciarTurnoEnemigo()
+  - IniciarDañoEnemigoDesdeUI() ahora solo aplica el daño, no inicia el turno del enemigo
+  - IniciarTurnoEnemigo() se llama explícitamente después de que el jugador complete toda su animación (incluida la vuelta)
+  - Esto asegura que el enemigo no ataque antes de que el jugador termine su animación completa
+- Estado actual:
+  - ✅ Fase 4 (vuelta) se completa correctamente
+  - ✅ Personaje vuelve a posición original
+  - ✅ Daño se aplica después de la Fase 4
+  - ✅ Primer sprite del idle se aplica inmediatamente (debería solucionar el problema de quedarse mirando a la izquierda)
+  - ⏳ Pendiente de verificación: que el idle se reproduzca correctamente después del ataque
+
+========================
+CURSOR (IA de código)
+========================
+[2026-01-30 - PROBLEMA CRÍTICO: Fase 4 (vuelta) del ataque no se ejecuta]
+- PROBLEMA IDENTIFICADO:
+  - Los logs muestran que después de aplicar el daño (Fase 3 completada), NO aparecen los logs de la Fase 4
+  - No aparece el log "✅ Daño aplicado. Iniciando Fase 4 (Corrida izquierda 28-31)..."
+  - No aparece el log "✅ Fase 4 COMPLETADA"
+  - El personaje nunca vuelve a su posición original
+  - La coroutine ReproducirAtaqueCaballeroCompleto parece detenerse o interrumpirse después de llamar a IniciarDañoEnemigoDesdeUI
+  
+- ANÁLISIS DE LOGS:
+  - ✅ Fase 3 (Golpe 24-27) se completa correctamente
+  - ✅ Se llama a gameManager.IniciarDañoEnemigoDesdeUI(daño) en línea 2423
+  - ✅ Se espera 0.1 segundos (yield return new WaitForSeconds(0.1f))
+  - ❌ NO aparece el log "✅ Daño aplicado. Iniciando Fase 4..." (debería estar en línea 2429)
+  - ❌ En su lugar aparece "GameManager] ContinuarDespuesDañoJugador iniciado"
+  - ❌ Luego aparece "GameManager] EjecutarAtaqueEnemigoSolo iniciado"
+  
+- CAUSA PROBABLE:
+  - IniciarDañoEnemigoDesdeUI() inicia ContinuarDespuesDañoJugador() que eventualmente llama a EjecutarAtaqueEnemigoSolo()
+  - EjecutarAtaqueEnemigoSolo() podría estar deteniendo o interfiriendo con la coroutine del ataque del jugador
+  - O la coroutine ReproducirAtaqueCaballeroCompleto se está deteniendo por alguna razón antes de llegar a la Fase 4
+  - Posible conflicto: la coroutine del ataque del jugador y la del enemigo se ejecutan simultáneamente
+  
+- PLAN DE SOLUCIÓN (NO IMPLEMENTADO AÚN):
+  1. Verificar si hay algún StopCoroutine que esté deteniendo ReproducirAtaqueCaballeroCompleto
+  2. Cambiar el flujo para que IniciarDañoEnemigoDesdeUI NO inicie inmediatamente el ataque del enemigo
+  3. Hacer que ReproducirAtaqueCaballeroCompleto espere a que termine la Fase 4 ANTES de permitir que continúe el flujo del GameManager
+  4. Agregar más logs para rastrear exactamente dónde se detiene la coroutine
+  5. Considerar hacer que IniciarDañoEnemigoDesdeUI solo marque que el daño debe aplicarse, pero que la coroutine del ataque controle cuándo realmente se aplica
+  6. Asegurar que la Fase 4 se complete ANTES de que el GameManager inicie el ataque del enemigo
+  
+- ARCHIVOS A REVISAR:
+  - Assets/Scripts/UIManager.cs: ReproducirAtaqueCaballeroCompleto() (líneas ~2418-2513)
+  - Assets/Scripts/GameManager.cs: IniciarDañoEnemigoDesdeUI() y ContinuarDespuesDañoJugador()
+  - Verificar si EjecutarAtaqueEnemigoSolo() está deteniendo coroutines del jugador
+
+========================
+CURSOR (IA de código)
+========================
 [2026-01-30 - Fix: Corregir retorno del caballero a posición original después del ataque]
 - Archivos MODIFICADOS:
   - Assets/Scripts/UIManager.cs:
@@ -293,7 +660,7 @@ CURSOR (IA de codigo)
 MERLIN (IA de ayuda)
 ========================
 [2026-01-28 - tarde]
-- Explicacion: pediste agregar caballeroFrames (Sprite[]) en UIManager y automatizar asignacion desde CABALLERO_CROP_504.png.
+- Explicacion: pediste agregar caballeroFrames (Sprite[]) en UIManager y automatizar asignacion desde el sprite sheet del caballero.
 - Archivos afectados: Assets/Scripts/UIManager.cs, Assets/Editor/AssignCaballeroFramesFromSprite.cs.
 - Intencion: tener 32 sprites (idle 0..15, ataque 16..31) en un array serializado.
 - Pasos en Unity que pediste: Tools > Assign Caballero Frames from Sprite y verificar el array caballeroFrames.
@@ -1263,7 +1630,7 @@ CURSOR (IA de codigo)
 - Codigo modificado:
   - Assets/Scripts/UIManager.cs: agregado [SerializeField] private Sprite[] caballeroFrames;.
 - Codigo agregado:
-  - Assets/Editor/AssignCaballeroFramesFromSprite.cs: asigna 32 sprites desde CABALLERO_CROP_504.png a caballeroFrames.
+  - Assets/Editor/AssignCaballeroFramesFromSprite.cs: asigna 32 sprites desde el sprite sheet del caballero a caballeroFrames.
 
 ========================
 MERLIN (IA de ayuda)

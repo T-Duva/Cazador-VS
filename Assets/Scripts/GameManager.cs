@@ -75,6 +75,30 @@ public class GameManager : MonoBehaviour
     // }
 
     #region Unity
+    private void Awake()
+    {
+        // ✅ INICIALIZAR REFERENCIAS VACÍAS para limpiar warnings de Missing Reference
+        if (canvas == null)
+        {
+            canvas = GetComponentInChildren<Canvas>();
+            if (canvas == null)
+            {
+                canvas = UnityEngine.Object.FindFirstObjectByType<Canvas>();
+            }
+        }
+        
+        if (uiManager == null)
+        {
+            uiManager = GetComponentInChildren<UIManager>();
+            if (uiManager == null)
+            {
+                uiManager = UnityEngine.Object.FindFirstObjectByType<UIManager>();
+            }
+        }
+        
+        Debug.Log($"[GameManager] Awake: Referencias inicializadas - canvas: {canvas != null}, uiManager: {uiManager != null}");
+    }
+    
     void Start()
     {
         if (canvas == null)
@@ -575,20 +599,34 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(tiempoAnimacion);
         
         if (!ataqueEnProceso) yield break; // Si se detuvo, salir
-        yield return StartCoroutine(ContinuarDespuesDañoJugador(daño));
+        
+        // Aplicar daño (sin iniciar turno del enemigo todavía)
+        yield return StartCoroutine(AplicarDañoEnemigo(daño));
+        
+        if (!ataqueEnProceso) yield break; // Si se detuvo después de aplicar daño (victoria), salir
+        
+        // Iniciar turno del enemigo después de que termine la animación
+        IniciarTurnoEnemigo();
         yield break;
     }
 
+    /// <summary>
+    /// Aplica el daño del jugador al enemigo SIN iniciar el turno del enemigo.
+    /// El turno del enemigo debe iniciarse manualmente llamando a IniciarTurnoEnemigo() después.
+    /// </summary>
     public void IniciarDañoEnemigoDesdeUI(int daño)
     {
         Debug.Log("[GameManager] IniciarDañoEnemigoDesdeUI recibido. daño=" + daño + ", ataqueEnProceso=" + ataqueEnProceso);
         if (!ataqueEnProceso) return;
-        StartCoroutine(ContinuarDespuesDañoJugador(daño));
+        StartCoroutine(AplicarDañoEnemigo(daño));
     }
 
-    private IEnumerator ContinuarDespuesDañoJugador(int daño)
+    /// <summary>
+    /// Solo aplica el daño al enemigo y actualiza la UI. NO inicia el turno del enemigo.
+    /// </summary>
+    private IEnumerator AplicarDañoEnemigo(int daño)
     {
-        Debug.Log("[GameManager] ContinuarDespuesDañoJugador iniciado. daño=" + daño + ", ataqueEnProceso=" + ataqueEnProceso);
+        Debug.Log("[GameManager] AplicarDañoEnemigo iniciado. daño=" + daño + ", ataqueEnProceso=" + ataqueEnProceso);
         if (!ataqueEnProceso) yield break;
         int vidaAntes = vidaJugador2;
         int escudoAntes = escudoJugador2;
@@ -620,6 +658,27 @@ public class GameManager : MonoBehaviour
             yield break;
         }
         
+        Debug.Log("[GameManager] ✅ Daño aplicado al enemigo. Esperando a que termine la animación del jugador antes de iniciar turno del enemigo.");
+        yield break;
+    }
+
+    /// <summary>
+    /// Inicia el turno del enemigo después de que el jugador complete su animación de ataque.
+    /// Debe llamarse DESPUÉS de que termine la Fase 4 (vuelta) del ataque del caballero.
+    /// </summary>
+    public void IniciarTurnoEnemigo()
+    {
+        Debug.Log("[GameManager] IniciarTurnoEnemigo llamado. ataqueEnProceso=" + ataqueEnProceso);
+        if (!ataqueEnProceso) return;
+        StartCoroutine(ContinuarDespuesDañoJugador());
+    }
+
+    /// <summary>
+    /// Continúa el flujo después del daño del jugador: espera y luego ejecuta el ataque del enemigo.
+    /// </summary>
+    private IEnumerator ContinuarDespuesDañoJugador()
+    {
+        Debug.Log("[GameManager] ContinuarDespuesDañoJugador iniciado. ataqueEnProceso=" + ataqueEnProceso);
         if (!ataqueEnProceso) yield break;
         
         yield return new WaitForSeconds(1.5f);
